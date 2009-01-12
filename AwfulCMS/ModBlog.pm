@@ -89,11 +89,11 @@ sub getPosts{
   my $dbh=$s->{page}->{dbh};
   my $offset=0;
 
-  my $q_c=$dbh->prepare("select count(*) from blog where pid=?") ||
+  my $q_c=$dbh->prepare("select count(*) from blog where pid=? and draft=0") ||
     $p->status(400, "Unable to prepare query: $!");
-  my $q_cm=$dbh->prepare("select count(*) from blog where rpid=?") ||
+  my $q_cm=$dbh->prepare("select count(*) from blog where rpid=? and draft=0") ||
     $p->status(400, "Unable to prepare query: $!");
-  my $q_s=$dbh->prepare("select * from blog where pid=? order by created desc limit ? offset ?") ||
+  my $q_s=$dbh->prepare("select * from blog where pid=? and draft=0 order by created desc limit ? offset ?") ||
     $p->status(400, "Unable to prepare query: $!");
 
   $q_c->execute(0) || $p->status(400, "Unable to execute query: $!");
@@ -227,6 +227,7 @@ sub createdb{
        "email tinytext NOT NULL,".
        "homepage tinytext,".
        "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,".
+       "draft int(4) NOT NULL default '1',".
        "PRIMARY KEY  (id),".
        "UNIQUE KEY id_2 (id),".
        "KEY id (id)".

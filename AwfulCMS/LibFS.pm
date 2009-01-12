@@ -40,6 +40,12 @@ sub lsx{
   my $files=shift;
   my $dirs=shift;
   my $dotfiles=shift;
+  my $checktype=shift;
+
+  if (ref($dotfiles) ne "HASH"){
+    $checktype=$dotfiles;
+    undef $dotfiles;
+  }
 
   my $ft=File::Type->new();
 
@@ -54,17 +60,25 @@ sub lsx{
       push(@$dirs,$file);
       next;
     } elsif ($file =~ /^\./||$file eq 'CVS') {
-      my $type = $ft->checktype_filename("$filename");
-      $dotfiles->{$file}={'type'=>$type,
-			  'size'=>-s $filename};
+      if ($checktype==1){
+	my $type = $ft->checktype_filename("$filename");
+	$dotfiles->{$file}={'type'=>$type,
+			    'size'=>-s $filename};
+      } else {
+	$dotfiles->{$file}={'foo'=>'bar'};
+      }
       next;
     } elsif (-d $filename) {
       push(@$dirs,$file);
       next;
     } else {
-      my $type = $ft->checktype_filename("$filename");
-      $files->{$file}={'type'=>$type,
-		       'size'=>-s $filename};
+      if ($checktype==1){
+	my $type = $ft->checktype_filename("$filename");
+	$files->{$file}={'type'=>$type,
+			 'size'=>-s $filename};
+	} else {
+	  $files->{$file}={$filename};
+	}
     }
   }
 }
