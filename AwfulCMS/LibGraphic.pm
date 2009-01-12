@@ -15,6 +15,10 @@ sub thumbnail {
   my $infile="$opts->{directory}/$opts->{filename}";
   my $outfile="$opts->{directory}/.$opts->{filename}";
 
+  my @instat=stat($infile);
+  my @outstat=stat($outfile);
+  return $outfile unless (@instat[9]>@outstat[9]);
+
   # valid too: newFromXpm newFromXbm
   if ($opts->{type} eq "image/jpeg"){
     $im=GD::Image->newFromJpeg($infile)||return;
