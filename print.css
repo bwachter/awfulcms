@@ -1,0 +1,28 @@
+   div.nav {
+     display:none;
+   }
+
+   div.content {
+     position:absolute;top:0px;left:0px;width=100%;
+   }
+
+   div.footer {
+     display:none;
+   }
+
+   div.newshead {
+    background-color:#eaeaea;
+   }
+
+   div.newsbody {
+
+   }
+   
+   body { 
+    color:black;
+    background-color:white;
+   }
+
+   p {
+    text-align: justify; 
+    }

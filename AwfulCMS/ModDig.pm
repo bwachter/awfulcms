@@ -1,0 +1,122 @@
+package AwfulCMS::ModDig;
+
+use strict;
+
+sub new(){
+  shift;
+  my $r=shift;
+  return -1 if (ref($r) ne "HASH");
+  my $s={};
+  $s->{page}=shift;
+
+  return -1 if (ref($s->{page}) ne "AwfulCMS::Page");
+
+  $r->{content}="html";
+  $r->{rqmap}={"default"=>{-handler=>"mainsite",
+			   -content=>"html"},
+	       "roles"=>{-handler=>"mainsite",
+			 -content=>"html",
+			 -role=>"author"},
+	       "orq"=>{-handler=>"orq",
+		       -content=>"html"}
+	       };
+  bless $s;
+  $s;
+}
+
+sub form(){
+
+}
+
+
+
+
+$digQuery="";
+
+use pkg_page;
+$p=pkg_page->new("/home/bwachter/public_html");
+
+sub queryDig {
+  my $digNS=shift;
+  my $digTypeName=shift;
+  foreach(@digDomains) {
+    $digQuery.=`dig $digNS $_ $digTypeName`;
+    $digQuery.="<hr>\n";
+  }
+}
+
+
+  my $digType=$p->pS($cgi->param('digType'));
+  my $digNS=$p->pS($cgi->param('digNS'));
+  my $digDomain=$p->pS($cgi->param('digDomain'));
+  my @digOptions=$cgi->param('digOption');
+  @digDomains=split("\n", $digDomain);
+  my @xopts={'trace', 'foo'};
+
+
+  if ($digType==0) { $digTypeName="any"; }
+  elsif ($digType==1) { $digTypeName="A"; }
+  elsif ( $digType==2) { $digTypeName="MX"; }
+  elsif ( $digType==3) { $digTypeName="SIG"; }
+  elsif ( $digType==4) { $digTypeName="CNAME"; }
+  elsif ( $digType==5) { $digTypeName="PTR"; }
+  elsif ( $digType==6) { $digTypeName="NS"; }
+  elsif ( $digType==7) { $digTypeName="AXFR"; }
+  else { $digTypeName="any"; }
+
+  if ($digDomain) { &queryDig($digNS, $digTypeName, @digDomains); }
+
+  $p->{'title'}="digger";
+  $p->printHeader();
+
+  $url="http://bwachter.lart.info/tools/dig.cgi?digType=$digType&digNS=$digNS&digDomain=$digDomain";
+  $url=~s/\r\n/%0D%0A/g;
+
+  foreach (@digOptions) {
+    $p->{'body'}.="$_ <br>";
+  }
+
+  $p->{'body'}.="
+    <form action=\"/tools/dig.cgi\" method=\"post\">
+    <table border=\"0\">
+    <tr>
+     <td colspan=\"2\">Domains, one per line</td>
+     <td colspan=\"3\">
+      <textarea cols=\"40\" rows=\"4\" name=\"digDomain\">$digDomain</textarea>
+     </td>
+    </tr><tr>
+     <td>Type</td>
+     <td><select name=\"digType\">".
+      $p->pOption(0,"any",$digType).
+      $p->pOption(1,"A",$digType).
+      $p->pOption(2,"MX",$digType).
+      $p->pOption(3,"SIG",$digType).
+      $p->pOption(4,"CNAME",$digType).
+      $p->pOption(5,"PTR",$digType).
+      $p->pOption(6,"NS",$digType).
+      $p->pOption(7,"AXFR",$digType).
+     "</select>
+     </td>
+     <td>NS (optional)</td>
+     <td><input type=\"text\" name=\"digNS\" value=\"$digNS\" /></td>
+    </tr>
+    <tr>
+     <td><input type=\"submit\" name=\"submit\" value=\"Go!\" /></td>
+    </tr>
+    <tr>
+     <th>+</th>
+     <th>-</th>
+     <th>Option</th>
+    </tr>
+    <!--
+    <tr>
+     <td><input type=\"checkbox\" name=\"x_trace\" value=\"yes\"></td>
+     <td><input type=\"radio\" name=\"x_trace\" value=\"no\"></td>
+     <td>trace</td>
+    </tr>
+    -->
+    </table></form><hr>
+    Use this link if you want to show the query to someone else: <a href=\"$url\">$url</a><hr>
+    <pre>$digQuery</pre>";
+
+   $p->printBody();

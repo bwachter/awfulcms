@@ -1,0 +1,118 @@
+   a:visited { 
+     color:blue; 
+     background-color:white; }
+     
+   a:hover { 
+     color:red; 
+     background-color:white }
+   
+   a {
+    font-family:verdana,sans-serif;
+    font-size:10pt;
+   }
+
+   div.nav {
+     position:absolute;top:0px;left:0px;width=100%;
+   }
+
+   div.content {
+     position:absolute;top:40px;left:0px;width=100%;
+     background-color:#aa1d5a;
+   }
+
+   div.footer {
+     display:none;
+   }
+   
+   a.menue {
+     font-family:verdana,sans-serif;
+     font-size:10pt;
+     color:white;
+     background-color:white; }
+
+   a.menue:hover {
+    color:blue;
+    background-color:white; }
+
+   a.header{
+        align:center;
+        font-family:verdana,sans-serif;
+	font-size:10pt;
+	vertical-align:middle;
+	text-align:center;}
+		       
+   body { 
+    color:black;
+    background-color:white;
+    font-family:verdana,sans-serif;
+    font-size:10pt; 
+   }
+
+   td.titlecell {
+    text-align:center;
+    background-color:#CCCCCC;
+    font-family:verdana,sans-serif;
+    font-size:10pt;
+    color:black;
+    border-bottom-style:solid;
+    border-bottom-color:black;
+    border-bottom-width:1px;
+    padding:2px; }
+  
+   td.shell {
+     color:#FFFFFF;
+     background-color:#000000;}
+  
+   td.title { 
+    font-family:verdana,sans-serif;
+    font-size:14pt;
+    color:green;
+    font-weight:bold;
+    border-style:solid;
+    border-color:black;
+    border-width:2px; 
+    padding:5px;
+    background-color:white; }
+    
+   td.navigation {
+    font-family:verdana,sans-serif;
+    font-size:9pt;
+    padding:5px; }
+   
+   table {
+    font-family:verdana,sans-serif;
+    font-size:10pt;
+   }
+   table.navigation {
+    border-style:solid;
+    border-color:black;
+    border-width:2px; }
+   
+   td.text {
+    font-family:verdana,sans-serif;
+    font-size:10pt;
+    padding:5px; }
+   
+   table.text {
+    border-style:solid;
+    border-color:black;
+    border-width:2px; } 
+   
+   td.footer1 {
+    border-style:solid;
+    border-color:black;
+    border-width:2px; }
+   
+   td.footer2 {
+    font-family:verdana,sans-serif;
+    font-size:8pt;
+    padding:3px; }
+ 
+   p.c2 {text-align: justify}
+   h2.c1 {text-align: center}
+ 
+   p {
+    text-align: justify; 
+    font-family:verdana,sans-serif;
+    font-size:10pt;
+    padding:5px;}
