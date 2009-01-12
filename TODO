@@ -1,0 +1,2 @@
+- add errorhandling to libgraphic
+- add logging capability (needed for errorhandling)
