@@ -4,7 +4,7 @@ use strict;
 use File::Type;
 
 use Exporter 'import';
-our @EXPORT_OK=qw(ls lsx);
+our @EXPORT_OK=qw(ls lsx openreadclose);
 
 sub ls {
   my $dir=shift;
@@ -81,6 +81,14 @@ sub lsx{
 	}
     }
   }
+}
+
+sub openreadclose{
+  my $file=shift;
+  open(FILE, "<$file");
+  my @fcontent=<FILE>;
+  close(FILE);
+  join('', @fcontent);
 }
 
 1;
