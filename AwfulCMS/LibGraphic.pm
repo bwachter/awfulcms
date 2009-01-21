@@ -31,11 +31,17 @@ sub thumbnail {
   my ($x,$y)=$im->getBounds();
 
   if (($y/$x) < 1) { # wide not tall
-    $dx=$opts->{maxx};
-    $dy=(($y/$x)*$dx);
+    if ($x < $opts->{maxx}){ $dx=$x; $dy=$y; }
+    else {
+      $dx=$opts->{maxx};
+      $dy=(($y/$x)*$dx);
+    }
   } else {
-    $dy=$opts->{maxy};
-    $dx=(($x/$y)*$dy);
+    if ($y < $opts->{maxy}){ $dy=$y; $dx=$x; }
+    else { 
+      $dy=$opts->{maxy};
+      $dx=(($x/$y)*$dy);
+    }
   }
 
   $tn=new GD::Image($dx,$dy)||return;
