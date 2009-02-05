@@ -99,7 +99,7 @@ sub doModule{
     $module="AwfulCMS::$module";
   }
 
-  $p->status(400, "Module '$module' not available $fx") if ($c->getValue("modules", $module) != 1 &&
+  $p->status(400, "Module '$module' not available") if ($c->getValue("modules", $module) != 1 &&
 					      $c->getValue("modules", $module_short) != 1);
   $p->status(404, "Module '$module' not found") if ($module eq "");
 
