@@ -124,7 +124,7 @@ sub status {
   $s->title("$status $s->{sdesc}->{$status}->{short}");
   $s->add("<h1>$status $s->{sdesc}->{$status}->{short}</h1>");
   $s->add("<p>$s->{sdesc}->{$status}->{long}</p>");
-  $s->add("<p>Additional information: $description</p>");
+  $s->add("<p>Additional information:</p><pre>$description</pre>");
   $s->out();
   exit;
 }
@@ -145,6 +145,10 @@ sub add {
   #  $s->{divmap}->{500}={'id'=>'content'};
   # a hash to hold divname -> number mappings
   #  $s->{divhash}->{content}=500;
+
+  #$s->{divmap}->{500}={'id'=>'content',
+  #		       'class'=>'content'};
+
 
   $s->{divhash}->{$divname}.=$content;
   $s->{body}.=$content;
@@ -256,5 +260,22 @@ sub h6 { h("h6", @_); }
 
 sub hr { tag("hr", @_); }
 sub p { tag("p", @_); }
+
+sub option { tag("option", @_); }
+
+
+# historical foo, need better code
+sub pOption {
+  my $s=shift;
+  my $value=shift;
+  my $name=shift;
+  my $default=shift;
+  my $add;
+
+  if ( $value == $default ) { $add="selected" }
+  else { $add="" }
+
+  "<option value=\"$value\" $add>$name</option>";
+}
 
 1;

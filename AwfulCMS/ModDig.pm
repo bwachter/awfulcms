@@ -12,7 +12,7 @@ sub new(){
   return -1 if (ref($s->{page}) ne "AwfulCMS::Page");
 
   $r->{content}="html";
-  $r->{rqmap}={"default"=>{-handler=>"mainsite",
+  $r->{rqmap}={"default"=>{-handler=>"defaultpage",
 			   -content=>"html"},
 	       "roles"=>{-handler=>"mainsite",
 			 -content=>"html",
@@ -24,36 +24,31 @@ sub new(){
   $s;
 }
 
-sub form(){
-
-}
-
-
-
-
-$digQuery="";
-
-use pkg_page;
-$p=pkg_page->new("/home/bwachter/public_html");
-
 sub queryDig {
+  my $s=shift;
   my $digNS=shift;
   my $digTypeName=shift;
+  my @digDomains=shift;
+  my $digQuery;
+
   foreach(@digDomains) {
     $digQuery.=`dig $digNS $_ $digTypeName`;
     $digQuery.="<hr>\n";
   }
+  $digQuery;
 }
 
+sub defaultpage(){
+  my $s=shift;
+  my $p=$s->{page};
 
-  my $digType=$p->pS($cgi->param('digType'));
-  my $digNS=$p->pS($cgi->param('digNS'));
-  my $digDomain=$p->pS($cgi->param('digDomain'));
-  my @digOptions=$cgi->param('digOption');
-  @digDomains=split("\n", $digDomain);
-  my @xopts={'trace', 'foo'};
+  my $digType=$p->{cgi}->param('digType');
+  my $digNS=$p->{cgi}->param('digNS');
+  my $digDomain=$p->{cgi}->param('digDomain');
+  my @digDomains=split("\n", $digDomain);
+  my ($digTypeName, $digQuery, $url);
 
-
+  $p->title("digger");
   if ($digType==0) { $digTypeName="any"; }
   elsif ($digType==1) { $digTypeName="A"; }
   elsif ( $digType==2) { $digTypeName="MX"; }
@@ -64,20 +59,13 @@ sub queryDig {
   elsif ( $digType==7) { $digTypeName="AXFR"; }
   else { $digTypeName="any"; }
 
-  if ($digDomain) { &queryDig($digNS, $digTypeName, @digDomains); }
+  if ($digDomain) { $digQuery=$s->queryDig($digNS, $digTypeName, @digDomains); }
 
-  $p->{'title'}="digger";
-  $p->printHeader();
-
-  $url="http://bwachter.lart.info/tools/dig.cgi?digType=$digType&digNS=$digNS&digDomain=$digDomain";
+  $url="http://$p->{rq_host}/$p->{rq_dir}/$p->{rq_file}?digType=$digType&digNS=$digNS&digDomain=$digDomain";
   $url=~s/\r\n/%0D%0A/g;
 
-  foreach (@digOptions) {
-    $p->{'body'}.="$_ <br>";
-  }
-
-  $p->{'body'}.="
-    <form action=\"/tools/dig.cgi\" method=\"post\">
+  $p->add("
+    <form action=\"$p->{rq_dir}/$p->{rq_file}\" method=\"post\">
     <table border=\"0\">
     <tr>
      <td colspan=\"2\">Domains, one per line</td>
@@ -117,6 +105,12 @@ sub queryDig {
     -->
     </table></form><hr>
     Use this link if you want to show the query to someone else: <a href=\"$url\">$url</a><hr>
-    <pre>$digQuery</pre>";
+    <pre>$digQuery</pre>");
+}
 
-   $p->printBody();
+1;
+
+
+
+
+
