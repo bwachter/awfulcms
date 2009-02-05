@@ -28,6 +28,9 @@ sub init{
   $c=AwfulCMS::Config->new($p->{rq_host});
   $p->status(400, "$c") if (ref($c) ne "AwfulCMS::Config");
 
+  eval "require Tie::RegexpHash" if ($c->getValue("main", "filematch"));
+  $p->status(400, "Require Tie::RegexpHash failed ($@)") if ($@);
+
   $roles=$c->getValues("roles");
 
   # add stylesheets
@@ -47,14 +50,17 @@ sub init{
 
 sub lookupModule{
   my $_modules=$c->getValues("mapping");
+my %hash=$c->getValues("mapping");
   my $_defaultmodule=$c->getValue("main", "defaultmodule")||"ModExample";
   my $_request=$p->{rq_dir};
+  my $_rqfile=$p->{rq_file};
 
   $_request=$p->{rq_file} if ($c->getValue("main", "filematch") 
 			      && $_request eq "." 
 			      && $p->{rq_file});
 
   return $_modules->{$_request} if (exists $_modules->{$_request});
+
   if ($c->getValue("main", "wildcardmappings")){
     my @t=split('/', $_request);
     my $t="";
@@ -64,6 +70,17 @@ sub lookupModule{
       $t.='/';
     }
   }
+
+  if ($c->getValue("main", "filematch")){
+    my $rehash = Tie::RegexpHash->new();
+    while (my($key, $value)=each(%$_modules)){
+      $key=~s/\*$// if ($c->getValue("main", "wildcardmappings"));
+      $rehash->add(qr/^$key/, $value);
+    }
+    my $match=$rehash->match($_rqfile);
+    return $match;
+  }
+
   return $_defaultmodule;
 }
 
@@ -82,7 +99,7 @@ sub doModule{
     $module="AwfulCMS::$module";
   }
 
-  $p->status(400, "Module not available") if ($c->getValue("modules", $module) != 1 &&
+  $p->status(400, "Module '$module' not available $fx") if ($c->getValue("modules", $module) != 1 &&
 					      $c->getValue("modules", $module_short) != 1);
   $p->status(404, "Module '$module' not found") if ($module eq "");
 
