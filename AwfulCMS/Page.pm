@@ -98,6 +98,7 @@ sub out {
   print "<title>$s->{title}</title>\n";
   print "</head><body>\n";
 
+  print $s->{preinclude} if ($s->{preinclude});
   # a hash to hold all main divs
   #  $s->{divmap}->{500}={'id'=>'content'};
   # a hash to hold divname -> number mappings
@@ -110,7 +111,7 @@ sub out {
     print div($s->{divhash}->{$divattr->{id}}, $divattr);
   }
 
-  #print $s->{body};
+  print $s->{postinclude} if ($s->{postinclude});
   print "</body></html>\n";
 }
 
@@ -123,6 +124,7 @@ sub status {
 
   $s->setHeader("Status", $status);
   $s->title("$status $s->{sdesc}->{$status}->{short}");
+  $s->clear();
   $s->add("<h1>$status $s->{sdesc}->{$status}->{short}</h1>");
   $s->add("<p>$s->{sdesc}->{$status}->{long}</p>");
   $s->add("<p>Additional information:</p><pre>$description</pre>");
@@ -150,9 +152,39 @@ sub add {
   #$s->{divmap}->{500}={'id'=>'content',
   #		       'class'=>'content'};
 
-
   $s->{divhash}->{$divname}.=$content;
-  $s->{body}.=$content;
+}
+
+sub clear {
+  my $s=shift;
+  my $content=shift;
+  my $divdesc=shift;
+
+  my $divname="content";
+  $s->{divhash}->{$divname}=""
+}
+
+sub prepend {
+  my $s=shift;
+  my $content=shift;
+  my $divdesc=shift;
+
+  my $divname="content";
+  $s->{divhash}->{$divname}=$content+$s->{divhash}->{$divname};
+}
+
+sub preinclude{
+  my $s=shift;
+  my $content=shift;
+
+  $s->{preinclude}.=$content;
+}
+
+sub postinclude{
+  my $s=shift;
+  my $content=shift;
+
+  $s->{postinclude}.=$content;
 }
 
 sub setHeader {
