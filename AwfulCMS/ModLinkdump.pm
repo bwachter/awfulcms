@@ -1,5 +1,29 @@
 package AwfulCMS::ModLinkdump;
 
+=head1 AwfulCMS::ModLinkdump
+
+This module provides a method to dump links into several categories, 
+and display either all links, all links in one category, or a single link.
+
+=head2 Configuration parameters
+
+=over
+
+=item * authcookie=<string>
+
+If this option is configured clients presenting a cookie named `canpost'
+and this value are allowed to add new links.
+
+=item * setcookie=<int>
+
+Set a cookie with the value specified in `authcookie' on requests. 
+Obviously you need to set `authcookie' for this to work. 
+Default is 0 (disabled)
+
+=back
+
+=cut
+
 use strict;
 
 sub new(){

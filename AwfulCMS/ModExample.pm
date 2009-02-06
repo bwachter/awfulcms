@@ -1,5 +1,16 @@
 package AwfulCMS::ModExample;
 
+=head1 AwfulCMS::ModExample
+
+This is a small example module to demonstrate how to build an AwfulCMS module. 
+Currently it just displays the requested host/file/directory
+
+=head2 Configuration parameters
+
+This module does not have any configurable options.
+
+=cut
+
 use strict;
 use AwfulCMS::Page qw(:tags);
 

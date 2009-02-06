@@ -1,5 +1,22 @@
 package AwfulCMS::Mod404;
 
+=head1 AwfulCMS::Mod404
+
+This module returns a 404 (not found) state, together with a configurable error message.
+You can use this as the default module if you don't want every url to match something.
+
+=head2 Configuration parameters
+
+=over
+
+=item * errortext=<string>
+
+The text to display on the 404-page
+
+=back
+
+=cut
+
 use strict;
 
 sub new(){

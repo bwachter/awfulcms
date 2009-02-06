@@ -1,5 +1,30 @@
 package AwfulCMS::ModMidget;
 
+=head1 AwfulCMS::ModMidget
+
+This module allows retrieving a Usenet article by message-ID from either a 
+NNTP-server or Google groups.
+
+=head2 Configuration parameters
+
+=over
+
+=item * useragent=<string>
+
+The useragent to use for HTTP-Requests. Google will most likely not
+allow requests if you don't set this option. Something like Mozilla/5.0
+should work fine.
+
+=item * newsserver=<string>
+
+The default newsserver to display in the web form. The name can be changed
+before submitting the form, it's just a bit more convenient not having to 
+type in a newsserver name for every lookup
+
+=back
+
+=cut
+
 use strict;
 
 sub new(){

@@ -1,5 +1,15 @@
 package AwfulCMS::ModDig;
 
+=head1 AwfulCMS::ModDig
+
+This module provides a frontend to the `dig' DNS lookup utility
+
+=head2 Configuration parameters
+
+This module does not have any configurable options.
+
+=cut
+
 use strict;
 
 sub new(){

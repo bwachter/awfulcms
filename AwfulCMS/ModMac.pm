@@ -1,5 +1,16 @@
 package AwfulCMS::ModMac;
 
+=head1 AwfulCMS::ModMac
+
+This module allows manufacturer lookups for MAC-addresses against a 
+MySQL database.
+
+=head2 Configuration parameters
+
+This module does not have any configurable options.
+
+=cut
+
 use strict;
 
 sub new(){

@@ -1,5 +1,52 @@
 package AwfulCMS::ModDirIndex;
 
+=head1 AwfulCMS::ModDirIndex
+
+This module provides a fancy directory listing. 
+Features like showing file type information and generating thumbnails
+of images are configurable.
+
+=head2 Configuration parameters
+
+=over
+
+=item * iconset=<string>
+
+A (preferably absolute) path to the directory where the icons reside. 
+The path needs to be absolute to the document root.
+
+=item * fileinfo=<int>
+
+Toggles display (and retrieving) of file type information. Default value is 0 (disabled).
+
+=item * preview=<int>
+
+Toggles display (and generation) of thumbnails for jpeg, png and gif files. Only works if `fileinfo' is set to `1'. Default value is 0 (disabled).
+
+=item * fileicon=<string>
+
+The icon name for files, relative to the `iconset' directory. Default is file.png.
+
+=item * diricon=<string>
+
+The icon name for directories, relative to the `iconset' directory. Default is directory.png.
+
+=item * icon-<mime-type>=<string>
+
+Set an icon different from the default fileicon for <mimetype>. The specified filename needs to be relative to the directory specified in `iconset'. Example: `icon-application/pdf=pdf.png'
+
+=item * preview-maxx
+
+The maximum x-Resolution of thumbnail images in pixels. Default is 150.
+
+=item * preview-maxy
+
+The maximum y-Resolution of thumbnail images in pixels. Default is 150.
+
+=back
+
+=cut
+
 use strict;
 use AwfulCMS::LibFS qw(lsx ls);
 use AwfulCMS::LibGraphic qw(thumbnail);

@@ -2,6 +2,8 @@ package AwfulCMS::ModBlog;
 
 =head1 AwfulCMS::ModBlog
 
+This module provides a minimalistic blog, currently read only for web access. A simple command line client exists.
+
 =head2 Configuration parameters
 
 =over

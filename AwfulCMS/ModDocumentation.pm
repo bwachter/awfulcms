@@ -1,5 +1,21 @@
 package AwfulCMS::ModDocumentation;
 
+=head1 AwfulCMS::ModDocumentation
+
+This module extracts and displays POD-Information from AwfulCMS modules and scripts.
+
+=head2 Configuration parameters
+
+=over
+
+=item * modulepath=<string>
+
+The installation path of AwfulCMS
+
+=back
+
+=cut
+
 use AwfulCMS::LibFS qw(ls);
 use strict;
 
@@ -38,7 +54,7 @@ sub contentlisting(){
     ls($s->{mc}->{modulepath}."$dir", \@files)||
       $p->status(500, "Unable to open directory $dir");
     $p->add("<li>$dir<ul>");
-    foreach(@files){
+    foreach(sort(@files)){
       next unless ($_=~/\.pm$/||$_=~/\.cgi$/||$_=~/\.pl$/);
       $p->add("<li><a href=\"$s->{target}?req=pod&file=$dir/$_\">$_</a></li>");
     }
@@ -63,14 +79,17 @@ sub podview(){
   $p->status(500, $@) if ($@);
 
   $file=~s/^[^a-zA-Z0-9]*//;
-  $p->add($file);
 
   $s->contentlisting() if ($file eq "");
 
   my $output;
   my $parser = Pod::Simple::HTML->new();
   $parser->output_string(\$output);
-  $parser->parse_from_file($s->{target}."/$file");
+  $parser->set_source($s->{mc}->{modulepath}."/$file");
+  $parser->run();
+  $output="<p>Sorry, no documentation exists for $file</p>" if ($output eq "");
+  $p->add($output);
+  return;
 }
 
 1;
