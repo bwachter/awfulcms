@@ -38,11 +38,12 @@ sub new {
   $s->{header}->{"Content-type"}="text/html" unless defined $s->{header}->{"Content-type"};
   $s->{cgi}=new CGI;
   $s->{rq_host}=$s->{cgi}->virtual_host();
-  $s->{rq_file}=$s->{cgi}->url(-absolute => 1);
-  $s->{rq_file}=~s/^\///;
-  $s->{rq_file}=~s/%20/ /;
-  ($s->{rq_dir})=$s->{rq_file}=~m/(.*)\/(.*)/;
+  $s->{rq_fileabs}=$s->{cgi}->url(-absolute => 1);
+  $s->{rq_fileabs}=~s/^\///;
+  $s->{rq_fileabs}=~s/%20/ /;
+  ($s->{rq_dir})=$s->{rq_fileabs}=~m/(.*)\/(.*)/;
   $s->{rq_dir}="." if ($s->{rq_dir} eq "");
+  ($s->{rq_file})=$s->{rq_fileabs}=~m/.*\/(.*)/;
   $s->{rq_vars}=$s->{cgi}->Vars();
 
   $s->{sdesc}={

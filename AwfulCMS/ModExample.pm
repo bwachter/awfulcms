@@ -36,7 +36,7 @@ sub mainsite(){
   $s->{page}->add("Example page");
 
   $s->{page}->add("<ul><li>Requested host: $s->{page}->{rq_host}</li>".
-		  "<li>Requested file: $s->{page}->{rq_file}</li>".
+		  "<li>Requested file: $s->{page}->{rq_file} ($s->{page}->{rq_fileabs})</li>".
 		  "<li>Requested directory: $s->{page}->{rq_dir}</li>".
 		  "</ul>");
 }

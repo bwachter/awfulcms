@@ -53,11 +53,11 @@ sub lookupModule{
 my %hash=$c->getValues("mapping");
   my $_defaultmodule=$c->getValue("main", "defaultmodule")||"ModExample";
   my $_request=$p->{rq_dir};
-  my $_rqfile=$p->{rq_file};
+  my $_rqfile=$p->{rq_fileabs};
 
-  $_request=$p->{rq_file} if ($c->getValue("main", "filematch") 
+  $_request=$p->{rq_fileabs} if ($c->getValue("main", "filematch") 
 			      && $_request eq "." 
-			      && $p->{rq_file});
+			      && $p->{rq_fileabs});
 
   return $_modules->{$_request} if (exists $_modules->{$_request});
 
