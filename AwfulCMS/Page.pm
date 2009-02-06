@@ -96,8 +96,16 @@ sub out {
   if (defined $s->{header}){
     if (ref($s->{header}) eq "HASH"){
       my ($key, $value);
-      print "$key: $value\n" while (($key, $value)=each(%{$s->{header}}));
+      while (($key, $value)=each(%{$s->{header}})){
+	$value=~s/\n*$//;
+	print "$key: $value\n";
+      }
     } else { print $s->{header}; }
+    if (ref($s->{cookies}) eq "ARRAY"){
+      foreach(@{$s->{cookies}}){
+	print "Set-Cookie: $_\n";
+      }
+    }
     print "\n";
   }
 
@@ -201,6 +209,21 @@ sub setHeader {
   my $headerValue=shift;
 
   $s->{header}->{$headerName}=$headerValue;
+}
+
+sub appendHeader {
+  my $s=shift;
+  my $headerName=shift;
+  my $headerValue=shift;
+
+  $s->{header}->{$headerName}.=$headerValue;
+}
+
+sub addCookie {
+  my $s=shift;
+  my $cookie=shift;
+  my $expire=gmtime(time()+365*24*3600)." GMT";
+  push (@{$s->{cookies}}, "$cookie; expires=$expire");
 }
 
 =item tag()
@@ -317,6 +340,20 @@ sub pOption {
   else { $add="" }
 
   "<option value=\"$value\" $add>$name</option>";
+}
+
+sub pString {
+  my $s=shift;
+  my $string=shift;
+
+  $string=~s/\n/<br \/>/g;
+  # .*? -- non-greedy matching...
+  $string=~s/\[\[img:\/\/(.*?)\|\|(.*?)\]\]/<img src="$1" alt="$2" \/>/g;
+  $string=~s/\[\[(.*?)\|\|(.*?)\]\]/<a href="$1">$2<\/a>/g;
+  $string=~s/-"(.*?)"-/<\/p><blockquote><p>$1<\/p><\/blockquote><p>/gs;
+  $string=~s/-\[(.*?)\]-/<\/p><pre>$1<\/pre><p>/gs;
+
+  $string;
 }
 
 1;
