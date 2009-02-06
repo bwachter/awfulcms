@@ -12,7 +12,7 @@ sub ls {
   my $dirs=shift;
   my $dotfiles=shift;
 
-  opendir(D, $dir);
+  opendir(D, $dir)||return 0;
   my @f = readdir(D);
   closedir(D);
 
@@ -33,6 +33,7 @@ sub ls {
       next;
     }
   }
+  return 1;
 }
 
 sub lsx{
@@ -49,7 +50,7 @@ sub lsx{
 
   my $ft=File::Type->new();
 
-  opendir(D, $dir);
+  opendir(D, $dir)||return 0;
   my @f = readdir(D);
   closedir(D);
 
@@ -81,6 +82,7 @@ sub lsx{
 	}
     }
   }
+  return 1;
 }
 
 sub openreadclose{
