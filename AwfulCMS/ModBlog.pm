@@ -1,5 +1,19 @@
 package AwfulCMS::ModBlog;
 
+=head1 AwfulCMS::ModBlog
+
+=head2 Configuration parameters
+
+=over
+
+=item * numarticles=<int>
+
+The number of articles to display on one page
+
+=back
+
+=cut
+
 use strict;
 use AwfulCMS::Page qw(:tags);
 use AwfulCMS::LibUtil qw(navwidget);
