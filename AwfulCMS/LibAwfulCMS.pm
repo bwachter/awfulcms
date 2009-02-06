@@ -161,7 +161,8 @@ sub doRequest{
     $o->{password}=$dbc->{$handle}->{$snum}->{password}||$dbc->{$handle}->{password}||"";
 
     $p->dbhandle({dsn=>"dbi:$o->{type}:dbname=$o->{dbname}", user=>"$o->{user}",
-		  password=>"$o->{password}", attr=>{RaiseError=>0,AutoCommit=>1}});
+		  password=>"$o->{password}", attr=>{RaiseError=>0,AutoCommit=>1},
+		 handle=>$handle});
   }
 
   $call=$r->{rqmap}->{$request}->{-handler};

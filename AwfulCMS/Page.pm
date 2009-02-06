@@ -80,7 +80,7 @@ sub dbhandle {
 
   $s->{dbh}=DBI->connect($dbcon->{dsn}, $dbcon->{user}, 
 			 $dbcon->{password}, $dbcon->{attr}) ||
-			   $s->status(500, "DBI->connect(): ". DBI->errstr);
+			   $s->status(500, "DBI->connect($dbcon->{handle}): ". DBI->errstr);
 }
 
 sub setModule{
