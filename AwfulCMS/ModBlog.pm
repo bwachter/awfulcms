@@ -205,7 +205,7 @@ sub defaultpage(){
   my $s=shift;
   my $p=$s->{page};
 
-  $p->add("<a href=\"?req=dropdb\">Drop database</a> | <a href=\"?req=createdb\">Drop and create database</a> | <a href=\"/\">Blog</a>");
+  #$p->add("<a href=\"?req=dropdb\">Drop database</a> | <a href=\"?req=createdb\">Drop and create database</a> | <a href=\"/\">Blog</a>");
   $s->getPosts();
 }
 
