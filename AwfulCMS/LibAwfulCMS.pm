@@ -50,7 +50,6 @@ sub init{
 
 sub lookupModule{
   my $_modules=$c->getValues("mapping");
-my %hash=$c->getValues("mapping");
   my $_defaultmodule=$c->getValue("main", "defaultmodule")||"ModExample";
   my $_request=$p->{rq_dir};
   my $_rqfile=$p->{rq_fileabs};
@@ -113,6 +112,7 @@ sub doModule{
 }
 
 sub doRequest{
+  $p->setModule($module);
   # FIXME, include code needs some serious redesigning
   $p->preinclude(openreadclose($c->getValue("main", "top-include")))
     if ($c->getValue("main", "top-include") && $r->{mc}->{'no-global-includes'}!=1);
@@ -148,7 +148,7 @@ sub doRequest{
     my $handle=$r->{rqmap}->{$request}->{-dbhandle};
     my $snum=1;
     $handle="default" if (not defined $dbc->{$handle});
-    $p->status(400, "There's no configuration for DB-handle '$handle'") if (not defined $dbc->{$handle});
+    $p->status(500, "There's no configuration for DB-handle '$handle'") if (not defined $dbc->{$handle});
     my $o={};
     if ($dbc->{$handle}->{access} eq "rr"){
       $snum=int(rand($dbc->{$handle}->{srvcnt})+1);

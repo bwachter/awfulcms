@@ -89,7 +89,6 @@ sub defaultpage(){
   my $mid=$p->{cgi}->param('mid') if ($p->{cgi}->param('mid'));
   my $submit=$p->{cgi}->param('submit');
 
-$mid='6v2f1fFi2guiU3@mid.individual.net';
   $p->title("midget");
   $p->add("<h1>midget</h1>
 <form name=\"foo\" method=\"post\" action=\"/$p->{rq_dir}/$p->{rq_file}\"><table border=\"0\">

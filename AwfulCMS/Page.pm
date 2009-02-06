@@ -79,7 +79,15 @@ sub dbhandle {
   $s->status(400, $@) if ($@);
 
   $s->{dbh}=DBI->connect($dbcon->{dsn}, $dbcon->{user}, 
-			 $dbcon->{password}, $dbcon->{attr}) || 			   $s->status(400, "DBI->connect(): ". DBI->errstr);
+			 $dbcon->{password}, $dbcon->{attr}) ||
+			   $s->status(500, "DBI->connect(): ". DBI->errstr);
+}
+
+sub setModule{
+  my $s=shift;
+  my $module=shift;
+
+  $s->{module}=$module;
 }
 
 sub out {
@@ -123,7 +131,7 @@ sub status {
   $description="Not given" if (not defined $description);
 
   $s->setHeader("Status", $status);
-  $s->title("$status $s->{sdesc}->{$status}->{short}");
+  $s->title("$status $s->{sdesc}->{$status}->{short} ($s->{module})");
   $s->clear();
   $s->add("<h1>$status $s->{sdesc}->{$status}->{short}</h1>");
   $s->add("<p>$s->{sdesc}->{$status}->{long}</p>");
