@@ -113,10 +113,15 @@ sub doModule{
 }
 
 sub doRequest{
-  $p->add(openreadclose($c->getValue("main", "top-include")))
+  # FIXME, include code needs some serious redesigning
+  $p->preinclude(openreadclose($c->getValue("main", "top-include")))
     if ($c->getValue("main", "top-include") && $r->{mc}->{'no-global-includes'}!=1);
-  $p->add(openreadclose($r->{mc}->{'top-include'}))
+  $p->preinclude(openreadclose($r->{mc}->{'top-include'}))
     if (defined $r->{mc}->{'top-include'});
+  $p->postinclude(openreadclose($c->getValue("main", "bottom-include")))
+    if ($c->getValue("main", "bottom-include") && $r->{mc}->{'no-global-includes'}!=1);
+  $p->postinclude(openreadclose($r->{mc}->{'bottom-include'}))
+    if (defined $r->{mc}->{'bottom-include'});
 
   unless (defined $r->{rqmap}->{$request}->{-handler}){
     if (defined $r->{rqmap}->{default}->{-handler}){
@@ -160,11 +165,6 @@ sub doRequest{
   }
 
   $call=$r->{rqmap}->{$request}->{-handler};
-
-  $p->add(openreadclose($c->getValue("main", "bottom-include")))
-    if ($c->getValue("main", "bottom-include") && $r->{mc}->{'no-global-includes'}!=1);
-  $p->add(openreadclose($r->{mc}->{'bottom-include'}))
-    if (defined $r->{mc}->{'bottom-include'});
 }
 
 sub done{
