@@ -74,11 +74,12 @@ my %hash=$c->getValues("mapping");
   if ($c->getValue("main", "filematch")){
     my $rehash = Tie::RegexpHash->new();
     while (my($key, $value)=each(%$_modules)){
+      next if ($key eq ".");
       $key=~s/\*$// if ($c->getValue("main", "wildcardmappings"));
       $rehash->add(qr/^$key/, $value);
     }
     my $match=$rehash->match($_rqfile);
-    return $match;
+    return $match if ($match);
   }
 
   return $_defaultmodule;
