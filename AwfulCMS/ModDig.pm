@@ -65,7 +65,7 @@ sub defaultpage(){
   $url=~s/\r\n/%0D%0A/g;
 
   $p->add("
-    <form action=\"$p->{rq_dir}/$p->{rq_file}\" method=\"post\">
+    <form action=\"/$p->{rq_dir}/$p->{rq_file}\" method=\"post\">
     <table border=\"0\">
     <tr>
      <td colspan=\"2\">Domains, one per line</td>
