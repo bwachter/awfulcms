@@ -16,8 +16,7 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html",
-			   -dbhandle=>"blog"}
+			   -content=>"html"}
 	      };
   $s->{mc}=$r->{mc};
   $s->{mc}->{iconset}="/icons/themes/simple" unless (defined $s->{mc}->{iconset});
