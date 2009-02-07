@@ -16,7 +16,7 @@ The installation path of AwfulCMS
 
 =cut
 
-use AwfulCMS::LibFS qw(ls);
+use AwfulCMS::LibFS qw(ls openreadclose);
 use strict;
 
 sub new(){
@@ -55,7 +55,7 @@ sub contentlisting(){
       $p->status(500, "Unable to open directory $dir");
     $p->add("<li>$dir<ul>");
     foreach(sort(@files)){
-      next unless ($_=~/\.pm$/||$_=~/\.cgi$/||$_=~/\.pl$/);
+      next unless ($_=~/(\.p[ml])$|(\.pod)$|(\.cgi)$/);
       $p->add("<li><a href=\"$s->{target}?req=pod&file=$dir/$_\">$_</a></li>");
     }
     $p->add("</ul></li>");
@@ -82,10 +82,13 @@ sub podview(){
 
   $s->contentlisting() if ($file eq "");
 
+  my $input=openreadclose($s->{mc}->{modulepath}."/$file");
+  $p->status(404, "Sorry, $file does not exist") if ($input eq "");
+
   my $output;
   my $parser = Pod::Simple::HTML->new();
   $parser->output_string(\$output);
-  $parser->set_source($s->{mc}->{modulepath}."/$file");
+  $parser->set_source(\$input);
   $parser->run();
   $output="<p>Sorry, no documentation exists for $file</p>" if ($output eq "");
   $p->add($output);
