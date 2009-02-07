@@ -134,7 +134,7 @@ scalar containing the file contents.
 
 sub openreadclose{
   my $file=shift;
-  open(FILE, "<$file");
+  open(FILE, "<$file")||return;
   my @fcontent=<FILE>;
   close(FILE);
   join('', @fcontent);
