@@ -14,6 +14,18 @@ The installation path of AwfulCMS
 
 =back
 
+=head2 Related information
+
+=over
+
+=item * L<http://perldoc.perl.org/Pod/Simple/HTML.html>
+
+=item * L<http://perldoc.perl.org/Pod/Simple/PullParser.html>
+
+=item * L<http://perldoc.perl.org/perlpod.html>
+
+=back
+
 =cut
 
 use AwfulCMS::LibFS qw(ls openreadclose);
