@@ -79,6 +79,7 @@ sub defaultpage(){
   my $s=shift;
   my $p=$s->{page};
 
+  $p->title("AwfulCMS Documentation");
   $s->contentlisting();
 }
 
