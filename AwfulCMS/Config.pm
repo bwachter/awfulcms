@@ -1,5 +1,36 @@
 package AwfulCMS::Config;
 
+=head1 AwfulCMS::Config
+
+This module provides functions to read and interpret the AwfulCMS config file.
+
+=head2 Configuration parameters
+
+There are no configuration parameters outside this module. 
+
+=head2 File format
+
+The configuration file is divided in several section, starting with 
+`section <sectionname>' and ending with `endsection'. All text which 
+is not between those keywords is treated as comments. Inside a section
+everything after a `#' sign is ignored.
+
+Each section can have its own syntax, though most sections just use
+simple key=value-pairs. 
+
+=head3 Section parsers
+
+This module comes with two predefined section parsers, a key=value-parser,
+and a parser for the database section. You can change parser assignments
+to section keywords in the code of this module. If there's no assignment
+for a section the key=value-parser is used.
+
+=head2 Module functions
+
+=over
+
+=cut
+
 use strict;
 
 sub new(){
@@ -65,6 +96,10 @@ sub new(){
   $s;
 }
 
+=item getValues()
+
+=cut
+
 sub getValues(){
   my $s=shift;
   my $type=shift;
@@ -76,6 +111,10 @@ sub getValues(){
 
   return $s->{"c_$type"};
 }
+
+=item getValue()
+
+=cut
 
 sub getValue(){
   my $s=shift;
@@ -90,6 +129,10 @@ sub getValue(){
   return "" if (not defined $s->{"c_$type"}->{$value});
   return $s->{"c_$type"}->{$value};
 }
+
+=item parseconfig()
+
+=cut
 
 sub parseconfig(){
   my $s=shift;
@@ -153,3 +196,7 @@ sub dbParser(){
 }
 
 1;
+
+=back
+
+=cut

@@ -1,10 +1,35 @@
 package AwfulCMS::LibFS;
 
+=head1 AwfulCMS::LibFS
+
+This library provides a few functions for file(system) operations.
+
+=head2 Configuration parameters
+
+There are no configuration parameters outside this module. 
+
+=head2 Module functions
+
+C<our @EXPORT_OK=qw(ls lsx openreadclose);>
+
+=over
+
+=cut
+
 use strict;
 use File::Type;
 
 use Exporter 'import';
 our @EXPORT_OK=qw(ls lsx openreadclose);
+
+=item ls($dir, \@files, [\@dirs, [\@dotfiles]])
+
+Lists the contents of the directory in `$dir', and fills the arrays
+provided by reference with the files, directories and dotfiles.
+
+The function returns 0 on error, 1 on success.
+
+=cut
 
 sub ls {
   my $dir=shift;
@@ -35,6 +60,21 @@ sub ls {
   }
   return 1;
 }
+
+=item lsx($dir, \%files, [\@dirs, [\%dotfiles], [$checktype]])
+
+Lists the contents of the directory in `$dir', and fills the arrays/hashes
+provided by reference with the files, directories and dotfiles.
+
+If $checktype is set to 1 the function will perform file type and size
+lookup, and include this information in the referenced hash. If $checktype
+is set to any other value the hash will just include the filename.
+
+It's possible to specify $checktype without a hash for %dotfiles.
+
+The function returns 0 on error, 1 on success.
+
+=cut
 
 sub lsx{
   my $dir=shift;
@@ -85,6 +125,13 @@ sub lsx{
   return 1;
 }
 
+=item openreadclose($file)
+
+Opens the file `$file', reads it completely, joins the line, and returns a 
+scalar containing the file contents.
+
+=cut
+
 sub openreadclose{
   my $file=shift;
   open(FILE, "<$file");
@@ -94,3 +141,7 @@ sub openreadclose{
 }
 
 1;
+
+=back
+
+=cut

@@ -1,10 +1,34 @@
 package AwfulCMS::LibGraphic;
 
+=head1 AwfulCMS::LibGraphic
+
+This library provides a few functions for graphic manipulation
+
+=head2 Configuration parameters
+
+There are no configuration parameters outside this module. 
+
+=head2 Module functions
+
+C<our @EXPORT_OK=qw(thumbnail);>
+
+=over
+
+=cut
+
 use strict;
 use GD;
 
 use Exporter 'import';
 our @EXPORT_OK=qw(thumbnail);
+
+=item thumbnail(%options)
+
+Generates a thumbnail image.
+
+The option hash must contain the keys directory, filename, type, maxx and maxy.
+
+=cut
 
 sub thumbnail {
   my $opts=shift;
@@ -61,3 +85,9 @@ sub thumbnail {
   close(IM);
   return $outfile;
 }
+
+1;
+
+=back
+
+=cut
