@@ -1,10 +1,32 @@
 package AwfulCMS::LibUtil;
 
+=head1 AwfulCMS::LibAwfulCMS
+
+This is the AwfulCMS core library.
+
+=head2 Configuration parameters
+
+There are no configuration parameters outside this module. 
+
+=head2 Module functions
+
+our @EXPORT_OK=qw(navwidget);
+
+=over
+
+=cut
+
 use strict;
 use AwfulCMS::Page qw(:tags);
 
 use Exporter 'import';
 our @EXPORT_OK=qw(navwidget);
+
+=item navwidget(%options)
+
+TODO
+
+=cut
 
 sub navwidget{
   my $nav;
@@ -45,3 +67,7 @@ sub navwidget{
 }
 
 1;
+
+=back
+
+=cut

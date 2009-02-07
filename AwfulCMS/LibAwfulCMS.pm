@@ -1,5 +1,21 @@
 package AwfulCMS::LibAwfulCMS;
 
+=head1 AwfulCMS::LibAwfulCMS
+
+This is the AwfulCMS core library.
+
+=head2 Configuration parameters
+
+There are no configuration parameters outside this module. 
+
+=head2 Module functions
+
+our @EXPORT_OK=qw(handleCGI);
+
+=over
+
+=cut
+
 use strict;
 use AwfulCMS::Page;
 use AwfulCMS::Config;
@@ -19,6 +35,12 @@ my ($p, # the page object
     $roles);
 
 my $r={}; # the hash reference for the module configuration / request handlers
+
+=item init()
+
+TODO
+
+=cut
 
 sub init{
   # set up a page for later use and find out about module and request foo
@@ -47,6 +69,12 @@ sub init{
   }
   #die $request."--".$p->{rq_dir}."--".$p->{rq_file}."--".$p->{cgi}->param("req")."--";
 }
+
+=item lookupModule()
+
+TODO
+
+=cut
 
 sub lookupModule{
   my $_modules=$c->getValues("mapping");
@@ -84,6 +112,12 @@ sub lookupModule{
   return $_defaultmodule;
 }
 
+=item doModule()
+
+TODO
+
+=cut
+
 sub doModule{
   $module=lookupModule();
   if (defined($p->{rq_vars}->{mod})){
@@ -110,6 +144,12 @@ sub doModule{
   $m=$module->new($r, $p);
   $p->status(400, "Unable to load module '$module'") if (ref($m) ne $module);
 }
+
+=item doRequest()
+
+TODO
+
+=cut
 
 sub doRequest{
   $p->setModule($module);
@@ -168,10 +208,22 @@ sub doRequest{
   $call=$r->{rqmap}->{$request}->{-handler};
 }
 
+=item done()
+
+TODO
+
+=cut
+
 sub done{
   $m->$call();
   $p->out();
 }
+
+=item handleCGI()
+
+TODO
+
+=cut
 
 sub handleCGI{
   init();
@@ -181,3 +233,7 @@ sub handleCGI{
 }
 
 1;
+
+=back
+
+=cut

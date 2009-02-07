@@ -98,6 +98,8 @@ sub new(){
 
 =item getValues()
 
+TODO
+
 =cut
 
 sub getValues(){
@@ -113,6 +115,8 @@ sub getValues(){
 }
 
 =item getValue()
+
+TODO
 
 =cut
 
@@ -131,6 +135,8 @@ sub getValue(){
 }
 
 =item parseconfig()
+
+TODO
 
 =cut
 

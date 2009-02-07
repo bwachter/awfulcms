@@ -1,6 +1,24 @@
 # http://www.troubleshooters.com/codecorn/littperl/perlreg.htm
 package AwfulCMS::Page;
 
+=head1 AwfulCMS::Page
+
+This is the AwfulCMS core library.
+
+=head2 Configuration parameters
+
+There are no configuration parameters outside this module. 
+
+=head2 Module functions
+
+our @EXPORT_OK=qw(a div h1 h2 h3 h4 h5 h6 hr p);
+
+our %EXPORT_TAGS = ( tags=>[ @EXPORT_OK ] );
+
+=over
+
+=cut
+
 use CGI;
 use strict;
 
@@ -71,6 +89,12 @@ sub DESTROY {
 
 # DB functions
 
+=item dbhandle(%dbcon)
+
+TODO
+
+=cut
+
 sub dbhandle {
   my $s=shift;
   my $dbcon=shift;
@@ -83,12 +107,24 @@ sub dbhandle {
 			   $s->status(500, "DBI->connect($dbcon->{handle}): ". DBI->errstr);
 }
 
+=item setModule()
+
+TODO
+
+=cut
+
 sub setModule{
   my $s=shift;
   my $module=shift;
 
   $s->{module}=$module;
 }
+
+=item out()
+
+TODO
+
+=cut
 
 sub out {
   my $s=shift;
@@ -131,6 +167,12 @@ sub out {
   print "</body></html>\n";
 }
 
+=item status($status, $description)
+
+TODO
+
+=cut
+
 sub status {
   my $s=shift;
   my $status=shift;
@@ -148,11 +190,23 @@ sub status {
   exit;
 }
 
+=item title($title)
+
+TODO
+
+=cut
+
 sub title {
   my $s=shift;
   my $title=shift;
   $s->{'title'}=$title;
 }
+
+=item add($content, [$divdesc])
+
+TODO
+
+=cut
 
 sub add {
   my $s=shift;
@@ -171,6 +225,12 @@ sub add {
   $s->{divhash}->{$divname}.=$content;
 }
 
+=item clear()
+
+TODO
+
+=cut
+
 sub clear {
   my $s=shift;
   my $content=shift;
@@ -179,6 +239,12 @@ sub clear {
   my $divname="content";
   $s->{divhash}->{$divname}=""
 }
+
+=item prepend()
+
+TODO
+
+=cut
 
 sub prepend {
   my $s=shift;
@@ -189,6 +255,12 @@ sub prepend {
   $s->{divhash}->{$divname}=$content+$s->{divhash}->{$divname};
 }
 
+=item preinclude()
+
+TODO
+
+=cut
+
 sub preinclude{
   my $s=shift;
   my $content=shift;
@@ -196,12 +268,24 @@ sub preinclude{
   $s->{preinclude}.=$content;
 }
 
+=item postinclude()
+
+TODO
+
+=cut
+
 sub postinclude{
   my $s=shift;
   my $content=shift;
 
   $s->{postinclude}.=$content;
 }
+
+=item setHeader($headerName, $headerValue)
+
+TODO
+
+=cut
 
 sub setHeader {
   my $s=shift;
@@ -211,6 +295,12 @@ sub setHeader {
   $s->{header}->{$headerName}=$headerValue;
 }
 
+=item appendHeader($headerName, $headerValue)
+
+TODO
+
+=cut
+
 sub appendHeader {
   my $s=shift;
   my $headerName=shift;
@@ -218,6 +308,12 @@ sub appendHeader {
 
   $s->{header}->{$headerName}.=$headerValue;
 }
+
+=item addCookie($cookie)
+
+TODO
+
+=cut
 
 sub addCookie {
   my $s=shift;
@@ -357,3 +453,7 @@ sub pString {
 }
 
 1;
+
+=back
+
+=cut
