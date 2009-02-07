@@ -95,6 +95,7 @@ sub podview(){
   $file=~s/^[^a-zA-Z0-9]*//;
 
   $s->contentlisting() if ($file eq "");
+  $p->title("Documentation for $file");
 
   my $input=openreadclose($s->{mc}->{modulepath}."/$file");
   $p->status(404, "Sorry, $file does not exist") if ($input eq "");

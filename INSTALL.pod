@@ -1,0 +1,30 @@
+
+=head1 INSTALL
+
+=head2 Getting the source
+
+C<git clone L<git://git.pimp.lart.info/awfulcms>>
+
+=head2 Web server configuration
+
+=head3 Lighttpd
+
+=over
+
+=item Set /awfulcms.cgi as the last possible directory index:
+
+C<index-file.names = ("index.html", "/awfulcms.cgi")>
+
+=item Set the error-handler if you want filematching to work:
+
+C<server.error-handler-404 = "/awfulcms.cgi">
+
+=back
+
+=head3 Apache
+
+=head3 Other webservers
+
+=head2 AwfulCMS configuration
+
+=cut
