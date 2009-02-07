@@ -75,6 +75,8 @@ sub podview(){
   my $p=$s->{page};
   my $file=$p->{cgi}->param("file");
 
+  $p->add("<p><a href=\"$s->{target}\">Go back to the index</a></p>");
+
   eval "require Pod::Simple::HTML";
   $p->status(500, $@) if ($@);
 
