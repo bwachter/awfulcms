@@ -75,7 +75,7 @@ sub formatArticle{
   my $body=AwfulCMS::SynBasic->format($d->{body});
 
   my $ret=
-    div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"?article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
       div("<p>$body</p>", {'class'=>'newsbody'}).
 	div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
 	  "<br class=\"l\" /><br class=\"l\" />";
@@ -150,7 +150,7 @@ sub getPosts{
     $cmtstring = "1 comment" if ($ccnt==1);
 
     $p->add(div("<!-- start news entry -->".
-		    div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+		    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
 		    div("<p>$body</p>", {'class'=>'newsbody'}).
 		    div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">$cmtstring</a>", {'class'=>'newsfoot'}).
 		    "<br class=\"l\" /><br class=\"l\" />", {'class'=>'news'}));
@@ -189,7 +189,6 @@ sub editform{
   <input type=\"hidden\" name=\"id\" value=\"$id\">
   <input type=\"hidden\" name=\"pid\" value=\"$pid\">
   <input type=\"hidden\" name=\"q\" value=\"add\">
-  <input type=\"hidden\" name=\"topic\" value=\"0\">
   <table border=\"0\">
   <tr>
    <td>Subject:</td>
@@ -235,7 +234,6 @@ sub createdb{
        "subject tinytext NOT NULL,".
        "body text NOT NULL,".
        "created bigint(20) default NULL,".
-       "topic tinyint(4) default NULL,".
        "lang tinyint(4) NOT NULL default '0',".
        "pid int(11) NOT NULL default '0',".
        "rpid int(11) NOT NULL default '0',".
@@ -273,7 +271,6 @@ sub createdb{
        "subject tinytext NOT NULL,".
        "body text NOT NULL,".
        "created bigint(20) default NULL,".
-       "topic tinyint(4) default NULL,".
        "lang tinyint(4) NOT NULL default '0',".
        "pid int(11) NOT NULL default '0',".
        "`name` tinytext NOT NULL,".
