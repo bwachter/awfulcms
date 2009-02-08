@@ -125,7 +125,7 @@ sub lsx{
   return 1;
 }
 
-=item openreadclose($file)
+=item openreadclose($file, [\@resultlist])
 
 Opens the file `$file', reads it completely, joins the line, and returns a 
 scalar containing the file contents.
@@ -134,9 +134,12 @@ scalar containing the file contents.
 
 sub openreadclose{
   my $file=shift;
+  my $result=shift;
+
   open(FILE, "<$file")||return;
   my @fcontent=<FILE>;
   close(FILE);
+  @$result=@fcontent if (ref($result) eq "ARRAY");
   join('', @fcontent);
 }
 
