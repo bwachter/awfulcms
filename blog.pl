@@ -14,6 +14,8 @@ There are no configuration parameters outside this module.
 
 =cut
 
+#TODO: LibCLI as CLI<>Module-wrapper; move as much code as possible to ModBlog
+
 use Term::ReadLine;
 use File::Temp;
 use AwfulCMS::Config;
@@ -128,7 +130,7 @@ sub deleteArticle{
 sub editArticle{
   my $ID=shift;
   my @result;
-  my (%oldarticle, %newarticle);
+  my %newarticle;
 
   my $q_a=$dbh->prepare("select * from blog where id=?");
   $q_a->execute($ID)||print $OUT "Error executing query";
@@ -144,7 +146,8 @@ sub editArticle{
       return;
     }
 #    print writeArticleDB(\(%$d, %newarticle))."\n";
-    print writeArticleDB(\%newarticle)."\n";
+    my %newhash=(%$d, %newarticle);
+    print writeArticleDB(\%newhash)."\n";
   } else {
     print $OUT "No such article\n";
   }
