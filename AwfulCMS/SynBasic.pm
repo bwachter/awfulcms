@@ -1,5 +1,36 @@
 package AwfulCMS::SynBasic;
 
+=head1 AwfulCMS::SynBasic
+
+This module provides a minimalistic syntax parser
+
+=head2 Syntax
+
+=over
+
+=item * Links
+
+You can add links with [[method://location||description]], e.g. [[http://lart.info||lart.info]]
+
+=item * Images
+
+There's a pseudo-method `img' for images, e.g. [[img://path/to/image||Alt text]]
+
+=item * Cites
+
+You can enclose cites in -\" \"-, like -\"This is a cite\"-
+
+=item * Pre
+
+You can add pre-tags by enclosing text in -[ ]-
+
+
+=back
+
+=cut
+
+
+
 use strict;
 
 sub new {
