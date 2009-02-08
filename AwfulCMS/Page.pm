@@ -74,7 +74,7 @@ sub new {
 	       403=>{"short"=>"Forbidden",
 		     "long"=>"You're not allowed to touch this. Seriously."},
 	       404=>{"short"=>"Not Found",
-		     "long"=>"Your requested a page which is not available (anymore)"}
+		     "long"=>"You requested a page which is not available (anymore)"}
 	      };
 
 
