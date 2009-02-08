@@ -73,7 +73,7 @@ sub parseArticle{
       my ($name)=/ (.*)</;
       $name=~s/ *$//;
       $output->{email}=$email if ($email ne "");
-      $output->{name}=$email if ($name ne "");
+      $output->{name}=$name if ($name ne "");
       next;
     } else {
       my ($key)=/^(.*?):/;
