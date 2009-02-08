@@ -75,7 +75,7 @@ sub formatArticle{
   my $body=AwfulCMS::SynBasic->format($d->{body});
 
   my $ret=
-    div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?article=$d->{id}\">$d->{id}] $d->{caption}</a>", {'class'=>'newshead'}).
+    div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
       div("<p>$body</p>", {'class'=>'newsbody'}).
 	div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
 	  "<br class=\"l\" /><br class=\"l\" />";
@@ -150,7 +150,7 @@ sub getPosts{
     $cmtstring = "1 comment" if ($ccnt==1);
 
     $p->add(div("<!-- start news entry -->".
-		    div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?req=article&article=$d->{id}\">$d->{id}] $d->{caption}</a>", {'class'=>'newshead'}).
+		    div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
 		    div("<p>$body</p>", {'class'=>'newsbody'}).
 		    div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">$cmtstring</a>", {'class'=>'newsfoot'}).
 		    "<br class=\"l\" /><br class=\"l\" />", {'class'=>'news'}));
@@ -168,7 +168,7 @@ sub editform{
   my $dbh=$s->{page}->{dbh};
 
 
-  my ($digType, $name, $email, $body, $caption);
+  my ($digType, $name, $email, $body, $subject);
 
   my $pid=0;
   # get rid of double posts due to reload
@@ -193,7 +193,7 @@ sub editform{
   <table border=\"0\">
   <tr>
    <td>Subject:</td>
-   <td><input size=\"30\" type=\"text\" name=\"caption\" value=\"$caption\"></td>
+   <td><input size=\"30\" type=\"text\" name=\"subject\" value=\"$subject\"></td>
    <td>Language:</td>
    <td><select name=\"lang\">".
     $p->pOption(1,"en",$digType).
@@ -232,7 +232,7 @@ sub createdb{
   push(@queries, "DROP TABLE IF EXISTS blog");
   push(@queries, "CREATE TABLE blog (".
        "id int(11) NOT NULL auto_increment,".
-       "caption tinytext NOT NULL,".
+       "subject tinytext NOT NULL,".
        "body text NOT NULL,".
        "created bigint(20) default NULL,".
        "topic tinyint(4) default NULL,".
@@ -270,7 +270,7 @@ sub createdb{
   push(@queries, "DROP TABLE IF EXISTS blogdel");
   push(@queries, "CREATE TABLE blogdel (".
        "id int(11) NOT NULL default '0',".
-       "caption tinytext NOT NULL,".
+       "subject tinytext NOT NULL,".
        "body text NOT NULL,".
        "created bigint(20) default NULL,".
        "topic tinyint(4) default NULL,".
