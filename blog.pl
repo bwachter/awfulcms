@@ -113,7 +113,8 @@ sub parseArticle{
       next;
     } elsif (/^tags:/i){
       my ($value)=/: *(.*)$/;
-      $value=~s/\s+//g;
+      $value=~s/^\s+//;
+      $value=~s/\s+$//;
       my @tags=split(',', $value);
       $output->{tags}=\@tags;
     } else {
@@ -149,6 +150,7 @@ sub writeArticleDB{
   my $q_i = $dbh->prepare("insert into blog(pid, rpid, subject, body, lang, name, email, homepage, draft, created) values (?,?,?,?,?,?,?,?,?,?)");
   my $q_s = $dbh->prepare("select id from blog where pid=? and rpid=? and subject=? and body=? and lang=? and name=? and email=? and homepage=? and draft=? and  created=?");
 
+  $args->{homepage}="" unless (defined $args->{homepage});
   foreach (@keys){
     return "Key $_ not found" unless (defined $args->{$_});
   }
