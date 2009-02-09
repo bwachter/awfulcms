@@ -115,7 +115,7 @@ sub parseArticle{
       my ($value)=/: *(.*)$/;
       $value=~s/^\s+//;
       $value=~s/\s+$//;
-      $value=~s/\s+,\s+//g;
+      $value=~s/\s*,\s*/,/g;
       my @tags=split(',', $value);
       $output->{tags}=\@tags;
     } else {
