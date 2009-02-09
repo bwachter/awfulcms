@@ -54,7 +54,15 @@ div.newsfoot {
   text-align:right;
   z-index:1;
 }
+
+div.newsfoot div.tags { 
+  text-align:left;    
+}
    
+div.newsfoot div.from { 
+  text-align:right;
+}
+
 body { 
   color:black;
   background-color:white;

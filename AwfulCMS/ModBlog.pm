@@ -38,6 +38,9 @@ sub new{
 	       "article"=>{-handler=>"getArticle",
 			   -content=>"html",
 			   -dbhandle=>"blog"},
+	       "tag"=>{-handler=>"displayTag",
+		       -content=>"html",
+		       -dbhandle=>"blog"},
 	       "comment"=>{-handler=>"editform",
 		       -content=>"html",
 		       -dbhandle=>"blog",
@@ -81,6 +84,54 @@ sub formatArticle{
 	  "<br class=\"l\" /><br class=\"l\" />";
 
   $ret;
+}
+
+sub getTags{
+  my $s=shift;
+  my $id=shift;
+  my $p=$s->{page};
+  my $dbh=$s->{page}->{dbh};
+  my ($data, @tags);
+
+  my $q_a=$dbh->prepare("select tag from blog_tags where id=?") ||
+    $p->status(400, "Unable to prepare query: $!");
+  $q_a->execute($id);
+  $data=$q_a->fetchall_arrayref({});
+
+  push(@tags, $_->{tag}) foreach (@$data);
+  @tags;
+}
+
+sub displayTag{
+  my $s=shift;
+  my $p=$s->{page};
+  my $dbh=$s->{page}->{dbh};
+  my $tag=$p->{cgi}->param("tag");
+
+  my $q_a=$dbh->prepare("select tag from blog_tags group by tag order by tag") ||
+    $p->status(400, "Unable to prepare query: $!");
+  my $q_t=$dbh->prepare("select blog_tags.tag,blog.subject,blog.id from blog_tags left join (blog) on (blog_tags.id=blog.id) where tag=? order by tag")||
+    $p->status(400, "Unable to prepare query: $!");
+
+
+  if (defined $tag){
+    my (@tags, $tagstr);
+    $q_t->execute($tag);
+    my $data=$q_t->fetchall_arrayref({});
+    push(@tags, "<a href=\"?req=article&article=$_->{id}\">$_->{subject}</a>") foreach (@$data);
+    $tagstr.=join(', ', @tags);
+    $p->add($tagstr);
+  } else {
+    my (@tags, $tagstr);
+    $q_a->execute();
+    my $data=$q_a->fetchall_arrayref({});
+
+    push(@tags, "<a href=\"?req=tag&tag=$_->{tag}\">$_->{tag}</a>") foreach (@$data);
+    $tagstr.=join(', ', @tags);
+    $p->add($tagstr);
+  }
+  
+  #push(@tags, $_->{tag}) foreach (@$data);
 }
 
 sub getArticle{
@@ -149,10 +200,16 @@ sub getPosts{
     my $cmtstring="$ccnt comments";
     $cmtstring = "1 comment" if ($ccnt==1);
 
+    my @tags=$s->getTags($d->{id});
+    my @tagref;
+    my $tagstr="<a href=\"?req=tag\">Tags</a>: ";
+    push(@tagref, "<a href=\"?req=tag&tag=$_\">$_</a>") foreach (@tags);
+    $tagstr.=join(', ', @tagref);
+    $tagstr.=" None" if (@tagref == 0);
     $p->add(div("<!-- start news entry -->".
 		    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
 		    div("<p>$body</p>", {'class'=>'newsbody'}).
-		    div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">$cmtstring</a>", {'class'=>'newsfoot'}).
+		    div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">$cmtstring</a></div>", {'class'=>'newsfoot'}).
 		    "<br class=\"l\" /><br class=\"l\" />", {'class'=>'news'}));
   }
 
@@ -277,6 +334,12 @@ sub createdb{
        "email tinytext NOT NULL,".
        "homepage tinytext,".
        "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP".
+       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+  push(@queries, "DROP TABLE IF EXISTS blog_tags");
+  push(@queries, "CREATE TABLE blog_tags (".
+       "id int(11) NOT NULL,".
+       "tag varchar(50) NOT NULL,".
+       "PRIMARY KEY (id, tag)".
        ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
 
   foreach(@queries){
