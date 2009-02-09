@@ -60,6 +60,7 @@ sub new{
   #$r->{mc}={} unless (defined $r->{mc});
   $s->{mc}=$r->{mc};
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
+  $s->{mc}->{'title-prefix'}="Blog" unless (defined $r->{mc}->{'title-prefix'});
   $s->{target}="/$s->{page}->{rq_dir}/$s->{page}->{rq_file}";
   bless $s;
   $s;
@@ -140,6 +141,7 @@ sub displayTag{
     push(@tags, "<a href=\"$s->{target}?req=tag&tag=$_->{tag}\">$_->{tag}</a>") foreach (@$data);
     $tagstr.=join(', ', @tags);
   }
+  $p->title($s->{mc}->{'title-prefix'}." - $header");
   $p->add(div(div($header, {'class'=>'newshead'}).
 	      div($tagstr,{'class'=>'newsbody'})
 	      , {'class'=>'news'}))
@@ -161,6 +163,7 @@ sub getArticle{
   $q_a->execute($article) || $p->status(400, "Unable to execute query: $!");
 
   my $d=$q_a->fetchrow_hashref();
+  $p->title($s->{mc}->{'title-prefix'}." - ".$d->{subject});
   $p->add(div($s->formatArticle($d), {'class'=>'news'}));
 }
 
@@ -292,6 +295,7 @@ sub defaultpage(){
   my $p=$s->{page};
 
   #$p->add("<a href=\"?req=dropdb\">Drop database</a> | <a href=\"?req=createdb\">Drop and create database</a> | <a href=\"/\">Blog</a>");
+  $p->title($s->{mc}->{'title-prefix'});
   $s->defaultHeader();
   $s->getPosts();
 }
