@@ -43,26 +43,28 @@ $mcm->{baselink}="" unless (defined $mcm->{baselink});
 $mcm->{description}="Some blog without description" unless (defined $mcm->{description});
 
 sub updateRSS{
-  my @result;
+  my $result;
   return unless (defined $mcm->{rsspath});
   my $rss = new XML::RSS(encoding => 'ISO-8859-1');
   $rss->channel(title=>$mcm->{'title-prefix'},
 		'link'=>$mcm->{baselink},
 		description=>$mcm->{description});
 
-  my $q = $dbh->prepare("select id,subject,body from blog where pid=0 and draft=0 order by created desc limit 15") ||
+  my $q = $dbh->prepare("select id,subject,body,created from blog where pid=0 and draft=0 order by created desc limit 15") ||
     return;
   #&myDie("Unable to prepare query for updating RSS: $!");
   $q->execute() || return;
     #&myDie("Unable to execute the query for updating RSS: $!");
-  while (@result=$q->fetchrow_array()) {
-    my $id=shift(@result);
-    my $subject=shift(@result);
-    my $body=AwfulCMS::Page->pString(shift(@result));
+  while ($result=$q->fetchrow_hashref()) {
+    my $body=AwfulCMS::Page->pString($result->{body});
+    my $created=localtime($result->{created});
     # update RSS feed
-    $rss -> add_item(title => $subject,
-		     'link' => "$mcm->{baselink}/?req=article&article=$id",
+    $rss -> add_item(title => $result->{subject},
+		     'link' => "$mcm->{baselink}/?req=article&article=$result->{id}",
 		     description => AwfulCMS::Page->pRSS($body),
+		     dc=>{
+			  date       => $created
+			 }
 		    );
   }
   $rss->save($mcm->{docroot}."/".$mcm->{rsspath});

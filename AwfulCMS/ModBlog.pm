@@ -63,7 +63,8 @@ sub new{
   $s->{mc}->{'title-prefix'}="Blog" unless (defined $r->{mc}->{'title-prefix'});
   $s->{target}="/$s->{page}->{rq_dir}/$s->{page}->{rq_file}";
   #FIXME
-  $s->{page}->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"/$s->{mc}->{rsspath}\">")
+  my $rssfile="http://".$s->{page}->{rq_host}."/".$s->{mc}->{rsspath};
+  $s->{page}->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$rssfile/\">")
     if defined ($s->{mc}->{rsspath});
   bless $s;
   $s;
