@@ -452,6 +452,17 @@ sub pString {
   $string;
 }
 
+sub pRSS {
+  my $s=shift;
+  my $string=shift;
+
+  $string=~s/<br \/>/\n<br \/>/g;
+  $string=~s/>/&gt;/g;
+  $string=~s/</&lt;/g;
+
+  $string;
+}
+
 1;
 
 =back
