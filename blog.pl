@@ -147,6 +147,7 @@ sub writeArticleDB{
   my $args=shift;
   my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=?, created=? where id=?");
   my $q_i = $dbh->prepare("insert into blog(pid, rpid, subject, body, lang, name, email, homepage, draft, created) values (?,?,?,?,?,?,?,?,?,?)");
+  my $q_s = $dbh->prepare("select id from blog where pid=? and rpid=? and subject=? and body=? and lang=? and name=? and email=? and homepage=? and draft=? and  created=?");
 
   foreach (@keys){
     return "Key $_ not found" unless (defined $args->{$_});
@@ -158,9 +159,16 @@ sub writeArticleDB{
 		  $args->{lang}, $args->{name}, $args->{email},
 		  $args->{homepage}, $args->{draft}, $args->{created}, $args->{id})||return "Unable to insert new record: $!\n";
   } else {
+    my $created=time();
+    my $href;
     $q_i->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body}, 
 		  $args->{lang}, $args->{name}, $args->{email},
-		  $args->{homepage}, $args->{draft}, time())||return "Unable to insert new record: $!\n";
+		  $args->{homepage}, $args->{draft}, $created)||return "Unable to insert new record: $!\n";
+    $q_s->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body}, 
+		  $args->{lang}, $args->{name}, $args->{email},
+		  $args->{homepage}, $args->{draft}, $created)||return "Unable to insert new record: $!\n";
+    $href=$q_s->fetchrow_hashref();
+    $args->{id}=$href->{id};
   }
 }
 
@@ -183,30 +191,29 @@ sub setTags{
   my $newtags=shift;
   my (@createtags, @deletetags);
   my (%oldhash, %newhash);
+  my $q_i = $dbh->prepare("insert into blog_tags(id, tag) values (?,?)");
+  my $q_d = $dbh->prepare("delete from blog_tags where id=? and tag=?");
 
   die "oldtags ne array" unless (ref($oldtags) eq "ARRAY");
-  die "newtags ne array" unless (ref($newtags) eq "ARRAY");
+  if (defined $newtags){
+    die "newtags ne array" unless (ref($newtags) eq "ARRAY");
 
-  $newhash{$_}=1 foreach(@$newtags);
-  $oldhash{$_}=1 foreach(@$oldtags);
+    $newhash{$_}=1 foreach(@$newtags);
+    $oldhash{$_}=1 foreach(@$oldtags);
 
-  foreach(@$newtags){
-    push (@createtags, $_) unless (defined $oldhash{$_});
-  }
+    foreach(@$newtags){
+      push (@createtags, $_) unless (defined $oldhash{$_});
+    }
 
-  foreach(@$oldtags){
-    push (@deletetags, $_) unless (defined $newhash{$_});
-  }
+    foreach(@$oldtags){
+      push (@deletetags, $_) unless (defined $newhash{$_});
+    }
 
 
-  my $q_i = $dbh->prepare("insert into blog_tags(id, tag) values (?,?)");
-  foreach(@createtags){
-    $q_i->execute($id, $_);
-  }
-
-  my $q_d = $dbh->prepare("delete from blog_tags where id=? and tag=?");
-  foreach(@deletetags){
-    $q_d->execute($id, $_);
+    $q_d->execute($id, $_) foreach(@deletetags);
+    $q_i->execute($id, $_) foreach(@createtags);
+  } else {
+    $q_i->execute($id, $_) foreach(@$oldtags);
   }
 }
 
@@ -249,6 +256,7 @@ sub editArticle{
     print writeArticleDB(\%newhash)."\n";
     setTags($d->{id}, $d->{tags}, %newhash->{tags});
     updateRSS();
+    unlink $tmp;
   } else {
     print $OUT "No such article\n";
   }
@@ -298,7 +306,7 @@ Pid: 0
 Rpid: 0
 Lang: $mc->{lang}
 Draft: $mc->{draft}
-
+Tags: 
 
 END
   system("vi $tmp");
@@ -309,6 +317,8 @@ END
     return;
   }
   print writeArticleDB(\%newarticle)."\n";
+  setTags(%newarticle->{id}, %newarticle->{tags});
+  unlink $tmp;
   updateRSS();
   # 1 english 2 german
   #$q_i->execute(0, 0, $subject, $text, 0, 1, $name, $email, $homepage, time());
