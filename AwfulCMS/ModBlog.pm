@@ -60,8 +60,16 @@ sub new{
   #$r->{mc}={} unless (defined $r->{mc});
   $s->{mc}=$r->{mc};
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
+  $s->{target}="/$s->{page}->{rq_dir}/$s->{page}->{rq_file}";
   bless $s;
   $s;
+}
+
+sub defaultHeader{
+  my $s=shift;
+  my $p=$s->{page};
+
+  $p->add(div("<p><a href=\"$s->{target}\">Blog</a> | <a href=\"$s->{target}?req=tag\">Tags</a></p>", {'class'=>'navw'}));
 }
 
 sub formatArticle{
@@ -78,9 +86,9 @@ sub formatArticle{
   my $body=AwfulCMS::SynBasic->format($d->{body});
 
   my $ret=
-    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"?article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$s->{target}?article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
       div("<p>$body</p>", {'class'=>'newsbody'}).
-	div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
+	div("Posted by $d->{name} $d->{email}-- <a href=\"$s->{target}?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
 	  "<br class=\"l\" /><br class=\"l\" />";
 
   $ret;
@@ -108,29 +116,33 @@ sub displayTag{
   my $dbh=$s->{page}->{dbh};
   my $tag=$p->{cgi}->param("tag");
 
+  $s->defaultHeader();
+
   my $q_a=$dbh->prepare("select tag from blog_tags group by tag order by tag") ||
     $p->status(400, "Unable to prepare query: $!");
   my $q_t=$dbh->prepare("select blog_tags.tag,blog.subject,blog.id from blog_tags left join (blog) on (blog_tags.id=blog.id) where tag=? order by tag")||
     $p->status(400, "Unable to prepare query: $!");
 
-
+  my ($tagstr, $header);
   if (defined $tag){
-    my (@tags, $tagstr);
+    my @tags;
+    $header="Articles tagged '$tag'";
     $q_t->execute($tag);
     my $data=$q_t->fetchall_arrayref({});
-    push(@tags, "<a href=\"?req=article&article=$_->{id}\">$_->{subject}</a>") foreach (@$data);
+    push(@tags, "<a href=\"$s->{target}?req=article&article=$_->{id}\">$_->{subject}</a>") foreach (@$data);
     $tagstr.=join(', ', @tags);
-    $p->add($tagstr);
   } else {
-    my (@tags, $tagstr);
+    my @tags;
+    $header="Available tags";
     $q_a->execute();
     my $data=$q_a->fetchall_arrayref({});
 
-    push(@tags, "<a href=\"?req=tag&tag=$_->{tag}\">$_->{tag}</a>") foreach (@$data);
+    push(@tags, "<a href=\"$s->{target}?req=tag&tag=$_->{tag}\">$_->{tag}</a>") foreach (@$data);
     $tagstr.=join(', ', @tags);
-    $p->add($tagstr);
   }
-  
+  $p->add(div(div($header, {'class'=>'newshead'}).
+	      div($tagstr,{'class'=>'newsbody'})
+	      , {'class'=>'news'}))
   #push(@tags, $_->{tag}) foreach (@$data);
 }
 
@@ -138,6 +150,8 @@ sub getArticle{
   my $s=shift;
   my $p=$s->{page};
   my $dbh=$s->{page}->{dbh};
+
+  $s->defaultHeader();
 
   my $article=int($p->{cgi}->param("article"))||
     $p->status(404, "No such article");
@@ -147,7 +161,7 @@ sub getArticle{
   $q_a->execute($article) || $p->status(400, "Unable to execute query: $!");
 
   my $d=$q_a->fetchrow_hashref();
-  $p->add($s->formatArticle($d));
+  $p->add(div($s->formatArticle($d), {'class'=>'news'}));
 }
 
 sub getPosts{
@@ -202,14 +216,14 @@ sub getPosts{
 
     my @tags=$s->getTags($d->{id});
     my @tagref;
-    my $tagstr="<a href=\"?req=tag\">Tags</a>: ";
-    push(@tagref, "<a href=\"?req=tag&tag=$_\">$_</a>") foreach (@tags);
+    my $tagstr="<a href=\"$s->{target}?req=tag\">Tags</a>: ";
+    push(@tagref, "<a href=\"$s->{target}?req=tag&tag=$_\">$_</a>") foreach (@tags);
     $tagstr.=join(', ', @tagref);
     $tagstr.=" None" if (@tagref == 0);
     $p->add(div("<!-- start news entry -->".
-		    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+		    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$s->{target}?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
 		    div("<p>$body</p>", {'class'=>'newsbody'}).
-		    div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">$cmtstring</a></div>", {'class'=>'newsfoot'}).
+		    div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- <a href=\"$s->{target}?comment&pid=$d->{id}\">$cmtstring</a></div>", {'class'=>'newsfoot'}).
 		    "<br class=\"l\" /><br class=\"l\" />", {'class'=>'news'}));
   }
 
@@ -278,6 +292,7 @@ sub defaultpage(){
   my $p=$s->{page};
 
   #$p->add("<a href=\"?req=dropdb\">Drop database</a> | <a href=\"?req=createdb\">Drop and create database</a> | <a href=\"/\">Blog</a>");
+  $s->defaultHeader();
   $s->getPosts();
 }
 
