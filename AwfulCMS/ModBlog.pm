@@ -64,7 +64,7 @@ sub new{
   $s->{target}="/$s->{page}->{rq_dir}/$s->{page}->{rq_file}";
   #FIXME
   my $rssfile="http://".$s->{page}->{rq_host}."/".$s->{mc}->{rsspath};
-  $s->{page}->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$rssfile/\">")
+  $s->{page}->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$rssfile\">")
     if defined ($s->{mc}->{rsspath});
   bless $s;
   $s;
