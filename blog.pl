@@ -20,8 +20,10 @@ use Term::ReadLine;
 use File::Temp;
 use AwfulCMS::Config;
 use AwfulCMS::LibFS qw(openreadclose);
+use AwfulCMS::Page;
 require DBI;
 use strict;
+use XML::RSS;
 
 # config part
 my $handle="blog";
@@ -32,8 +34,39 @@ my @fixedkeys=('id');
 # global values
 my $c=AwfulCMS::Config->new("");
 my $mc=$c->getValues("ModBlogCLI");
+my $mcm=$c->getValues("ModBlog");
 my $dbh;
 my $OUT;
+
+$mcm->{'title-prefix'}="Blog" unless (defined $mcm->{'title-prefix'});
+$mcm->{baselink}="" unless (defined $mcm->{baselink});
+$mcm->{description}="Some blog without description" unless (defined $mcm->{description});
+
+sub updateRSS{
+  my @result;
+  return unless (defined $mcm->{rsspath});
+  my $rss = new XML::RSS(encoding => 'ISO-8859-1');
+  $rss->channel(title=>$mcm->{'title-prefix'},
+		'link'=>$mcm->{baselink},
+		description=>$mcm->{description});
+
+  my $q = $dbh->prepare("select id,subject,body from blog where pid=0 and draft=0 order by created desc limit 15") ||
+    return;
+  #&myDie("Unable to prepare query for updating RSS: $!");
+  $q->execute() || return;
+    #&myDie("Unable to execute the query for updating RSS: $!");
+  while (@result=$q->fetchrow_array()) {
+    my $id=shift(@result);
+    my $subject=shift(@result);
+    my $body=AwfulCMS::Page->pString(shift(@result));
+    # update RSS feed
+    $rss -> add_item(title => $subject,
+		     'link' => "$mcm->{baselink}/?req=article&article=$id",
+		     description => AwfulCMS::Page->pRSS($body),
+		    );
+  }
+  $rss->save($mcm->{rsspath});
+}
 
 sub formatArticle{
   my $d=shift;
@@ -213,6 +246,7 @@ sub editArticle{
     my %newhash=(%$d, %newarticle);
     print writeArticleDB(\%newhash)."\n";
     setTags($d->{id}, $d->{tags}, %newhash->{tags});
+    updateRSS();
   } else {
     print $OUT "No such article\n";
   }
@@ -273,7 +307,7 @@ END
     return;
   }
   print writeArticleDB(\%newarticle)."\n";
-  
+  updateRSS();
   # 1 english 2 german
   #$q_i->execute(0, 0, $subject, $text, 0, 1, $name, $email, $homepage, time());
 }
