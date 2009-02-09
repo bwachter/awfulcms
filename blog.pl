@@ -51,6 +51,7 @@ sub formatArticle{
     next if ($_ eq "email" || $_ eq "name" || $_ eq "body");
     $ret.=ucfirst($_).": ".$d->{$_}."\n";
   }
+  $ret.="Tags: ".join(", ", @{$d->{tags}})."\n" if (defined $d->{tags});
 
   $ret.="\n".$d->{body}."\n";
   $ret;
@@ -75,6 +76,11 @@ sub parseArticle{
       $output->{email}=$email if ($email ne "");
       $output->{name}=$name if ($name ne "");
       next;
+    } elsif (/^tags:/i){
+      my ($value)=/: *(.*)$/;
+      $value=~s/\s+//g;
+      my @tags=split(',', $value);
+      $output->{tags}=\@tags;
     } else {
       my ($key)=/^(.*?):/;
       my ($value)=/: *(.*)$/;
@@ -84,6 +90,7 @@ sub parseArticle{
   }
   $output->{body}=~s/^\s+//;
   $output->{body}=~s/\s+$//;
+  $output->{olddraft}=$output->{draft} if (defined $output->{draft});
 }
 
 sub connectDB{
@@ -103,7 +110,7 @@ sub connectDB{
 
 sub writeArticleDB{
   my $args=shift;
-  my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=? where id=?");
+  my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=?, created=? where id=?");
   my $q_i = $dbh->prepare("insert into blog(pid, rpid, subject, body, lang, name, email, homepage, draft, created) values (?,?,?,?,?,?,?,?,?,?)");
 
   foreach (@keys){
@@ -111,13 +118,69 @@ sub writeArticleDB{
   }
 
   if ($args->{id}){
+    $args->{created}=time() if ($args->{olddraft}==1);
     $q_u->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body}, 
 		  $args->{lang}, $args->{name}, $args->{email},
-		  $args->{homepage}, $args->{draft}, $args->{id})||return "Unable to insert new record: $!\n";
+		  $args->{homepage}, $args->{draft}, $args->{created}, $args->{id})||return "Unable to insert new record: $!\n";
   } else {
     $q_i->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body}, 
 		  $args->{lang}, $args->{name}, $args->{email},
 		  $args->{homepage}, $args->{draft}, time())||return "Unable to insert new record: $!\n";
+  }
+}
+
+
+sub getTags{
+  my $id=shift;
+  my ($data, @tags);
+
+  my $q_a=$dbh->prepare("select tag from blog_tags where id=?");
+  $q_a->execute($id);
+  $data=$q_a->fetchall_arrayref({});
+
+  push(@tags, $_->{tag}) foreach (@$data);
+  @tags;
+}
+
+sub setTags{
+  my $id=shift;
+  my $oldtags=shift;
+  my $newtags=shift;
+  my (@createtags, @deletetags);
+  my (%oldhash, %newhash);
+
+  die "oldtags ne array" unless (ref($oldtags) eq "ARRAY");
+  die "newtags ne array" unless (ref($newtags) eq "ARRAY");
+
+  $newhash{$_}=1 foreach(@$newtags);
+  $oldhash{$_}=1 foreach(@$oldtags);
+
+  foreach(@$newtags){
+    push (@createtags, $_) unless (defined $oldhash{$_});
+  }
+
+  foreach(@$oldtags){
+    push (@deletetags, $_) unless (defined $newhash{$_});
+  }
+
+
+  my $q_i = $dbh->prepare("insert into blog_tags(id, tag) values (?,?)");
+  foreach(@createtags){
+    $q_i->execute($id, $_);
+  }
+
+  my $q_d = $dbh->prepare("delete from blog_tags where id=? and tag=?");
+  foreach(@deletetags){
+    $q_d->execute($id, $_);
+  }
+}
+
+sub deleteTags{
+  my $id=shift;
+  my $tags=shift;
+  my $q_i = $dbh->prepare("delete into blog_tags where id=? and tag=?");
+  foreach(@$tags){
+    $q_i->execute($id, $_);
   }
 }
 
@@ -137,6 +200,7 @@ sub editArticle{
   my $d=$q_a->fetchrow_hashref();
   if (defined $d){
     my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
+    @{$d->{tags}}=getTags($d->{id});
     print $tmp formatArticle($d);
     system("vi $tmp");
     openreadclose($tmp, \@result);
@@ -148,6 +212,7 @@ sub editArticle{
 #    print writeArticleDB(\(%$d, %newarticle))."\n";
     my %newhash=(%$d, %newarticle);
     print writeArticleDB(\%newhash)."\n";
+    setTags($d->{id}, $d->{tags}, %newhash->{tags});
   } else {
     print $OUT "No such article\n";
   }
@@ -177,6 +242,7 @@ sub printArticle{
   $q_a->execute($ID)||print $OUT "Error executing query";
   my $d=$q_a->fetchrow_hashref();
   if (defined $d){
+    @{$d->{tags}}=getTags($d->{id});
     print $OUT formatArticle($d)
   } else {
     print $OUT "No such article\n";
@@ -207,6 +273,7 @@ END
     return;
   }
   print writeArticleDB(\%newarticle)."\n";
+  
   # 1 english 2 german
   #$q_i->execute(0, 0, $subject, $text, 0, 1, $name, $email, $homepage, time());
 }
