@@ -225,6 +225,13 @@ sub add {
   $s->{divhash}->{$divname}.=$content;
 }
 
+sub addHead{
+  #FIXME
+  my $s=shift;
+  my $content=shift;
+  $s->{head}.=$content;
+}
+
 =item clear()
 
 TODO

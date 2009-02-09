@@ -62,6 +62,9 @@ sub new{
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
   $s->{mc}->{'title-prefix'}="Blog" unless (defined $r->{mc}->{'title-prefix'});
   $s->{target}="/$s->{page}->{rq_dir}/$s->{page}->{rq_file}";
+  #FIXME
+  $s->{page}->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$s->{target}/$s->{mc}->{rsspath}\">")
+    if defined ($s->{mc}->{rsspath});
   bless $s;
   $s;
 }

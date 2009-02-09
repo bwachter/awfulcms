@@ -65,7 +65,7 @@ sub updateRSS{
 		     description => AwfulCMS::Page->pRSS($body),
 		    );
   }
-  $rss->save($mcm->{rsspath});
+  $rss->save($mcm->{docroot}."/".$mcm->{rsspath});
 }
 
 sub formatArticle{
