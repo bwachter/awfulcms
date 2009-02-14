@@ -301,7 +301,7 @@ sub newArticle{
   my @result;
   my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
   print $tmp <<END;
-Subject: test
+Subject: 
 Name: $mc->{name}
 EMail: $mc->{email}
 Homepage: $mc->{homepage}
