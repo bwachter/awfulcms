@@ -63,6 +63,7 @@ sub new {
   $s->{rq_dir}="." if ($s->{rq_dir} eq "");
   ($s->{rq_file})=$s->{rq_fileabs}=~m/.*\/(.*)/;
   $s->{rq_vars}=$s->{cgi}->Vars();
+  $s->{target}="/$s->{rq_dir}/$s->{rq_file}";
 
   $s->{sdesc}={
 	       400=>{"short"=>"Bad Request",
@@ -116,8 +117,10 @@ TODO
 sub setModule{
   my $s=shift;
   my $module=shift;
+  my $instance=shift;
 
   $s->{module}=$module;
+  $s->{module_instance}=$instance;
 }
 
 =item out()

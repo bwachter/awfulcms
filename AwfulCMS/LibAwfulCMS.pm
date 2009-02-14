@@ -27,6 +27,7 @@ our @EXPORT_OK=qw(handleCGI);
 my ($p, # the page object
     $c, # the configuration object
     $call, # the final request call in the module
+    $instance, # the module instance, if not default
     $m, # the module object handle
     $module, # the module name
     $module_short, # the module shortname (i.e. without AwfulCMS::)
@@ -125,6 +126,11 @@ sub doModule{
   } else {
   }
 
+  if ($module=~/\//){
+    ($instance)=$module=~m/\/(.*)$/;
+    $module=~s/\/.*//;
+  }
+
   if ($module=~/^AwfulCMS::/){
     $module_short=$module;
     $module_short=~s/^AwfulCMS:://;
@@ -141,6 +147,7 @@ sub doModule{
   $p->status(400, "Require $module failed ($@)") if ($@);
 
   $r->{mc}=$c->getValues($module_short);
+  $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short."/".$instance)}} if ($c->getValues($module_short."/".$instance));
   $m=$module->new($r, $p);
   $p->status(400, "Unable to load module '$module'") if (ref($m) ne $module);
 }
@@ -152,7 +159,7 @@ TODO
 =cut
 
 sub doRequest{
-  $p->setModule($module);
+  $p->setModule($module, $instance);
   # FIXME, include code needs some serious redesigning
   $p->preinclude(openreadclose($c->getValue("main", "top-include")))
     if ($c->getValue("main", "top-include") && $r->{mc}->{'no-global-includes'}!=1);
