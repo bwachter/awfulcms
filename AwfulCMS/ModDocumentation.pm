@@ -48,7 +48,6 @@ sub new(){
 	       };
 
   $s->{mc}=$r->{mc};
-  $s->{target}="/$s->{page}->{rq_dir}/$s->{page}->{rq_file}";
   bless $s;
   $s;
 }
@@ -68,7 +67,7 @@ sub contentlisting(){
     $p->add("<li>$dir<ul>");
     foreach(sort(@files)){
       next unless ($_=~/(\.p[ml])$|(\.pod)$|(\.cgi)$/);
-      $p->add("<li><a href=\"$s->{target}?req=pod&file=$dir/$_\">$_</a></li>");
+      $p->add("<li><a href=\"$p->{target}?req=pod&file=$dir/$_\">$_</a></li>");
     }
     $p->add("</ul></li>");
   }
@@ -88,7 +87,7 @@ sub podview(){
   my $p=$s->{page};
   my $file=$p->{cgi}->param("file");
 
-  $p->add("<p><a href=\"$s->{target}\">Go back to the index</a></p>");
+  $p->add("<p><a href=\"$p->{target}\">Go back to the index</a></p>");
 
   eval "require Pod::Simple::HTML";
   $p->status(500, $@) if ($@);

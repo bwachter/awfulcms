@@ -74,11 +74,11 @@ sub getCatItems {
   $p->add("<h2>search results: $catname</h2>") if ($catname eq "");
   my $q_s = $p->{dbh}->prepare("select id,link,description from ld where cat=? and hide=0 order by description desc") ||
     $p->status(500, "Unable to prepare query for getting items: $!");
-  $p->add("<li><a href=\"$s->{target}?q=c$catid\">$catname</a>") if ($catname ne "");
+  $p->add("<li><a href=\"$p->{target}?q=c$catid\">$catname</a>") if ($catname ne "");
   $p->add("<ul>");
   $q_s->execute($catid) || $p->status(500, "Unable to execute query for selecting items: $!");
   while ((my $id, my $link, my $description) = $q_s->fetchrow_array()) {
-    $p->add("<li><a href=\"$s->{target}?q=$id\">#</a> <a href=\"$link\">".$p->pString($description)."</a></li>\n");
+    $p->add("<li><a href=\"$p->{target}?q=$id\">#</a> <a href=\"$link\">".$p->pString($description)."</a></li>\n");
   }
   $p->add("</ul>");
   $p->add("</li>") if ($catname ne "");
@@ -113,7 +113,7 @@ sub printAddForm{
   my $q_c = $p->{dbh}->prepare("select id,cat from ld_cat order by cat asc") ||
     $p->status(500, "Unable to prepare query for getting items: $!");
   $q_c->execute() || $p->status(500, "Unable to execute query for selecting items: $!");
-  $p->add("<form action=\"$s->{target}\" method=\"get\"><table><tr>
+  $p->add("<form action=\"$p->{target}\" method=\"get\"><table><tr>
           <td><input type=\"text\" name=\"link\" size=\"50\"/>(Link)</td><td><select name=\"cat\">");
   while ((my $id, my $cat) = $q_c->fetchrow_array()){
     $p->add("<option value=\"$id\">$cat</option>");
@@ -140,9 +140,8 @@ sub addLink{
 sub defaultpage(){
   my $s=shift;
   my $p=$s->{page};
-  $s->{target}="/$p->{rq_dir}/$p->{rq_file}";
 
-  $p->addCookie("canpost=$s->{mc}->{authcookie}; path=$s->{target}")
+  $p->addCookie("canpost=$s->{mc}->{authcookie}; path=$p->{target}")
     if ($s->{mc}->{authcookie} && $s->{mc}->{setcookie});
 
   my $bCookie=$p->{cgi}->raw_cookie('canpost');
@@ -152,8 +151,8 @@ sub defaultpage(){
 		   $s->{mc}->{authcookie});
   $p->title("Linkdump");
 
-  $p->add("<h3><a href=\"$s->{target}\">up</a>");
-  $p->add("|<a href=\"$s->{target}?q=new\">new</a>") if ($canpost);
+  $p->add("<h3><a href=\"$p->{target}\">up</a>");
+  $p->add("|<a href=\"$p->{target}?q=new\">new</a>") if ($canpost);
   $p->add("</h3>");
 
   if ($bQ =~ /^\d+$/) {

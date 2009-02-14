@@ -61,7 +61,6 @@ sub new{
   $s->{mc}=$r->{mc};
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
   $s->{mc}->{'title-prefix'}="Blog" unless (defined $r->{mc}->{'title-prefix'});
-  $s->{target}="/$s->{page}->{rq_dir}/$s->{page}->{rq_file}";
   #FIXME
   my $rssfile="http://".$s->{page}->{rq_host}."/".$s->{mc}->{rsspath};
   $s->{page}->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$rssfile\">")
@@ -74,12 +73,13 @@ sub defaultHeader{
   my $s=shift;
   my $p=$s->{page};
 
-  $p->add(div("<p><a href=\"$s->{target}\">Blog</a> | <a href=\"$s->{target}?req=tag\">Tags</a></p>", {'class'=>'navw'}));
+  $p->add(div("<p><a href=\"$p->{target}\">Blog</a> | <a href=\"$p->{target}?req=tag\">Tags</a></p>", {'class'=>'navw'}));
 }
 
 sub formatArticle{
   my $s=shift;
   my $d=shift;
+  my $p=$s->{page};
 
   if ($d->{email}=~/^\(/ && $d->{email}=~/\)$/) {
     $d->{email}=" $d->{email} ";
@@ -91,9 +91,9 @@ sub formatArticle{
   my $body=AwfulCMS::SynBasic->format($d->{body});
 
   my $ret=
-    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$s->{target}?article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$p->{target}?article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
       div("<p>$body</p>", {'class'=>'newsbody'}).
-	div("Posted by $d->{name} $d->{email}-- <a href=\"$s->{target}?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
+	div("Posted by $d->{name} $d->{email}-- <a href=\"$p->{target}?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
 	  "<br class=\"l\" /><br class=\"l\" />";
 
   $ret;
@@ -134,7 +134,7 @@ sub displayTag{
     $header="Articles tagged '$tag'";
     $q_t->execute($tag);
     my $data=$q_t->fetchall_arrayref({});
-    push(@tags, "<a href=\"$s->{target}?req=article&article=$_->{id}\">$_->{subject}</a>") foreach (@$data);
+    push(@tags, "<a href=\"$p->{target}?req=article&article=$_->{id}\">$_->{subject}</a>") foreach (@$data);
     $tagstr.=join(', ', @tags);
   } else {
     my @tags;
@@ -142,7 +142,7 @@ sub displayTag{
     $q_a->execute();
     my $data=$q_a->fetchall_arrayref({});
 
-    push(@tags, "<a href=\"$s->{target}?req=tag&tag=$_->{tag}\">$_->{tag}</a>") foreach (@$data);
+    push(@tags, "<a href=\"$p->{target}?req=tag&tag=$_->{tag}\">$_->{tag}</a>") foreach (@$data);
     $tagstr.=join(', ', @tags);
   }
   $p->title($s->{mc}->{'title-prefix'}." - $header");
@@ -223,14 +223,14 @@ sub getPosts{
 
     my @tags=$s->getTags($d->{id});
     my @tagref;
-    my $tagstr="<a href=\"$s->{target}?req=tag\">Tags</a>: ";
-    push(@tagref, "<a href=\"$s->{target}?req=tag&tag=$_\">$_</a>") foreach (@tags);
+    my $tagstr="<a href=\"$p->{target}?req=tag\">Tags</a>: ";
+    push(@tagref, "<a href=\"$p->{target}?req=tag&tag=$_\">$_</a>") foreach (@tags);
     $tagstr.=join(', ', @tagref);
     $tagstr.=" None" if (@tagref == 0);
     $p->add(div("<!-- start news entry -->".
-		    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$s->{target}?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+		    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$p->{target}?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
 		    div("<p>$body</p>", {'class'=>'newsbody'}).
-		    div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- <a href=\"$s->{target}?comment&pid=$d->{id}\">$cmtstring</a></div>", {'class'=>'newsfoot'}).
+		    div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- <a href=\"$p->{target}?comment&pid=$d->{id}\">$cmtstring</a></div>", {'class'=>'newsfoot'}).
 		    "<br class=\"l\" /><br class=\"l\" />", {'class'=>'news'}));
   }
 
