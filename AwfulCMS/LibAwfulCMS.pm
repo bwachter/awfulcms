@@ -191,11 +191,25 @@ sub doRequest{
   }
 
   if (defined $r->{rqmap}->{$request}->{-dbhandle}){
+    # dbhandle lookup order:
+    # module:handle/instance, module/instance, module:handle, module, default
     my $dbc=$c->getValues("database");
-    my $handle=$r->{rqmap}->{$request}->{-dbhandle};
+    # the handle asked by the module
+    my $mhandle=$r->{rqmap}->{$request}->{-dbhandle};
+    my $handle="default";
+    if ($instance ne "" && defined $dbc->{"$module_short:$mhandle/$instance"}){
+      $handle="$module_short:$mhandle/$instance"
+    } elsif ($instance ne "" && defined $dbc->{"$module_short/$instance"}){
+      $handle="$module_short/$instance"
+    } elsif (defined $dbc->{"$module_short:$mhandle"}){
+      $handle="$module_short:$mhandle"
+    } elsif (defined $dbc->{"$module_short"}){
+      $handle="$module_short"
+    }
+
     my $snum=1;
-    $handle="default" if (not defined $dbc->{$handle});
-    $p->status(500, "There's no configuration for DB-handle '$handle'") if (not defined $dbc->{$handle});
+    $p->status(500, "There's no configuration for DB-handle '$handle', and there's no default handle") 
+      if (not defined $dbc->{$handle});
     my $o={};
     if ($dbc->{$handle}->{access} eq "rr"){
       $snum=int(rand($dbc->{$handle}->{srvcnt})+1);

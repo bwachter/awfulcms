@@ -20,7 +20,6 @@ sub new(){
   return -1 if (ref($r) ne "HASH");
   my $s={};
   $s->{page}=shift;
-
   return -1 if (ref($s->{page}) ne "AwfulCMS::Page");
 
   $r->{content}="html";
