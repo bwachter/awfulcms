@@ -28,7 +28,7 @@ sub new(){
 	       "roles"=>{-handler=>"mainsite",
 			 -content=>"html",
 			 -role=>"author"},
-	       "orq"=>{-handler=>"orq",
+	       "status"=>{-handler=>"status",
 		       -content=>"html"}
 	       };
   $s->{mc}=$r->{mc};
@@ -64,11 +64,25 @@ sub mainsite(){
     $p->add("<dt>$key</dt><dd>$s->{mc}->{$key}</dd>\n");
   }  
   $p->add("</dl>");
+
+  $p->add("<h2>Generate status page</h2>");
+  $p->add("<form name=\"foo\" method=\"post\" action=\"$p->{target}\">".
+	  "<input type=\"hidden\" name=\"req\" value=\"status\" />".
+	  "<input type=\"text\" name=\"message\" value=\"status message\" />".
+	  "<input type=\"text\" name=\"status\" size=\"4\" value=\"404\" />".
+	  "<input type=\"submit\" name=\"submit\" value=\"Submit\" />");
+
 }
 
-sub orq(){
+sub status(){
   my $s=shift;
-  $s->{page}->add("orq");
+  my $p=$s->{page};
+  my $status=400;
+  my $message="Sample message";
+  
+  $status=$p->{cgi}->param('status') if ($p->{cgi}->param('status'));
+  $message=$p->{cgi}->param('message') if ($p->{cgi}->param('message'));
+  $p->status($status, $message);
 }
 
 1;

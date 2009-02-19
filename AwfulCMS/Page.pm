@@ -191,6 +191,7 @@ sub status {
   $s->add("<p>Additional information:</p><pre>$description</pre>");
   $s->out();
   exit;
+  #die "Foo";
 }
 
 =item title($title)
