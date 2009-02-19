@@ -29,8 +29,8 @@ our %EXPORT_TAGS = ( tags=>[ @EXPORT_OK ] );
 sub new {
   shift;
   my $o=shift;
-  my %opt;
   my $s={};
+  bless $s;
 
   # a hash to hold all main divs
   $s->{divmap}={};
@@ -43,27 +43,35 @@ sub new {
   #die (ref($s->{divhash}));
 
   if (defined $o){
-    if (ref($o) eq "HASH"){ %opt=$o; }
-    else { %opt=(); $s->{title}=$o; }
+    if (ref($o) eq "HASH"){ 
+      $s->{title}=$o->{title} if (defined $o->{title});
+      $s->{mode}=$o->{mode} if (defined $o->{mode});
+    }
+    else { $s->{title}=$o; }
   }
+
+  $s->{mode}="CGI" unless (defined $s->{mode});
 
   # now set some defaults
   # TODO: read defaults from config
-  $s->{doctype}='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'."\n"
-    unless defined $s->{doctype};
-
   $s->{header}={};
-  $s->{header}->{"Content-type"}="text/html" unless defined $s->{header}->{"Content-type"};
-  $s->{cgi}=new CGI;
-  $s->{rq_host}=$s->{cgi}->virtual_host();
-  $s->{rq_fileabs}=$s->{cgi}->url(-absolute => 1);
-  $s->{rq_fileabs}=~s/^\///;
-  $s->{rq_fileabs}=~s/%20/ /;
-  ($s->{rq_dir})=$s->{rq_fileabs}=~m/(.*)\/(.*)/;
-  $s->{rq_dir}="." if ($s->{rq_dir} eq "");
-  ($s->{rq_file})=$s->{rq_fileabs}=~m/.*\/(.*)/;
-  $s->{rq_vars}=$s->{cgi}->Vars();
-  $s->{target}="/$s->{rq_dir}/$s->{rq_file}";
+
+  if ($s->{mode} eq "CGI"){
+    $s->{doctype}='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'."\n"
+      unless defined $s->{doctype};
+
+    $s->{header}->{"Content-type"}="text/html" unless defined $s->{header}->{"Content-type"};
+    $s->{cgi}=new CGI;
+    $s->{rq_host}=$s->{cgi}->virtual_host();
+    $s->{rq_fileabs}=$s->{cgi}->url(-absolute => 1);
+    $s->{rq_fileabs}=~s/^\///;
+    $s->{rq_fileabs}=~s/%20/ /;
+    ($s->{rq_dir})=$s->{rq_fileabs}=~m/(.*)\/(.*)/;
+    $s->{rq_dir}="." if ($s->{rq_dir} eq "");
+    ($s->{rq_file})=$s->{rq_fileabs}=~m/.*\/(.*)/;
+    $s->{rq_vars}=$s->{cgi}->Vars();
+    $s->{target}="/$s->{rq_dir}/$s->{rq_file}";
+  }
 
   $s->{sdesc}={
 	       400=>{"short"=>"Bad Request",
@@ -79,7 +87,11 @@ sub new {
 	      };
 
 
-  bless $s;
+  if ($s->{mode} eq "CLI"){
+    eval "require HTML::FormatText::WithLinks::AndTables";
+    $s->status(400, "Require HTML::FormatText::WithLinks::AndTables failed ($@)") if ($@);
+  }
+
   $s;
 }
 
@@ -131,29 +143,30 @@ TODO
 
 sub out {
   my $s=shift;
+  my $out;
 
   if (defined $s->{header}){
     if (ref($s->{header}) eq "HASH"){
       my ($key, $value);
       while (($key, $value)=each(%{$s->{header}})){
 	$value=~s/\n*$//;
-	print "$key: $value\n";
+	$out.="$key: $value\n";
       }
-    } else { print $s->{header}; }
+    } else { $out.=$s->{header}; }
     if (ref($s->{cookies}) eq "ARRAY"){
       foreach(@{$s->{cookies}}){
-	print "Set-Cookie: $_\n";
+	$out.="Set-Cookie: $_\n";
       }
     }
-    print "\n";
+    $out.="\n";
   }
 
-  print $s->{doctype} if defined $s->{doctype};
-  print "<html><head>$s->{head}\n";
-  print "<title>$s->{title}</title>\n";
-  print "</head><body>\n";
+  $out.=$s->{doctype} if defined $s->{doctype};
+  $out.="<html><head>$s->{head}\n".
+    "<title>$s->{title}</title>\n".
+      "</head><body>\n";
 
-  print $s->{preinclude} if ($s->{preinclude});
+  $out.=$s->{preinclude} if ($s->{preinclude});
   # a hash to hold all main divs
   #  $s->{divmap}->{500}={'id'=>'content'};
   # a hash to hold divname -> number mappings
@@ -163,11 +176,18 @@ sub out {
   my $divhash=$s->{divhash};
   foreach my $divid (sort (keys(%$divmap))){
     my $divattr=$divmap->{$divid};
-    print div($s->{divhash}->{$divattr->{id}}, $divattr);
+    $out.=div($s->{divhash}->{$divattr->{id}}, $divattr);
   }
 
-  print $s->{postinclude} if ($s->{postinclude});
-  print "</body></html>\n";
+  $out.=$s->{postinclude} if ($s->{postinclude});
+  $out.="</body></html>\n";
+
+  if ($s->{mode} eq "CLI"){
+    my $text=HTML::FormatText::WithLinks::AndTables->convert($out);
+    print $text;
+  } else {
+    print $out;
+  }
 }
 
 =item status($status, $description)

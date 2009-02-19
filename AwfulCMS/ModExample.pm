@@ -49,6 +49,7 @@ sub mainsite(){
   $p->add("<h2>Request parameters</h2>");
 
   $p->add("<ul>".
+	  "<li>Mode: $s->{page}->{mode}</li>".
 	  "<li>Module name: $s->{page}->{module}</li>".
 	  "<li>Module instance: $s->{page}->{module_instance}</li>".
 	  "<li>Target URL: $s->{page}->{target}</li>".
@@ -62,7 +63,7 @@ sub mainsite(){
   #foreach my $key (sort($s->{mc})){
   foreach my $key (sort(keys(%{$s->{mc}}))){
     $p->add("<dt>$key</dt><dd>$s->{mc}->{$key}</dd>\n");
-  }  
+  }
   $p->add("</dl>");
 
   $p->add("<h2>Generate status page</h2>");

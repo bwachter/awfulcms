@@ -29,6 +29,7 @@ my ($p, # the page object
     $call, # the final request call in the module
     $instance, # the module instance, if not default
     $m, # the module object handle
+    $mode, # operating mode, CLI or CGI
     $module, # the module name
     $module_short, # the module shortname (i.e. without AwfulCMS::)
     $request, # the name of the request to pass through
@@ -45,7 +46,7 @@ TODO
 
 sub init{
   # set up a page for later use and find out about module and request foo
-  $p=AwfulCMS::Page->new("");
+  $p=AwfulCMS::Page->new({'mode'=>$mode});
 
   # read the configuration file
   $c=AwfulCMS::Config->new($p->{rq_host});
@@ -247,6 +248,21 @@ TODO
 =cut
 
 sub handleCGI{
+  $mode="CGI";
+  init();
+  doModule();
+  doRequest();
+  done();
+}
+
+=item handleCLI()
+
+TODO
+
+=cut
+
+sub handleCLI{
+  $mode="CLI";
   init();
   doModule();
   doRequest();
