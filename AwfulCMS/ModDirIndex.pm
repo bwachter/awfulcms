@@ -86,8 +86,6 @@ sub defaultpage(){
   my $icon="file.png";
   my ($maxx,$maxy) = (150,150);
 
-  $s->{page}->add("Listing $s->{page}->{rq_dir} :: $s->{page}->{rq_file}");
-
   if ($s->{page}->{rq_dir} eq "." && $s->{page}->{rq_file} eq ""){
     $s->{page}->status(403, "You're not allowed to view this");
     return;
