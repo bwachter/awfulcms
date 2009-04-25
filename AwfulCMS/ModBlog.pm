@@ -14,6 +14,10 @@ The number of articles to display on one page
 
 =back
 
+=head2 Module functions
+
+=over
+
 =cut
 
 use strict;
@@ -32,10 +36,10 @@ sub new{
   return -1 if (ref($s->{page}) ne "AwfulCMS::Page");
 
   $r->{content}="html";
-  $r->{rqmap}={"default"=>{-handler=>"defaultpage",
+  $r->{rqmap}={"default"=>{-handler=>"displayPage",
 			   -content=>"html",
 			   -dbhandle=>"blog"},
-	       "article"=>{-handler=>"getArticle",
+	       "article"=>{-handler=>"displayArticle",
 			   -content=>"html",
 			   -dbhandle=>"blog"},
 	       "tag"=>{-handler=>"displayTag",
@@ -76,6 +80,12 @@ sub defaultHeader{
   $p->add(div("<p><a href=\"$p->{target}\">Blog</a> | <a href=\"$p->{target}?req=tag\">Tags</a></p>", {'class'=>'navw'}));
 }
 
+=item formatArticle(%data)
+
+Formats the article data in %data for display
+
+=cut
+
 sub formatArticle{
   my $s=shift;
   my $d=shift;
@@ -90,14 +100,54 @@ sub formatArticle{
 
   my $body=AwfulCMS::SynBasic->format($d->{body});
 
+  my @tags=$s->getTags($d->{id});
+  my @tagref;
+  my $tagstr="<a href=\"$p->{target}?req=tag\">Tags</a>: ";
+  push(@tagref, "<a href=\"$p->{target}?req=tag&tag=$_\">$_</a>") foreach (@tags);
+  $tagstr.=join(', ', @tagref);
+  $tagstr.=" None" if (@tagref == 0);
+
+  my $ccnt=$s->getCommentCnt($d->{id});
+  my $cmtstring="$ccnt comments";
+  $cmtstring = "1 comment" if ($ccnt==1);
+  $cmtstring = "<a href=\"$p->{target}?req=article&article=$d->{id}#comments\">$cmtstring</a>" if ($ccnt>0);
+
+  $d->{name}="<a href=\"$d->{homepage}\">$d->{name}</a>" if ($d->{homepage}=~/^http:\/\//);
+
   my $ret=
-    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$p->{target}?article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+    div("<!-- start news entry --><a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$p->{target}?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
       div("<p>$body</p>", {'class'=>'newsbody'}).
-	div("Posted by $d->{name} $d->{email}-- <a href=\"$p->{target}?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
+	div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
 	  "<br class=\"l\" /><br class=\"l\" />";
 
   $ret;
 }
+
+=item getCommentCnt($id)
+
+Returns the number of comments for the article $id
+
+=cut
+
+sub getCommentCnt{
+  my $s=shift;
+  my $id=shift;
+  my $p=$s->{page};
+  my $dbh=$s->{page}->{dbh};
+
+  my $q_cm=$dbh->prepare("select count(*) from blog where rpid=? and draft=0") ||
+    $p->status(400, "Unable to prepare query: $!");
+
+  $q_cm->execute($id) || $p->status(400, "Unable to execute query: $!");
+  my ($ccnt)=$q_cm->fetchrow_array();
+  $ccnt;
+}
+
+=item getTags($id)
+
+Returns an array with the tags for article $id
+
+=cut
 
 sub getTags{
   my $s=shift;
@@ -114,6 +164,20 @@ sub getTags{
   push(@tags, $_->{tag}) foreach (@$data);
   @tags;
 }
+
+=back
+
+=head2 Module handlers
+
+=over
+
+=cut
+
+=item displayTag() CGI(tag)
+
+Displays tag overview/detail
+
+=cut
 
 sub displayTag{
   my $s=shift;
@@ -152,7 +216,13 @@ sub displayTag{
   #push(@tags, $_->{tag}) foreach (@$data);
 }
 
-sub getArticle{
+=item displayArticle() CGI(int article)
+
+Displays one posting
+
+=cut
+
+sub displayArticle{
   my $s=shift;
   my $p=$s->{page};
   my $dbh=$s->{page}->{dbh};
@@ -163,23 +233,38 @@ sub getArticle{
     $p->status(404, "No such article");
   my $q_a=$dbh->prepare("select * from blog where id=?") ||
     $p->status(400, "Unable to prepare query: $!");
+  my $q_c=$dbh->prepare("select * from blog where rpid=? and draft=0 order by created desc") ||
+    $p->status(400, "Unable to prepare query: $!");
 
   $q_a->execute($article) || $p->status(400, "Unable to execute query: $!");
 
   my $d=$q_a->fetchrow_hashref();
   $p->title($s->{mc}->{'title-prefix'}." - ".$d->{subject});
   $p->add(div($s->formatArticle($d), {'class'=>'news'}));
+
+  # fixme, works but is not that nice
+  $q_c->execute($d->{id}) || $p->status(400, "Unable to execute query: $!");
+  while (my $d=$q_c->fetchrow_hashref()){
+    $p->add(div($s->formatArticle($d), {'class'=>'news'}));
+  }
 }
 
-sub getPosts{
+=item displayPage() CGI(int page)
+
+Displays one page with postings
+
+=cut
+
+sub displayPage{
   my $s=shift;
   my $p=$s->{page};
   my $dbh=$s->{page}->{dbh};
   my $offset=0;
 
+  $p->title($s->{mc}->{'title-prefix'});
+  $s->defaultHeader();
+
   my $q_c=$dbh->prepare("select count(*) from blog where pid=? and draft=0") ||
-    $p->status(400, "Unable to prepare query: $!");
-  my $q_cm=$dbh->prepare("select count(*) from blog where rpid=? and draft=0") ||
     $p->status(400, "Unable to prepare query: $!");
   my $q_s=$dbh->prepare("select * from blog where pid=? and draft=0 order by created desc limit ? offset ?") ||
     $p->status(400, "Unable to prepare query: $!");
@@ -203,35 +288,9 @@ sub getPosts{
 	 );
 
   $q_s->execute(0, $s->{mc}->{numarticles}, $offset) || $p->status(400, "Unable to execute query: $!");
+
   while (my $d=$q_s->fetchrow_hashref()){
-    $q_cm->execute($d->{id}) || $p->status(400, "Unable to execute query: $!");
-    my ($ccnt)=$q_cm->fetchrow_array();
-
-    if ($d->{email}=~/^\(/ && $d->{email}=~/\)$/) {
-      $d->{email}=" $d->{email} ";
-    } else {
-      $d->{email}="";
-    }
-    $d->{date}=localtime($d->{created});
-
-    $d->{name}="<a href=\"$d->{homepage}\">$d->{name}</a>" if ($d->{homepage}=~/^http:\/\//);
-
-    my $body=AwfulCMS::SynBasic->format($d->{body});
-    #$p->add($s->formatArticle($d));
-    my $cmtstring="$ccnt comments";
-    $cmtstring = "1 comment" if ($ccnt==1);
-
-    my @tags=$s->getTags($d->{id});
-    my @tagref;
-    my $tagstr="<a href=\"$p->{target}?req=tag\">Tags</a>: ";
-    push(@tagref, "<a href=\"$p->{target}?req=tag&tag=$_\">$_</a>") foreach (@tags);
-    $tagstr.=join(', ', @tagref);
-    $tagstr.=" None" if (@tagref == 0);
-    $p->add(div("<!-- start news entry -->".
-		    div("<a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$p->{target}?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
-		    div("<p>$body</p>", {'class'=>'newsbody'}).
-		    div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- <a href=\"$p->{target}?comment&pid=$d->{id}\">$cmtstring</a></div>", {'class'=>'newsfoot'}).
-		    "<br class=\"l\" /><br class=\"l\" />", {'class'=>'news'}));
+    $p->add(div($s->formatArticle($d), {'class'=>'news'}));
   }
 
   $p->add(div(p("There are $cnt articles on $pages pages").
@@ -239,6 +298,12 @@ sub getPosts{
 	      {'class'=>'navw-full'})
 	 );
 }
+
+=item editform() CGI(int article)
+
+FIXME, displays an article create/edit form
+
+=cut
 
 sub editform{
   my $s=shift;
@@ -294,15 +359,11 @@ sub editform{
 	 ");
 }
 
-sub defaultpage(){
-  my $s=shift;
-  my $p=$s->{page};
+=item createdb()
 
-  #$p->add("<a href=\"?req=dropdb\">Drop database</a> | <a href=\"?req=createdb\">Drop and create database</a> | <a href=\"/\">Blog</a>");
-  $p->title($s->{mc}->{'title-prefix'});
-  $s->defaultHeader();
-  $s->getPosts();
-}
+Drops and creates all blog databases
+
+=cut
 
 sub createdb{
   my $s=shift;
@@ -370,6 +431,12 @@ sub createdb{
   }
 }
 
+=item dropdb()
+
+Drops all blog databases
+
+=cut
+
 sub dropdb{
   my $s=shift;
   my $dbh=$s->{page}->{dbh};
@@ -385,3 +452,6 @@ sub dropdb{
 
 1;
 
+=back
+
+=cut
