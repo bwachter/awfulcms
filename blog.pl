@@ -26,7 +26,7 @@ use strict;
 use XML::RSS;
 
 # config part
-my $handle="blog";
+my $handle="ModBlog";
 
 my @keys=('pid', 'rpid', 'subject', 'body', 'lang', 'name', 'email', 'homepage', 'draft');
 my @fixedkeys=('id');
