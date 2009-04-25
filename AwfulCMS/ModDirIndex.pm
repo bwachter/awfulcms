@@ -86,6 +86,22 @@ sub defaultpage(){
   my $icon="file.png";
   my ($maxx,$maxy) = (150,150);
 
+  $s->{page}->add("Listing $s->{page}->{rq_dir} :: $s->{page}->{rq_file}");
+
+  if ($s->{page}->{rq_dir} eq "." && $s->{page}->{rq_file} eq ""){
+    $s->{page}->status(403, "You're not allowed to view this");
+    return;
+  }
+
+  # prevent listing the parent directory if the given filename
+  # does not exist as a directory, but is configured for ModDirIndex
+  $s->{page}->{rq_dir}.="/".$s->{page}->{rq_file} 
+    if ($s->{page}->{rq_dir} ne "" && $s->{page}->{rq_file} ne "");
+  unless (-d $s->{page}->{rq_dir}){
+    $s->{page}->status(404, "Directory does not exist");
+    return;
+  }
+
   if ($s->{mc}->{preview}==1){
     $maxx=$s->{mc}->{'preview-maxx'} if defined $s->{mc}->{'preview-maxx'};
     $maxy=$s->{mc}->{'preview-maxy'} if defined $s->{mc}->{'preview-maxy'};
