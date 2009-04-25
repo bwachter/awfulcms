@@ -63,6 +63,8 @@ sub new {
     $s->{header}->{"Content-type"}="text/html" unless defined $s->{header}->{"Content-type"};
     $s->{cgi}=new CGI;
     $s->{rq_host}=$s->{cgi}->virtual_host();
+    $s->{rq_remote_host}=$s->{cgi}->remote_host();
+    $s->{rq_remote_ip}=$s->{cgi}->remote_addr();
     $s->{rq_fileabs}=$s->{cgi}->url(-absolute => 1);
     $s->{rq_fileabs}=~s/^\///;
     $s->{rq_fileabs}=~s/%20/ /;

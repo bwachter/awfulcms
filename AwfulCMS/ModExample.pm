@@ -56,6 +56,8 @@ sub mainsite(){
 	  "<li>Requested host: $s->{page}->{rq_host}</li>".
 	  "<li>Requested file: $s->{page}->{rq_file} ($s->{page}->{rq_fileabs})</li>".
 	  "<li>Requested directory: $s->{page}->{rq_dir}</li>".
+	  "<li>Remote host: $s->{page}->{rq_remote_host}</li>".
+	  "<li>Remote IP: $s->{page}->{rq_remote_ip}</li>".
 	  "</ul>");
 
   $p->add("<h2>Module configuration</h2>");
