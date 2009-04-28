@@ -316,7 +316,10 @@ sub postinclude{
 
 =item setHeader($headerName, $headerValue)
 
-TODO
+Sets a HTTP-header to the given value. If a header with this name
+already exists it will be overwritten. 
+
+C<setHeader("Location", "http://www.example.com")>
 
 =cut
 
