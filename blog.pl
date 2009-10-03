@@ -66,8 +66,9 @@ sub updateRSS{
     my $body=AwfulCMS::Page->pString($result->{body});
     my $created=localtime($result->{created});
     # update RSS feed
+    # FIXME, change to url builder
     $rss -> add_item(title => $result->{subject},
-		     'link' => "$mcm->{baselink}/?req=article&article=$result->{id}",
+		     'link' => "$mcm->{baselink}/article/article,$result->{id}/",
 		     description => AwfulCMS::Page->pRSS($body),
 		     dc=>{
 			  date       => $created
