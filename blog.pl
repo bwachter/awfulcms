@@ -39,8 +39,8 @@ my @fixedkeys=('id');
 my $instance=$ARGV[0];
 my $c=AwfulCMS::Config->new("");
 my $mc=$c->getValues("ModBlogCLI");
-my $mcm=$c->getValues("ModBlog");
-$mcm={%{$mcm}, %{$c->getValues("ModBlog/$instance")}} if ($c->getValues("ModBlog/$instance"));
+my $mcm=$c->getValues("$handle");
+$mcm={%{$mcm}, %{$c->getValues("$handle/$instance")}} if ($c->getValues("$handle/$instance"));
 
 my $dbh;
 my $OUT;
@@ -138,14 +138,16 @@ sub parseArticle{
 }
 
 sub connectDB{
+  my $dbhandle=$handle;
   my $dbc=$c->getValues("database");
 
-  die("There's no configuration for DB-handle '$handle'") if (not defined $dbc->{$handle});
+  $dbhandle="$handle/$instance" if (defined $dbc->{"$handle/$instance"});
+  die("There's no configuration for DB-handle '$handle'") if (not defined $dbc->{$dbhandle});
   my $o={};
-  $o->{type}=$dbc->{$handle}->{type}||"mysql";
-  $o->{dbname}=$dbc->{$handle}->{1}->{dbname}||$dbc->{$handle}->{dbname};
-  $o->{user}=$dbc->{$handle}->{1}->{user}||$dbc->{$handle}->{user}||"";
-  $o->{password}=$dbc->{$handle}->{1}->{password}||$dbc->{$handle}->{password}||"";
+  $o->{type}=$dbc->{$dbhandle}->{type}||"mysql";
+  $o->{dbname}=$dbc->{$dbhandle}->{1}->{dbname}||$dbc->{$dbhandle}->{dbname};
+  $o->{user}=$dbc->{$dbhandle}->{1}->{user}||$dbc->{$dbhandle}->{user}||"";
+  $o->{password}=$dbc->{$dbhandle}->{1}->{password}||$dbc->{$dbhandle}->{password}||"";
 
   $dbh=DBI->connect("dbi:$o->{type}:dbname=$o->{dbname}", $o->{user}, 
 		    $o->{password}, {RaiseError=>0,AutoCommit=>1}) ||
