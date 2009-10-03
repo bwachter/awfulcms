@@ -292,3 +292,37 @@ div.donate {
   position:relative;
   /*overflow:hidden;*/
 }
+
+
+
+
+
+.gallery-item {
+  font-family:arial,sans-serif;
+  float:left;
+  width:300px;
+  text-align:center;
+  font-size:x-small;
+  padding-top:0.5em;
+}
+
+.gallery-item a {
+  white-space:normal;
+  text-decoration:none;
+  text-align:left;
+}
+
+.gallery-info {
+  color:#999;
+  background-color:transparent;
+}
+
+.gallery-date {
+  color:#999;
+  background-color:transparent;
+}
+
+.gallery-group {
+  position:relative;
+  /*overflow:hidden;*/
+}
