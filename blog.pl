@@ -362,6 +362,8 @@ sub main{
       newArticle();
     } elsif ($cmd[0] eq "q"){
       exit(0);
+    } elsif ($cmd[0] eq "r"){
+      updateRSS();
     } else {
       print "Unknown command `$cmd[0]'\n" unless ($cmd[0] eq "");
     }
