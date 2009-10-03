@@ -52,6 +52,9 @@ sub mainsite(){
 	  "<li>Mode: $s->{page}->{mode}</li>".
 	  "<li>Module name: $s->{page}->{module}</li>".
 	  "<li>Module instance: $s->{page}->{module_instance}</li>".
+	  "<li>Module request: $s->{page}->{url}->{request}</li>".
+	  "<li>Module arguments: $s->{page}->{url}->{arguments}</li>".
+	  "<li>Base URL: $s->{page}->{baseurl}</li>".
 	  "<li>Target URL: $s->{page}->{target}</li>".
 	  "<li>Requested host: $s->{page}->{rq_host}</li>".
 	  "<li>Requested file: $s->{page}->{rq_file} ($s->{page}->{rq_fileabs})</li>".
@@ -60,9 +63,22 @@ sub mainsite(){
 	  "<li>Remote IP: $s->{page}->{rq_remote_ip}</li>".
 	  "</ul>");
 
+  $p->add("<h2>CGI parameters</h2>");
+  $p->add("<dl>");
+  foreach my $key (sort(keys(%{$s->{page}->{rq_vars}}))){
+    $p->add("<dt>$key</dt><dd>$s->{page}->{rq_vars}->{$key}</dd>\n");
+  }
+  $p->add("</dl>");
+
+  $p->add("<h2>URL parameters</h2>");
+  $p->add("<dl>");
+  foreach my $key (sort(keys(%{$s->{page}->{url}->{args}}))){
+    $p->add("<dt>$key</dt><dd>$s->{page}->{url}->{args}->{$key}</dd>\n");
+  }
+  $p->add("</dl>");
+
   $p->add("<h2>Module configuration</h2>");
   $p->add("<dl>");
-  #foreach my $key (sort($s->{mc})){
   foreach my $key (sort(keys(%{$s->{mc}}))){
     $p->add("<dt>$key</dt><dd>$s->{mc}->{$key}</dd>\n");
   }

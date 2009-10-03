@@ -21,6 +21,7 @@ our %EXPORT_TAGS = ( tags=>[ @EXPORT_OK ] );
 
 use CGI;
 use strict;
+use AwfulCMS::UrlBuilder;
 
 use Exporter 'import';
 our @EXPORT_OK=qw(a div h1 h2 h3 h4 h5 h6 hr p);
@@ -132,9 +133,13 @@ sub setModule{
   my $s=shift;
   my $module=shift;
   my $instance=shift;
+  my $baseurl=shift;
+  my $request=shift;
 
+  $s->{url}=AwfulCMS::UrlBuilder->new($s->{target}, $baseurl);
   $s->{module}=$module;
   $s->{module_instance}=$instance;
+  $s->{baseurl}=$baseurl;
 }
 
 =item out()
@@ -214,6 +219,55 @@ sub status {
   $s->out();
   exit;
   #die "Foo";
+}
+
+=item navwidget(%options)
+
+TODO
+
+=cut
+
+sub navwidget{
+  my $s=shift;
+  my $nav;
+  my $x=shift;
+
+  my $curpage=$x->{'curpage'}||1;
+  my $minpage=$x->{'minpage'}||1;
+  my $maxpage=$x->{'maxpage'}||1;
+  my $param=$x->{'param'}||"page";
+
+  # format 1...c-1 c c+1...l
+
+  $nav=a('&lt;&lt', {'href'=>$s->{url}->buildurl({"$param"=>$curpage-1})
+		    }) unless ($curpage==$minpage);
+  if ($curpage>$minpage+3){
+    $nav.=a(1, {'href'=>$s->{url}->buildurl({"$param"=>$minpage})}).
+      " ... ".a($curpage-1, {'href'=>$s->{url}->buildurl({"$param"=>$curpage-1})});
+  } else {
+    # there is only a one number gap at the beginning, don't use ...
+    for (my $i=0;$i<3;$i++){ 
+      $nav.=a($minpage+$i, {'href'=>$s->{url}->buildurl({"$param"=>$minpage+$i})}) unless ($curpage<=$minpage+$i);
+    }
+  }
+
+  $nav.=" $curpage ";
+  # the part to append to the current page
+  if ($curpage<$maxpage-3){
+    $nav.=" ".a($curpage+1, {'href'=>$s->{url}->buildurl({"$param"=>$curpage+1})}).
+      " ... ".a($maxpage, {'href'=>$s->{url}->buildurl({"$param"=>$maxpage})});
+  } else {
+    # there is only a one number gap at the end, don't use ...
+    for (my $i=1;$i<=3;$i++){ 
+      $nav.=a($curpage+$i, {'href'=>$s->{url}->buildurl({"$param"=>($curpage+$i)})
+			   }) unless ($curpage>=$maxpage-$i+1);
+    }
+  }
+
+  $nav.=a('&gt;&gt', {
+		      'href'=>$s->{url}->buildurl({"$param"=>$curpage+1})
+		     }) unless ($curpage>=$maxpage);
+  $nav;
 }
 
 =item title($title)

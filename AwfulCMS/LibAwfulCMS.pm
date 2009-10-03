@@ -30,6 +30,7 @@ my ($p, # the page object
     $instance, # the module instance, if not default
     $m, # the module object handle
     $mode, # operating mode, CLI or CGI
+    $baseurl, # the base url for the module, without parameters or subdirs
     $module, # the module name
     $module_short, # the module shortname (i.e. without AwfulCMS::)
     $request, # the name of the request to pass through
@@ -63,12 +64,13 @@ sub init{
     $p->{head}.="<link rel=\"stylesheet\" type=\"text/css\" media=\"$media\" href=\"$stylesheet\" />\n";
   }
 
-  if (defined($p->{rq_vars}->{req})){
-    $request=$p->{rq_vars}->{req};
-  } else {
-    ($request)=$p->{rq_dir}=~/.*\/(.*)$/;# if ($p->{rq_dir}=~/\//);
+# REMOVE, moved to doRequest()
+#  if (defined($p->{rq_vars}->{req})){
+#    $request=$p->{rq_vars}->{req};
+#  } else {
+#    ($request)=$p->{rq_dir}=~/.*\/(.*)$/;# if ($p->{rq_dir}=~/\//);
     #($request)=$p->{rq_file}=~/\/.*\/(.*)$/ if ($p->{rq_file}=~/\//);
-  }
+#  }
   #die $request."--".$p->{rq_dir}."--".$p->{rq_file}."--".$p->{cgi}->param("req")."--";
 }
 
@@ -88,6 +90,8 @@ sub lookupModule{
 			      && $_request eq "." 
 			      && $p->{rq_fileabs});
 
+  # FIXME, need to check physical directories in some cases
+  $baseurl=$_modules->{$_request};
   return $_modules->{$_request} if (exists $_modules->{$_request});
 
   if ($c->getValue("main", "wildcardmappings")){
@@ -95,6 +99,7 @@ sub lookupModule{
     my $t="";
     foreach(@t){
       $t.=$_;
+      $baseurl=$t;
       return $_modules->{"$t*"} if (exists $_modules->{"$t*"});
       $t.='/';
     }
@@ -111,6 +116,7 @@ sub lookupModule{
     return $match if ($match);
   }
 
+  $baseurl=$_modules->{$_request};
   return $_defaultmodule;
 }
 
@@ -160,7 +166,17 @@ TODO
 =cut
 
 sub doRequest{
-  $p->setModule($module, $instance);
+  $p->setModule($module, $instance, $baseurl);
+
+  if (defined($p->{rq_vars}->{req})){
+    $request=$p->{rq_vars}->{req};
+  } else {
+    #$request=getrequest($p->{target}, $baseurl);
+    $request=$p->{url}->{request};
+    #($request)=$p->{rq_dir}=~/.*\/(.*)$/;# if ($p->{rq_dir}=~/\//);
+    #($request)=$p->{rq_file}=~/\/.*\/(.*)$/ if ($p->{rq_file}=~/\//);
+  }
+
   # FIXME, include code needs some serious redesigning
   $p->preinclude(openreadclose($c->getValue("main", "top-include")))
     if ($c->getValue("main", "top-include") && $r->{mc}->{'no-global-includes'}!=1);

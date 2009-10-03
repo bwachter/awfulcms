@@ -77,7 +77,8 @@ sub defaultHeader{
   my $s=shift;
   my $p=$s->{page};
 
-  $p->add(div("<p><a href=\"$p->{target}\">Blog</a> | <a href=\"$p->{target}?req=tag\">Tags</a></p>", {'class'=>'navw'}));
+  my $tagurl=$p->{url}->buildurl({'req'=>'tag'});
+  $p->add(div("<p><a href=\"/$p->{baseurl}\">Blog</a> | <a href=\"$tagurl\">Tags</a></p>", {'class'=>'navw'}));
 }
 
 =item formatArticle(%data)
@@ -102,22 +103,29 @@ sub formatArticle{
 
   my @tags=$s->getTags($d->{id});
   my @tagref;
-  my $tagstr="<a href=\"$p->{target}?req=tag\">Tags</a>: ";
-  push(@tagref, "<a href=\"$p->{target}?req=tag&tag=$_\">$_</a>") foreach (@tags);
+  my $tagstr="<a href=\"".$p->{url}->buildurl({'req'=>'tag'})."\">Tags</a>: ";
+  push(@tagref, "<a href=\"".
+       $p->{url}->buildurl({'req'=>'tag',
+			    'tag'=>$_})."\">$_</a>") foreach (@tags);
   $tagstr.=join(', ', @tagref);
   $tagstr.=" None" if (@tagref == 0);
 
   my $ccnt=$s->getCommentCnt($d->{id});
   my $cmtstring="$ccnt comments";
   $cmtstring = "1 comment" if ($ccnt==1);
-  $cmtstring = "<a href=\"$p->{target}?req=article&article=$d->{id}#comments\">$cmtstring</a>" if ($ccnt>0);
+
+  $cmtstring = "<a href=\"".
+    $p->{url}->buildurl({'req'=>'article',
+			 'article'=>"$d->{id}"})."#comments\">$cmtstring</a>" if ($ccnt>0);
 
   $d->{name}="<a href=\"$d->{homepage}\">$d->{name}</a>" if ($d->{homepage}=~/^http:\/\//);
 
   my $ret=
-    div("<!-- start news entry --><a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$p->{target}?req=article&article=$d->{id}\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
-      div("<p>$body</p>", {'class'=>'newsbody'}).
-	div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
+    div("<!-- start news entry --><a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"".
+	$p->{url}->buildurl({'req'=>'article',
+			    'article'=>$d->{id}})."\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+			      div("<p>$body</p>", {'class'=>'newsbody'}).
+				div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
 	  "<br class=\"l\" /><br class=\"l\" />";
 
   $ret;
@@ -183,7 +191,7 @@ sub displayTag{
   my $s=shift;
   my $p=$s->{page};
   my $dbh=$s->{page}->{dbh};
-  my $tag=$p->{cgi}->param("tag");
+  my $tag=$p->{url}->param("tag");
 
   $s->defaultHeader();
 
@@ -193,12 +201,14 @@ sub displayTag{
     $p->status(400, "Unable to prepare query: $!");
 
   my ($tagstr, $header);
-  if (defined $tag){
+  if (defined $tag && $tag ne ""){
     my @tags;
     $header="Articles tagged '$tag'";
     $q_t->execute($tag);
     my $data=$q_t->fetchall_arrayref({});
-    push(@tags, "<a href=\"$p->{target}?req=article&article=$_->{id}\">$_->{subject}</a>") foreach (@$data);
+    push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'article',
+						  'article'=>$_->{id}}).
+	 "\">$_->{subject}</a>") foreach (@$data);
     $tagstr.=join(', ', @tags);
   } else {
     my @tags;
@@ -206,7 +216,9 @@ sub displayTag{
     $q_a->execute();
     my $data=$q_a->fetchall_arrayref({});
 
-    push(@tags, "<a href=\"$p->{target}?req=tag&tag=$_->{tag}\">$_->{tag}</a>") foreach (@$data);
+    push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'tag',
+						  'tag'=>$_->{tag}}).
+	 "\">$_->{tag}</a>")  foreach (@$data);
     $tagstr.=join(', ', @tags);
   }
   $p->title($s->{mc}->{'title-prefix'}." - $header");
@@ -229,7 +241,7 @@ sub displayArticle{
 
   $s->defaultHeader();
 
-  my $article=int($p->{cgi}->param("article"))||
+  my $article=int($p->{url}->param("article"))||
     $p->status(404, "No such article");
   my $q_a=$dbh->prepare("select * from blog where id=?") ||
     $p->status(400, "Unable to prepare query: $!");
@@ -274,7 +286,7 @@ sub displayPage{
   my $pages=int($cnt/$s->{mc}->{numarticles});
   $pages++ unless ($cnt=~/0$/);
 
-  my $page=int($p->{cgi}->param("page"))||1;
+  my $page=int($p->{url}->param("page"))||1;
   $page=1 if ($page<0);
   $offset=($page-1)*$s->{mc}->{numarticles};
 
@@ -283,7 +295,7 @@ sub displayPage{
 
   #TODO: urlbuilder
 
-  $p->add(div(p(navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
+  $p->add(div(p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
 	      {'class'=>'navw'})
 	 );
 
@@ -294,7 +306,7 @@ sub displayPage{
   }
 
   $p->add(div(p("There are $cnt articles on $pages pages").
-	      p(navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
+	      p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
 	      {'class'=>'navw-full'})
 	 );
 }
