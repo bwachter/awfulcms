@@ -547,8 +547,8 @@ sub pRSS {
   my $string=shift;
 
   $string=~s/<br \/>/\n<br \/>/g;
-  $string=~s/>/&gt;/g;
-  $string=~s/</&lt;/g;
+#  $string=~s/>/&gt;/g;
+#  $string=~s/</&lt;/g;
 
   $string;
 }
