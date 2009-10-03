@@ -36,8 +36,13 @@ sub thumbnail {
   my ($im, $tn, $image, $dx, $dy);
   return if (ref($opts) ne "HASH");
 
-  my $infile="$opts->{directory}/$opts->{filename}";
-  my $outfile="$opts->{directory}/.$opts->{filename}";
+  my $filename=$opts->{filename};
+  return unless $filename;
+
+  my $infile="$opts->{directory}/$filename";
+  $filename=$opts->{prepend}.$filename if ($opts->{prepend});
+  my $outfile="$opts->{directory}/.$filename";
+  $outfile.=$opts->{append} if ($opts->{append});
 
   my @instat=stat($infile);
   my @outstat=stat($outfile);
@@ -55,14 +60,18 @@ sub thumbnail {
   my ($x,$y)=$im->getBounds();
 
   if (($y/$x) < 1) { # wide not tall
-    if ($x < $opts->{maxx}){ $dx=$x; $dy=$y; }
-    else {
+    if ($x < $opts->{maxx}){ # image smaller than thumbnail
+      return if ($opts->{ignorelarger});
+      $dx=$x; $dy=$y; 
+    } else {
       $dx=$opts->{maxx};
       $dy=(($y/$x)*$dx);
     }
   } else {
-    if ($y < $opts->{maxy}){ $dy=$y; $dx=$x; }
-    else { 
+    if ($y < $opts->{maxy}){ # image smaller than thumbnail
+      return if ($opts->{ignorelarger});
+      $dy=$y; $dx=$x;
+    } else { 
       $dy=$opts->{maxy};
       $dx=(($x/$y)*$dy);
     }
