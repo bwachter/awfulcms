@@ -1,4 +1,8 @@
 #!/usr/bin/perl
+# new headers: obsoletes
+# add `description' to tags (separate table, join)
+# descrition-header; only visible in the blog
+# faq autogeneration
 
 =head1 blog.pl
 
@@ -32,9 +36,12 @@ my @keys=('pid', 'rpid', 'subject', 'body', 'lang', 'name', 'email', 'homepage',
 my @fixedkeys=('id');
 
 # global values
+my $instance=$ARGV[0];
 my $c=AwfulCMS::Config->new("");
 my $mc=$c->getValues("ModBlogCLI");
 my $mcm=$c->getValues("ModBlog");
+$mcm={%{$mcm}, %{$c->getValues("ModBlog/$instance")}} if ($c->getValues("ModBlog/$instance"));
+
 my $dbh;
 my $OUT;
 
@@ -333,6 +340,7 @@ sub main{
   $OUT = $term->OUT || \*STDOUT;
   my %article;
 
+  print $OUT "Using blog at $mcm->{baselink}\n";
   connectDB();
   while ( defined ($_ = $term->readline($prompt)) ) {
     my @cmd=split(/ /, $_);
