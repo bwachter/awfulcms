@@ -34,10 +34,12 @@ sub new {
   $_request=~s/^\/*//;
   $_request=~s/^$_baseurl//;
   $_request=~s/^\/*//;
+  $_request=~s/\%2C/,/g;
 
   # sometimes we need req= as additional argument
   $s->{arguments}=$_request;
   ($s->{request}, $s->{xarguments})=$_request=~m/(.*?)\/(.*)/;
+  $s->{request}=~s/,.*$//;
 
   my @_arguments=split('/', $s->{arguments});
   foreach (@_arguments){
@@ -69,9 +71,11 @@ sub buildurl {
 
   $baseurl=$s->{baseurl} if ($baseurl eq "");
 
+  $request=$args->{req} if (defined $args->{req});
+  delete $args->{req};
   foreach my $key (sort(keys(%{$args}))){
-    if ($key eq "req"){
-      $request=$args->{$key};
+    if ($key eq $request){
+      $request.=",$args->{$key}";
     } else {
       $url.="$key,$args->{$key}/";
     }
