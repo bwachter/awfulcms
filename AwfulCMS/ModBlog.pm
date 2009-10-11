@@ -42,6 +42,9 @@ sub new{
 	       "article"=>{-handler=>"displayArticle",
 			   -content=>"html",
 			   -dbhandle=>"blog"},
+	       "draft"=>{-handler=>"displayArticle",
+			   -content=>"html",
+			   -dbhandle=>"blog"},
 	       "tag"=>{-handler=>"displayTag",
 		       -content=>"html",
 		       -dbhandle=>"blog"},
@@ -238,17 +241,21 @@ sub displayArticle{
   my $s=shift;
   my $p=$s->{page};
   my $dbh=$s->{page}->{dbh};
+  my $draft=0;
 
   $s->defaultHeader();
 
-  my $article=int($p->{url}->param("article"))||
+  my $article=int(($p->{url}->param("article")) || ($p->{url}->param("draft"))) ||
     $p->status(404, "No such article");
-  my $q_a=$dbh->prepare("select * from blog where id=?") ||
+
+  $draft=1 if (int($p->{url}->param("draft")));
+  my $q_a=$dbh->prepare("select * from blog where id=? and draft=?") ||
     $p->status(400, "Unable to prepare query: $!");
   my $q_c=$dbh->prepare("select * from blog where rpid=? and draft=0 order by created desc") ||
     $p->status(400, "Unable to prepare query: $!");
 
-  $q_a->execute($article) || $p->status(400, "Unable to execute query: $!");
+  $q_a->execute($article, $draft) || $p->status(400, "Unable to execute query: $!");
+  $p->status(404, "No such article") if ($q_a->rows == 0);
 
   my $d=$q_a->fetchrow_hashref();
   $p->title($s->{mc}->{'title-prefix'}." - ".$d->{subject});
