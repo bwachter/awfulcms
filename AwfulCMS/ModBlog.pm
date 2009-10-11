@@ -200,7 +200,7 @@ sub displayTag{
 
   my $q_a=$dbh->prepare("select tag from blog_tags group by tag order by tag") ||
     $p->status(400, "Unable to prepare query: $!");
-  my $q_t=$dbh->prepare("select blog_tags.tag,blog.subject,blog.id from blog_tags left join (blog) on (blog_tags.id=blog.id) where tag=? order by tag")||
+  my $q_t=$dbh->prepare("select blog_tags.tag,blog.subject,blog.id from blog_tags left join (blog) on (blog_tags.id=blog.id) where tag=? and draft=0 order by tag")||
     $p->status(400, "Unable to prepare query: $!");
 
   my ($tagstr, $header);
