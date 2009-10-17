@@ -50,14 +50,14 @@ sub format {
 
   # .*? -- non-greedy matching...
   # h2-6
-  $string=~s{={6}(.*?)={6}}{<h6>$1</h6>}gs;
-  $string=~s{={5}(.*?)={5}}{<h5>$1</h5>}gs;
-  $string=~s{={4}(.*?)={4}}{<h4>$1</h4>}gs;
-  $string=~s{={3}(.*?)={3}}{<h3>$1</h3>}gs;
-  $string=~s{={2}(.*?)={2}}{<h2>$1</h2>}gs;
+  $string=~s{={6}(.*?)={6}((?: \w*="\w*")*)}{<h6$2>$1</h6>}gs;
+  $string=~s{={5}(.*?)={5}((?: \w*="\w*")*)}{<h5$2>$1</h5>}gs;
+  $string=~s{={4}(.*?)={4}((?: \w*="\w*")*)}{<h4$2>$1</h4>}gs;
+  $string=~s{={3}(.*?)={3}((?: \w*="\w*")*)}{<h3$2>$1</h3>}gs;
+  $string=~s{={2}(.*?)={2}((?: \w*="\w*")*)}{<h2$2>$1</h2>}gs;
 
-  $string=~s{-\[(.*?)\]-}{<pre>$1</pre>}gs;
-  $string=~s{--"(.*?)"--}{<blockquote><p>$1</p></blockquote>}gs;
+  $string=~s{-\[(.*?)\]-((?: \w*="\w*")*)}{<pre$2>$1</pre>}gs;
+  $string=~s{--"(.*?)"--((?: \w*="\w*")*)}{<blockquote$2><p>$1</p></blockquote>}gs;
 
   # insert paragraphs after block elements...
   $string=~s{(</.*?>\n*)([^<>]+?)(<.*?>|\n{2})}{$1<p>$2</p>$3}gsm;
