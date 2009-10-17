@@ -127,7 +127,7 @@ sub formatArticle{
     div("<!-- start news entry --><a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"".
 	$p->{url}->buildurl({'req'=>'article',
 			    'article'=>$d->{id}})."\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
-			      div("<p>$body</p>", {'class'=>'newsbody'}).
+			      div("$body", {'class'=>'newsbody'}).
 				div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
 	  "<br class=\"l\" /><br class=\"l\" />";
 
