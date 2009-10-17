@@ -46,12 +46,37 @@ sub format {
   my $s=shift;
   my $string=shift;
 
-  $string=~s/\n/<br \/>/g;
+  $string=~s{\n{2,}}{\n\n}g;
+
   # .*? -- non-greedy matching...
-  $string=~s/\[\[img:\/\/(.*?)\|\|(.*?)\]\]/<img src="$1" alt="$2" \/>/g;
-  $string=~s/\[\[(.*?)\|\|(.*?)\]\]/<a href="$1">$2<\/a>/g;
-  $string=~s/-"(.*?)"-/<\/p><blockquote><p>$1<\/p><\/blockquote><p>/gs;
-  $string=~s/-\[(.*?)\]-/<\/p><pre>$1<\/pre><p>/gs;
+  # h2-6
+  $string=~s{={6}(.*?)={6}}{<h6>$1</h6>}gs;
+  $string=~s{={5}(.*?)={5}}{<h5>$1</h5>}gs;
+  $string=~s{={4}(.*?)={4}}{<h4>$1</h4>}gs;
+  $string=~s{={3}(.*?)={3}}{<h3>$1</h3>}gs;
+  $string=~s{={2}(.*?)={2}}{<h2>$1</h2>}gs;
+
+  $string=~s{-\[(.*?)\]-}{<pre>$1</pre>}gs;
+  $string=~s{--"(.*?)"--}{<blockquote><p>$1</p></blockquote>}gs;
+
+  # insert paragraphs after block elements...
+  $string=~s{(</.*?>\n*)([^<>]+?)(<.*?>|\n{2})}{$1<p>$2</p>$3}gsm;
+  # ...get rid of newline between tags...
+  $string=~s{>\n*<}{><}g;
+  # ...and create all other paragraphs between double-newline or other <p>
+  $string=~s{(</p>|\n{2})([^<>]+?)(<.*?>|\n{2})}{$1<p>$2</p>$3}gsm;
+  # now create the last paragraph, if needed...
+  $string=~s{\n}{}g;
+  $string=~s{(</.*?>)([^<]*?)$}{$1<p>$2</p>}smx;
+  # ...and the first
+  $string=~s{^([^<>]+)}{<p>$1</p>}sm;
+
+  # inline elements
+  $string=~s{'''(.*?)'''}{<b>$1</b>}gs;
+  $string=~s{''(.*?)''}{<i>$1</i>}gs;
+  $string=~s{\[\[img:\/\/(.*?)\|\|(.*?)\]\]}{<img src="$1" alt="$2" />}g;
+  $string=~s{\[\[(.*?)\|\|(.*?)\]\]}{<a href="$1">$2</a>}g;
+  $string=~s{'''''(.*?)'''''}{<i><b>$1</b></i>}gs;
 
   $string;
 }
