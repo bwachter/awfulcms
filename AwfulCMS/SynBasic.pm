@@ -46,6 +46,7 @@ sub format {
   my $s=shift;
   my $string=shift;
 
+  $string=~s{\r}{\n}g;
   $string=~s{\n{2,}}{\n\n}g;
 
   # .*? -- non-greedy matching...
