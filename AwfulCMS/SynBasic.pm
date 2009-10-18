@@ -65,7 +65,7 @@ sub format {
   # ...get rid of newline between tags...
   $string=~s{>\n*<}{><}g;
   # ...and create all other paragraphs between double-newline or other <p>
-  $string=~s{(</p>|\n{2})([^<>]+?)(?=<.*?>|\n{2})}{$1<p>$2</p>}gsm;
+  $string=~s{(</p>|\n{2})([^<>]+?)(?=<.*?>|\n{2})(?![^>]*</pre>)}{$1<p>$2</p>}gsm;
   # now create the last paragraph, if needed...
   $string=~s{(</.*?>)([^<]*?)$}{$1<p>$2</p>}s;
   # ...and the first
