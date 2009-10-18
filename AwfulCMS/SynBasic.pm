@@ -66,10 +66,9 @@ sub format {
   # ...and create all other paragraphs between double-newline or other <p>
   $string=~s{(</p>|\n{2})([^<>]+?)(<.*?>|\n{2})}{$1<p>$2</p>$3}gsm;
   # now create the last paragraph, if needed...
-  $string=~s{\n}{}g;
-  $string=~s{(</.*?>)([^<]*?)$}{$1<p>$2</p>}smx;
+  $string=~s{(</.*?>)([^<]*?)$}{$1<p>$2</p>}s;
   # ...and the first
-  $string=~s{^([^<>]+)}{<p>$1</p>}sm;
+  $string=~s{^([^<>]+)}{<p>$1</p>}s;
 
   # inline elements
   $string=~s{'''(.*?)'''}{<b>$1</b>}gs;
