@@ -1,6 +1,7 @@
 package AwfulCMS::ModTemplate;
 
 use strict;
+use AwfulCMS::SynBasic;
 
 sub new(){
   shift;
@@ -29,13 +30,44 @@ baz";
 
 sub mainsite(){
   my $s=shift;
+  my $p=$s->{page};
   my @lines;
-  open(F, "$s->{page}->{rq_file}")||die "Unable to open template '$s->{page}->{rq_file}'";
+
+  my $filename=$s->{page}->{rq_dir}."/".$s->{page}->{rq_file};
+  # FIXME, index.html needs to be found, too
+  $filename=~s/\.html$/.tpl/;
+  $filename.="index.tpl" if ($filename=~/\/$/);
+  $filename.=".tpl" unless ($filename=~/\.tpl$/);
+  
+  open(F, "$filename")||
+    $p->status(404, "No such file '$filename'");
   @lines=<F>;
   close(F);
-  foreach(@lines){
-    $s->{page}->add($_);
+
+  my $content=join('', @lines);
+  (my $metadata)=$content=~/\{:(.*):\}/s;
+  $content=~s/\{:(.*):\}//gs;
+  $content=~s/^\s*//;
+  $metadata=~s/^\s+/ /;
+  my @metadata;
+  @metadata=split '\n', $metadata;
+  my %metadata;
+  foreach (@metadata){
+    chomp;
+    s/^ *//;
+    my ($key, $value)=split(/=/);
+    $metadata{"$key"}=$value;
   }
+
+  $p->title($metadata{title});
+  my $body;
+  $body.="<h1>$metadata{title}</h1>" if defined $metadata{title};
+  $body.=AwfulCMS::SynBasic->format($content, 
+				      {blogurl=>$s->{mc}->{'content-prefix'}});
+
+  #foreach my $key (sort(keys(%metadata))){ $body.="'$key' =&gt; '$metadata{$key}'<br />"; }
+
+  $p->add($body);
 }
 
 1;
