@@ -25,6 +25,7 @@ use File::Temp;
 use AwfulCMS::Config;
 use AwfulCMS::LibFS qw(openreadclose);
 use AwfulCMS::Page;
+use AwfulCMS::SynBasic;
 require DBI;
 use strict;
 use XML::RSS;
