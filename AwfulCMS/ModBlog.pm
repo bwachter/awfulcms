@@ -102,7 +102,8 @@ sub formatArticle{
   }
   $d->{date}=localtime($d->{created});
 
-  my $body=AwfulCMS::SynBasic->format($d->{body});
+  my $body=AwfulCMS::SynBasic->format($d->{body}, 
+				     {blogurl=>$s->{mc}->{'content-prefix'}});
 
   my @tags=$s->getTags($d->{id});
   my @tagref;
