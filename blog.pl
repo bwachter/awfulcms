@@ -63,7 +63,8 @@ sub updateRSS{
   $q->execute() || return;
     #&myDie("Unable to execute the query for updating RSS: $!");
   while ($result=$q->fetchrow_hashref()) {
-    my $body=AwfulCMS::Page->pString($result->{body});
+    my $body=AwfulCMS::SynBasic->format($result->{body}, 
+			   {blogurl=>$mcm->{'content-prefix'}});
     my $created=localtime($result->{created});
     # update RSS feed
     # FIXME, change to url builder
