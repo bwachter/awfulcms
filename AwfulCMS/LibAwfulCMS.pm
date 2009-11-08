@@ -63,6 +63,10 @@ sub init{
   while (my ($media,$stylesheet)=each(%$stylesheets)){
     $p->{head}.="<link rel=\"stylesheet\" type=\"text/css\" media=\"$media\" href=\"$stylesheet\" />\n";
   }
+  if (my $favicon=$c->getValue("main", "favicon")){
+    # todo, check icon type. so far only png is supported
+    $p->{head}.="<link rel=\"icon\" href=\"$favicon\" type=\"image/png\" />\n";
+  }
 
 # REMOVE, moved to doRequest()
 #  if (defined($p->{rq_vars}->{req})){
