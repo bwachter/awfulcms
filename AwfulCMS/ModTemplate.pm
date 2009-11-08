@@ -68,7 +68,11 @@ sub mainsite(){
 
   #foreach my $key (sort(keys(%metadata))){ $body.="'$key' =&gt; '$metadata{$key}'<br />"; }
 
+  # FIXME, more elegant solution
   $p->add($body);
+  my $dumpfile=$filename;
+  $dumpfile=~s/\.tpl$/.html/;
+  $p->dumpto($dumpfile);
 }
 
 1;

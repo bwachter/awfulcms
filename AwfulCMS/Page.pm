@@ -150,6 +150,7 @@ TODO
 
 sub out {
   my $s=shift;
+  my $hdr;
   my $out;
 
   if (defined $s->{header}){
@@ -157,15 +158,15 @@ sub out {
       my ($key, $value);
       while (($key, $value)=each(%{$s->{header}})){
 	$value=~s/\n*$//;
-	$out.="$key: $value\n";
+	$hdr.="$key: $value\n";
       }
-    } else { $out.=$s->{header}; }
+    } else { $hdr.=$s->{header}; }
     if (ref($s->{cookies}) eq "ARRAY"){
       foreach(@{$s->{cookies}}){
-	$out.="Set-Cookie: $_\n";
+	$hdr.="Set-Cookie: $_\n";
       }
     }
-    $out.="\n";
+    $hdr.="\n";
   }
 
   $out.=$s->{doctype} if defined $s->{doctype};
@@ -189,11 +190,18 @@ sub out {
   $out.=$s->{postinclude} if ($s->{postinclude});
   $out.="</body></html>\n";
 
+  if (defined $s->{dumppage}){
+    # FIXME, error handling and recent check
+    open(F, ">$s->{dumppage}");
+    print F $out;
+    close(F); 
+  }
+
   if ($s->{mode} eq "CLI"){
     my $text=HTML::FormatText::WithLinks::AndTables->convert($out);
     print $text;
   } else {
-    print $out;
+    print $hdr.$out;
   }
 }
 
@@ -280,6 +288,18 @@ sub title {
   my $s=shift;
   my $title=shift;
   $s->{'title'}=$title;
+}
+
+=item dumpto($filename)
+
+Dump the page to $filename in addition to stdout
+
+=cut
+
+sub dumpto {
+  my $s=shift;
+  my $filename=shift;
+  $s->{'dumppage'}=$filename;
 }
 
 =item add($content, [$divdesc])
