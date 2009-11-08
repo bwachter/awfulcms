@@ -80,6 +80,11 @@ sub format {
   $string=~s{\[\[(.*?)\|\|(.*?)\]\]}{<a href="$1">$2</a>}g;
   $string=~s{'''''(.*?)'''''}{<i><b>$1</b></i>}gs;
 
+  # some cases still result in empty paragraphs, remove them for now
+  $string=~s{<p>\s*</p>}{}gs;
+
+  $string=~s/{{(.*?)}}/<$1>/gs if (defined $vars->{htmlhack});
+
   $string;
 }
 

@@ -63,7 +63,8 @@ sub mainsite(){
   my $body;
   $body.="<h1>$metadata{title}</h1>" if defined $metadata{title};
   $body.=AwfulCMS::SynBasic->format($content, 
-				      {blogurl=>$s->{mc}->{'content-prefix'}});
+				      {blogurl=>$s->{mc}->{'content-prefix'},
+				      htmlhack=>1});
 
   #foreach my $key (sort(keys(%metadata))){ $body.="'$key' =&gt; '$metadata{$key}'<br />"; }
 
