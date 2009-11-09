@@ -85,6 +85,11 @@ sub format {
 
   $string=~s/{{(.*?)}}/<$1>/gs if (defined $vars->{htmlhack});
 
+  # lists. first thoughts
+  #  ordered list: {% %}
+  #  unordered list: {! !}
+  #  definition list: {* *}
+
   $string;
 }
 

@@ -100,12 +100,11 @@ sub lookupModule{
 
   if ($c->getValue("main", "wildcardmappings")){
     my @t=split('/', $_request);
-    my $t="";
-    foreach(@t){
-      $t.=$_;
+    while(@t){
+      my $t=join('/', @t);
       $baseurl=$t;
       return $_modules->{"$t*"} if (exists $_modules->{"$t*"});
-      $t.='/';
+      pop(@t);
     }
   }
 

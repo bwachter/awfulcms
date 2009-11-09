@@ -38,7 +38,9 @@ sub mainsite(){
   $filename=~s/\.html$/.tpl/;
   $filename.="index.tpl" if ($filename=~/\/$/);
   $filename.=".tpl" unless ($filename=~/\.tpl$/);
-  
+
+  # if index.tpl does not exist generate a simple overview page;
+  # if overview.map exists, use this for the overview
   open(F, "$filename")||
     $p->status(404, "No such file '$filename'");
   @lines=<F>;
