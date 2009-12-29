@@ -62,7 +62,7 @@ sub navwidget{
     }
   }
 
-  $nav.=a('&gt;&gt', {'href'=>"$param=".($curpage+1)}) unless ($curpage>=$maxpage);
+  $nav.=a('&gt;&gt;', {'href'=>"$param=".($curpage+1)}) unless ($curpage>=$maxpage);
   $nav;
 }
 

@@ -272,7 +272,7 @@ sub navwidget{
     }
   }
 
-  $nav.=a('&gt;&gt', {
+  $nav.=a('&gt;&gt;', {
                       'href'=>$s->{url}->buildurl({"$param"=>$curpage+1})
                      }) unless ($curpage>=$maxpage);
   $nav;
