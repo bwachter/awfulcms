@@ -7,7 +7,7 @@ This is the AwfulCMS core library.
 
 =head2 Configuration parameters
 
-There are no configuration parameters outside this module. 
+There are no configuration parameters outside this module.
 
 =head2 Module functions
 
@@ -36,7 +36,7 @@ sub new {
   # a hash to hold all main divs
   $s->{divmap}={};
   $s->{divmap}->{500}={'id'=>'content',
-		       'class'=>'content'};
+                       'class'=>'content'};
   # a hash to hold divname -> number mappings
   $s->{divhash}={};
   #$s->{divhash}->{content}="<hr/>Sample content<hr/>";
@@ -44,7 +44,7 @@ sub new {
   #die (ref($s->{divhash}));
 
   if (defined $o){
-    if (ref($o) eq "HASH"){ 
+    if (ref($o) eq "HASH"){
       $s->{title}=$o->{title} if (defined $o->{title});
       $s->{mode}=$o->{mode} if (defined $o->{mode});
     }
@@ -77,17 +77,17 @@ sub new {
   }
 
   $s->{sdesc}={
-	       400=>{"short"=>"Bad Request",
-		     "long"=>"Your client made a bad request"},
-	       401=>{"short"=>"Unauthorized",
-		     "long"=>"Your are not authorized to perform this operation"},
-	       402=>{"short"=>"Payment Required",
-		     "long"=>"Give me your money!"},
-	       403=>{"short"=>"Forbidden",
-		     "long"=>"You're not allowed to touch this. Seriously."},
-	       404=>{"short"=>"Not Found",
-		     "long"=>"You requested a page which is not available (anymore)"}
-	      };
+               400=>{"short"=>"Bad Request",
+                     "long"=>"Your client made a bad request"},
+               401=>{"short"=>"Unauthorized",
+                     "long"=>"Your are not authorized to perform this operation"},
+               402=>{"short"=>"Payment Required",
+                     "long"=>"Give me your money!"},
+               403=>{"short"=>"Forbidden",
+                     "long"=>"You're not allowed to touch this. Seriously."},
+               404=>{"short"=>"Not Found",
+                     "long"=>"You requested a page which is not available (anymore)"}
+              };
 
 
   if ($s->{mode} eq "CLI"){
@@ -118,9 +118,9 @@ sub dbhandle {
   eval "require DBI";
   $s->status(400, $@) if ($@);
 
-  $s->{dbh}=DBI->connect($dbcon->{dsn}, $dbcon->{user}, 
-			 $dbcon->{password}, $dbcon->{attr}) ||
-			   $s->status(500, "DBI->connect($dbcon->{handle}): ". DBI->errstr);
+  $s->{dbh}=DBI->connect($dbcon->{dsn}, $dbcon->{user},
+                         $dbcon->{password}, $dbcon->{attr}) ||
+                           $s->status(500, "DBI->connect($dbcon->{handle}): ". DBI->errstr);
 }
 
 =item setModule()
@@ -157,20 +157,20 @@ sub out {
     if (ref($s->{header}) eq "HASH"){
       my ($key, $value);
       while (($key, $value)=each(%{$s->{header}})){
-	$value=~s/\n*$//;
-	$hdr.="$key: $value\n";
+        $value=~s/\n*$//;
+        $hdr.="$key: $value\n";
       }
     } else { $hdr.=$s->{header}; }
     if (ref($s->{cookies}) eq "ARRAY"){
       foreach(@{$s->{cookies}}){
-	$hdr.="Set-Cookie: $_\n";
+        $hdr.="Set-Cookie: $_\n";
       }
     }
     $hdr.="\n";
   }
 
   $out.=$s->{doctype} if defined $s->{doctype};
-  $out.="<html><head>$s->{head}\n".
+  $out.="<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>$s->{head}\n".
     "<title>$s->{title}</title>\n".
       "</head><body>\n";
 
@@ -194,7 +194,7 @@ sub out {
     # FIXME, error handling and recent check
     open(F, ">$s->{dumppage}");
     print F $out;
-    close(F); 
+    close(F);
   }
 
   if ($s->{mode} eq "CLI"){
@@ -248,13 +248,13 @@ sub navwidget{
   # format 1...c-1 c c+1...l
 
   $nav=a('&lt;&lt', {'href'=>$s->{url}->buildurl({"$param"=>$curpage-1})
-		    }) unless ($curpage==$minpage);
+                    }) unless ($curpage==$minpage);
   if ($curpage>$minpage+3){
     $nav.=a(1, {'href'=>$s->{url}->buildurl({"$param"=>$minpage})}).
       " ... ".a($curpage-1, {'href'=>$s->{url}->buildurl({"$param"=>$curpage-1})});
   } else {
     # there is only a one number gap at the beginning, don't use ...
-    for (my $i=0;$i<3;$i++){ 
+    for (my $i=0;$i<3;$i++){
       $nav.=a($minpage+$i, {'href'=>$s->{url}->buildurl({"$param"=>$minpage+$i})}) unless ($curpage<=$minpage+$i);
     }
   }
@@ -266,15 +266,15 @@ sub navwidget{
       " ... ".a($maxpage, {'href'=>$s->{url}->buildurl({"$param"=>$maxpage})});
   } else {
     # there is only a one number gap at the end, don't use ...
-    for (my $i=1;$i<=3;$i++){ 
+    for (my $i=1;$i<=3;$i++){
       $nav.=a($curpage+$i, {'href'=>$s->{url}->buildurl({"$param"=>($curpage+$i)})
-			   }) unless ($curpage>=$maxpage-$i+1);
+                           }) unless ($curpage>=$maxpage-$i+1);
     }
   }
 
   $nav.=a('&gt;&gt', {
-		      'href'=>$s->{url}->buildurl({"$param"=>$curpage+1})
-		     }) unless ($curpage>=$maxpage);
+                      'href'=>$s->{url}->buildurl({"$param"=>$curpage+1})
+                     }) unless ($curpage>=$maxpage);
   $nav;
 }
 
@@ -320,7 +320,7 @@ sub add {
   #  $s->{divhash}->{content}=500;
 
   #$s->{divmap}->{500}={'id'=>'content',
-  #		       'class'=>'content'};
+  #                    'class'=>'content'};
 
   $s->{divhash}->{$divname}.=$content;
 }
@@ -391,7 +391,7 @@ sub postinclude{
 =item setHeader($headerName, $headerValue)
 
 Sets a HTTP-header to the given value. If a header with this name
-already exists it will be overwritten. 
+already exists it will be overwritten.
 
 C<setHeader("Location", "http://www.example.com")>
 
@@ -436,12 +436,12 @@ sub addCookie {
 
 tag() inserts a new tag into the current page
 
-tag() accepts up to 4 arguments: tag name, attributes, content 
+tag() accepts up to 4 arguments: tag name, attributes, content
 and valid attributes.
 
 The first parameter needs to be a scalar containing the tag name.
 
-The first hash is used as argument list, the first array for 
+The first hash is used as argument list, the first array for
 argument validation. The second scalar is used as content.
 
 =cut
@@ -495,7 +495,7 @@ sub div {
   $attributes={} unless defined $attributes;
 #  my %allowedAttributes=("align"=>("left", "center", "right", "justify"),
   my %allowedAttributes=("align"=>"",
-			 "class"=>"", "id"=>"", "style"=>"", "title"=>"");
+                         "class"=>"", "id"=>"", "style"=>"", "title"=>"");
   tag("div", $content, $attributes, \%allowedAttributes);
 }
 
