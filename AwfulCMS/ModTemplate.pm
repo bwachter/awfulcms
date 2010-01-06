@@ -79,6 +79,11 @@ sub mainsite(){
   $p->add($body);
   my $dumpfile=$filename;
   $dumpfile=~s/\.tpl$/.html/;
+
+  if ($s->{mc}->{cache}){
+      $dumpfile=~s,/,_,g;
+      $dumpfile=$s->{mc}->{cache}."/$dumpfile";
+  }
   $p->dumpto($dumpfile);
 }
 
