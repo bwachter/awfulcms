@@ -10,7 +10,7 @@ A command line client for ModBlog
 
 =head2 Configuration parameters
 
-There are no configuration parameters outside this module. 
+There are no configuration parameters outside this module.
 
 =head2 Module functions
 
@@ -33,7 +33,7 @@ use XML::RSS;
 # config part
 my $handle="ModBlog";
 
-my @keys=('pid', 'rpid', 'subject', 'body', 'lang', 'name', 'email', 'homepage', 'draft');
+my @keys=('pid', 'rpid', 'subject', 'body', 'lang', 'name', 'email', 'homepage', 'draft', 'tease');
 my @fixedkeys=('id');
 
 # global values
@@ -55,8 +55,8 @@ sub updateRSS{
   return unless (defined $mcm->{rsspath});
   my $rss = new XML::RSS(encoding => 'ISO-8859-1');
   $rss->channel(title=>$mcm->{'title-prefix'},
-		'link'=>$mcm->{baselink},
-		description=>$mcm->{description});
+                'link'=>$mcm->{baselink},
+                description=>$mcm->{description});
 
   my $q = $dbh->prepare("select id,subject,body,created from blog where pid=0 and draft=0 order by created desc limit 15") ||
     return;
@@ -64,18 +64,18 @@ sub updateRSS{
   $q->execute() || return;
     #&myDie("Unable to execute the query for updating RSS: $!");
   while ($result=$q->fetchrow_hashref()) {
-    my $body=AwfulCMS::SynBasic->format($result->{body}, 
-			   {blogurl=>$mcm->{'content-prefix'}});
+    my $body=AwfulCMS::SynBasic->format($result->{body},
+                           {blogurl=>$mcm->{'content-prefix'}});
     my $created=localtime($result->{created});
     # update RSS feed
     # FIXME, change to url builder
     $rss -> add_item(title => $result->{subject},
-		     'link' => "$mcm->{baselink}/article/article,$result->{id}/",
-		     description => AwfulCMS::Page->pRSS($body),
-		     dc=>{
-			  date       => $created
-			 }
-		    );
+                     'link' => "$mcm->{baselink}/article/article,$result->{id}/",
+                     description => AwfulCMS::Page->pRSS($body),
+                     dc=>{
+                          date       => $created
+                         }
+                    );
   }
   $rss->save($mcm->{docroot}."/".$mcm->{rsspath});
 }
@@ -152,15 +152,15 @@ sub connectDB{
   $o->{user}=$dbc->{$dbhandle}->{1}->{user}||$dbc->{$dbhandle}->{user}||"";
   $o->{password}=$dbc->{$dbhandle}->{1}->{password}||$dbc->{$dbhandle}->{password}||"";
 
-  $dbh=DBI->connect("dbi:$o->{type}:dbname=$o->{dbname}", $o->{user}, 
-		    $o->{password}, {RaiseError=>0,AutoCommit=>1}) ||
-		      die "DBI->connect(): ". DBI->errstr;
+  $dbh=DBI->connect("dbi:$o->{type}:dbname=$o->{dbname}", $o->{user},
+                    $o->{password}, {RaiseError=>0,AutoCommit=>1}) ||
+                      die "DBI->connect(): ". DBI->errstr;
 }
 
 sub writeArticleDB{
   my $args=shift;
-  my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=?, created=? where id=?");
-  my $q_i = $dbh->prepare("insert into blog(pid, rpid, subject, body, lang, name, email, homepage, draft, created) values (?,?,?,?,?,?,?,?,?,?)");
+  my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=?, created=?, tease=? where id=?");
+  my $q_i = $dbh->prepare("insert into blog(pid, rpid, subject, body, lang, name, email, homepage, draft, tease, created) values (?,?,?,?,?,?,?,?,?,?,?)");
   my $q_s = $dbh->prepare("select id from blog where pid=? and rpid=? and subject=? and body=? and lang=? and name=? and email=? and homepage=? and draft=? and  created=?");
 
   $args->{homepage}="" unless (defined $args->{homepage});
@@ -170,18 +170,20 @@ sub writeArticleDB{
 
   if ($args->{id}){
     $args->{created}=time() if ($args->{olddraft}==1);
-    $q_u->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body}, 
-		  $args->{lang}, $args->{name}, $args->{email},
-		  $args->{homepage}, $args->{draft}, $args->{created}, $args->{id})||return "Unable to insert new record: $!\n";
+    $q_u->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
+                  $args->{lang}, $args->{name}, $args->{email},
+                  $args->{homepage}, $args->{draft}, $args->{created},
+                  $args->{tease}, $args->{id})||return "Unable to insert new record: $!\n";
   } else {
     my $created=time();
     my $href;
-    $q_i->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body}, 
-		  $args->{lang}, $args->{name}, $args->{email},
-		  $args->{homepage}, $args->{draft}, $created)||return "Unable to insert new record: $!\n";
-    $q_s->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body}, 
-		  $args->{lang}, $args->{name}, $args->{email},
-		  $args->{homepage}, $args->{draft}, $created)||return "Unable to insert new record: $!\n";
+    $q_i->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
+                  $args->{lang}, $args->{name}, $args->{email},
+                  $args->{homepage}, $args->{draft}, $args->{tease},
+                  $created)||return "Unable to insert new record: $!\n";
+    $q_s->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
+                  $args->{lang}, $args->{name}, $args->{email},
+                  $args->{homepage}, $args->{draft}, $created)||return "Unable to insert new record: $!\n";
     $href=$q_s->fetchrow_hashref();
     $args->{id}=$href->{id};
   }
@@ -313,7 +315,7 @@ sub newArticle{
   my @result;
   my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
   print $tmp <<END;
-Subject: 
+Subject:
 Name: $mc->{name}
 EMail: $mc->{email}
 Homepage: $mc->{homepage}
@@ -321,7 +323,8 @@ Pid: 0
 Rpid: 0
 Lang: $mc->{lang}
 Draft: $mc->{draft}
-Tags: 
+Tease: $mc->{tease}
+Tags:
 
 END
   system("vi $tmp");

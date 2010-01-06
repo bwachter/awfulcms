@@ -37,33 +37,33 @@ sub new{
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"displayPage",
-			   -content=>"html",
-			   -dbhandle=>"blog"},
-	       "article"=>{-handler=>"displayArticle",
-			   -content=>"html",
-			   -dbhandle=>"blog"},
-	       "draft"=>{-handler=>"displayArticle",
-			   -content=>"html",
-			   -dbhandle=>"blog"},
-	       "tag"=>{-handler=>"displayTag",
-		       -content=>"html",
-		       -dbhandle=>"blog"},
-	       "comment"=>{-handler=>"editform",
-		       -content=>"html",
-		       -dbhandle=>"blog",
-		       -role=>"author"},
-	       "edit"=>{-handler=>"editsite",
-			-content=>"html",
-			-role=>"moderator"},
-	       "createdb"=>{-handler=>"createdb",
-			    -content=>"html",
-			    -dbhandle=>"blog",
-			    -role=>"admin"},
-	       "dropdb"=>{-handler=>"dropdb",
-			  -content=>"html",
-			  -dbhandle=>"blog",
-			  -role=>"admin"}
-	       };
+                           -content=>"html",
+                           -dbhandle=>"blog"},
+               "article"=>{-handler=>"displayArticle",
+                           -content=>"html",
+                           -dbhandle=>"blog"},
+               "draft"=>{-handler=>"displayArticle",
+                           -content=>"html",
+                           -dbhandle=>"blog"},
+               "tag"=>{-handler=>"displayTag",
+                       -content=>"html",
+                       -dbhandle=>"blog"},
+               "comment"=>{-handler=>"editform",
+                       -content=>"html",
+                       -dbhandle=>"blog",
+                       -role=>"author"},
+               "edit"=>{-handler=>"editsite",
+                        -content=>"html",
+                        -role=>"moderator"},
+               "createdb"=>{-handler=>"createdb",
+                            -content=>"html",
+                            -dbhandle=>"blog",
+                            -role=>"admin"},
+               "dropdb"=>{-handler=>"dropdb",
+                          -content=>"html",
+                          -dbhandle=>"blog",
+                          -role=>"admin"}
+               };
   #$r->{mc}={} unless (defined $r->{mc});
   $s->{mc}=$r->{mc};
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
@@ -102,15 +102,15 @@ sub formatArticle{
   }
   $d->{date}=localtime($d->{created});
 
-  my $body=AwfulCMS::SynBasic->format($d->{body}, 
-				     {blogurl=>$s->{mc}->{'content-prefix'}});
+  my $body=AwfulCMS::SynBasic->format($d->{body},
+                                     {blogurl=>$s->{mc}->{'content-prefix'}});
 
   my @tags=$s->getTags($d->{id});
   my @tagref;
   my $tagstr="<a href=\"".$p->{url}->buildurl({'req'=>'tag'})."\">Tags</a>: ";
   push(@tagref, "<a href=\"".
        $p->{url}->buildurl({'req'=>'tag',
-			    'tag'=>$_})."\">$_</a>") foreach (@tags);
+                            'tag'=>$_})."\">$_</a>") foreach (@tags);
   $tagstr.=join(', ', @tagref);
   $tagstr.=" None" if (@tagref == 0);
 
@@ -120,17 +120,17 @@ sub formatArticle{
 
   $cmtstring = "<a href=\"".
     $p->{url}->buildurl({'req'=>'article',
-			 'article'=>"$d->{id}"})."#comments\">$cmtstring</a>" if ($ccnt>0);
+                         'article'=>"$d->{id}"})."#comments\">$cmtstring</a>" if ($ccnt>0);
 
   $d->{name}="<a href=\"$d->{homepage}\">$d->{name}</a>" if ($d->{homepage}=~/^http:\/\//);
 
   my $ret=
     div("<!-- start news entry --><a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"".
-	$p->{url}->buildurl({'req'=>'article',
-			    'article'=>$d->{id}})."\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
-			      div("$body", {'class'=>'newsbody'}).
-				div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
-	  "<br class=\"l\" /><br class=\"l\" />";
+        $p->{url}->buildurl({'req'=>'article',
+                            'article'=>$d->{id}})."\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
+                              div("$body", {'class'=>'newsbody'}).
+                                div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
+          "<br class=\"l\" /><br class=\"l\" />";
 
   $ret;
 }
@@ -177,6 +177,26 @@ sub getTags{
   @tags;
 }
 
+=item getTeasers($)
+
+Returs a list of teasers
+
+=cut
+
+sub getTeasers{
+    my $s=shift;
+    my $dbh=$s->{page}->{dbh};
+    my $p=$s->{page};
+    my ($data, @teasers);
+    my $q=$dbh->prepare("select subject from blog where draft=1 and tease=1")||
+        $p->status(400, "Unable to prepare query: $!");
+    $q->execute();
+    $data=$q->fetchall_arrayref({});
+
+    push(@teasers, $_->{subject}) foreach (@$data);
+    join(", ", @teasers);
+}
+
 =back
 
 =head2 Module handlers
@@ -211,8 +231,8 @@ sub displayTag{
     $q_t->execute($tag);
     my $data=$q_t->fetchall_arrayref({});
     push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'article',
-						  'article'=>$_->{id}}).
-	 "\">$_->{subject}</a>") foreach (@$data);
+                                                  'article'=>$_->{id}}).
+         "\">$_->{subject}</a>") foreach (@$data);
     $tagstr.=join(', ', @tags);
   } else {
     my @tags;
@@ -221,14 +241,14 @@ sub displayTag{
     my $data=$q_a->fetchall_arrayref({});
 
     push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'tag',
-						  'tag'=>$_->{tag}}).
-	 "\">$_->{tag}</a>")  foreach (@$data);
+                                                  'tag'=>$_->{tag}}).
+         "\">$_->{tag}</a>")  foreach (@$data);
     $tagstr.=join(', ', @tags);
   }
   $p->title($s->{mc}->{'title-prefix'}." - $header");
   $p->add(div(div($header, {'class'=>'newshead'}).
-	      div($tagstr,{'class'=>'newsbody'})
-	      , {'class'=>'news'}))
+              div($tagstr,{'class'=>'newsbody'})
+              , {'class'=>'news'}))
   #push(@tags, $_->{tag}) foreach (@$data);
 }
 
@@ -303,9 +323,15 @@ sub displayPage{
 
   #TODO: urlbuilder
 
+  if ($s->{mc}->{tease}){
+      $p->add(div(p("Upcoming articles: ".$s->getTeasers()),
+                  {'class'=>'navw'})
+          );
+  }
+
   $p->add(div(p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
-	      {'class'=>'navw'})
-	 );
+              {'class'=>'navw'})
+         );
 
   $q_s->execute(0, $s->{mc}->{numarticles}, $offset) || $p->status(400, "Unable to execute query: $!");
 
@@ -314,9 +340,9 @@ sub displayPage{
   }
 
   $p->add(div(p("There are $cnt articles on $pages pages").
-	      p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
-	      {'class'=>'navw-full'})
-	 );
+              p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
+              {'class'=>'navw-full'})
+         );
 }
 
 =item editform() CGI(int article)
@@ -376,7 +402,7 @@ sub editform{
    </td>
   </tr>
   </table></form><hr>
-	 ");
+         ");
 }
 
 =item createdb()
