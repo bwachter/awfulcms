@@ -6,7 +6,7 @@ This is the AwfulCMS core library.
 
 =head2 Configuration parameters
 
-There are no configuration parameters outside this module. 
+There are no configuration parameters outside this module.
 
 =head2 Module functions
 
@@ -90,9 +90,9 @@ sub lookupModule{
   my $_request=$p->{rq_dir};
   my $_rqfile=$p->{rq_fileabs};
 
-  $_request=$p->{rq_fileabs} if ($c->getValue("main", "filematch") 
-			      && $_request eq "." 
-			      && $p->{rq_fileabs});
+  $_request=$p->{rq_fileabs} if ($c->getValue("main", "filematch")
+                              && $_request eq "."
+                              && $p->{rq_fileabs});
 
   # FIXME, need to check physical directories in some cases
   $baseurl=$_modules->{$_request};
@@ -150,13 +150,14 @@ sub doModule{
   }
 
   $p->status(400, "Module '$module' not available") if ($c->getValue("modules", $module) != 1 &&
-					      $c->getValue("modules", $module_short) != 1);
+                                              $c->getValue("modules", $module_short) != 1);
   $p->status(404, "Module '$module' not found") if ($module eq "");
 
   eval "require $module";
   $p->status(400, "Require $module failed ($@)") if ($@);
 
-  $r->{mc}=$c->getValues($module_short);
+  $r->{mc}={};
+  $r->{mc}=$c->getValues($module_short) if ($c->getValues($module_short));
   $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short."/".$instance)}} if ($c->getValues($module_short."/".$instance));
   $m=$module->new($r, $p);
   $p->status(400, "Unable to load module '$module'") if (ref($m) ne $module);
@@ -228,7 +229,7 @@ sub doRequest{
     }
 
     my $snum=1;
-    $p->status(500, "There's no configuration for DB-handle '$handle', and there's no default handle") 
+    $p->status(500, "There's no configuration for DB-handle '$handle', and there's no default handle")
       if (not defined $dbc->{$handle});
     my $o={};
     if ($dbc->{$handle}->{access} eq "rr"){
@@ -242,8 +243,8 @@ sub doRequest{
     $o->{password}=$dbc->{$handle}->{$snum}->{password}||$dbc->{$handle}->{password}||"";
 
     $p->dbhandle({dsn=>"dbi:$o->{type}:dbname=$o->{dbname}", user=>"$o->{user}",
-		  password=>"$o->{password}", attr=>{RaiseError=>0,AutoCommit=>1},
-		 handle=>$handle});
+                  password=>"$o->{password}", attr=>{RaiseError=>0,AutoCommit=>1},
+                 handle=>$handle});
   }
 
   $call=$r->{rqmap}->{$request}->{-handler};
