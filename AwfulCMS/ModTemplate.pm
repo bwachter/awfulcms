@@ -14,10 +14,12 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"mainsite",
-			   -content=>"html"},
-	       "file"=>{-handler=>"mainsite",
-			 -content=>"html"}
-	       };
+                           -content=>"html"},
+               "file"=>{-handler=>"mainsite",
+                         -content=>"html"}
+               };
+
+  $s->{mc}=$r->{mc};
   bless $s;
   $s;
 }
@@ -38,6 +40,9 @@ sub mainsite(){
   $filename=~s/\.html$/.tpl/;
   $filename.="index.tpl" if ($filename=~/\/$/);
   $filename.=".tpl" unless ($filename=~/\.tpl$/);
+
+  $filename=~s/^$s->{mc}->{prefix}// if ($s->{mc}->{prefix});
+  $filename=$s->{mc}->{path}."/$filename" if ($s->{mc}->{path});
 
   # if index.tpl does not exist generate a simple overview page;
   # if overview.map exists, use this for the overview
@@ -64,9 +69,9 @@ sub mainsite(){
   $p->title($metadata{title});
   my $body;
   $body.="<h1>$metadata{title}</h1>" if defined $metadata{title};
-  $body.=AwfulCMS::SynBasic->format($content, 
-				      {blogurl=>$s->{mc}->{'content-prefix'},
-				      htmlhack=>1});
+  $body.=AwfulCMS::SynBasic->format($content,
+                                      {blogurl=>$s->{mc}->{'content-prefix'},
+                                      htmlhack=>1});
 
   #foreach my $key (sort(keys(%metadata))){ $body.="'$key' =&gt; '$metadata{$key}'<br />"; }
 
