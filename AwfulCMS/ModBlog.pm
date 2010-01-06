@@ -188,13 +188,13 @@ sub getTeasers{
     my $dbh=$s->{page}->{dbh};
     my $p=$s->{page};
     my ($data, @teasers);
-    my $q=$dbh->prepare("select subject from blog where draft=1 and tease=1")||
+    my $q=$dbh->prepare("select subject from blog where draft=1 and tease=1 order by created desc")||
         $p->status(400, "Unable to prepare query: $!");
     $q->execute();
     $data=$q->fetchall_arrayref({});
 
     push(@teasers, $_->{subject}) foreach (@$data);
-    join(", ", @teasers);
+    join("; ", @teasers);
 }
 
 =back
