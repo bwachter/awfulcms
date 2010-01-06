@@ -79,9 +79,13 @@ sub format {
   $string=~s{\[\[img:\/\/(.*?)\|\|(.*?)\]\]}{<img src="$1" alt="$2" />}g;
   $string=~s{\[\[blog:\/\/(.*?)\|\|(.*?)\]\]}{<a href="$vars->{'blogurl'}/$1">$2</a>}g;
   $string=~s{\[\[(.*?)\|\|(.*?)\]\]}{<a href="$1">$2</a>}g;
+  $string=~s{\[\[([^<]*?)\]\]}{<a href="$1">$1</a>}g;
   $string=~s{\[\@([^<]*?)\|\|(.*?)\@\]}{<a name="$1" id="$1">$2</a>}g;
   #dirty hack, replacing all invalid chars by _ for the id would be better
-  $string=~s{\[\@([^ ]*)(.*?)\@\]}{<a name="$1" id="$1">$1$2</a>}g;
+  $string=~s{\[\@([^ @]*)(.*?)\@\]}{<a name="$1" id="$1">$1$2</a>}g;
+  $string=~s{\[#([^ #]*)(.*?)#\]}{<a href="#$1">$1$2</a>}g;
+  #$string=~s{\[#(.*?)#\]}{<a href="#$1">$1</a>}g;
+  #$string=~s{\[\#([^ ]*)(.*?)\#\]}{<a href="#$1">$1$2</a>}g;
   $string=~s{'''''(.*?)'''''}{<i><b>$1</b></i>}gs;
 
   # some cases still result in empty paragraphs, remove them for now
