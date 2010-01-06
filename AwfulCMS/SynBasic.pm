@@ -34,12 +34,12 @@ You can add pre-tags by enclosing text in -[ ]-
 use strict;
 
 sub new {
-	shift;
+        shift;
 
-	my $s={};
+        my $s={};
 
-	bless $s;
-	$s;
+        bless $s;
+        $s;
 }
 
 sub format {
@@ -78,6 +78,7 @@ sub format {
   $string=~s{\[\[img:\/\/(.*?)\|\|(.*?)\]\]}{<img src="$1" alt="$2" />}g;
   $string=~s{\[\[blog:\/\/(.*?)\|\|(.*?)\]\]}{<a href="$vars->{'blogurl'}/$1">$2</a>}g;
   $string=~s{\[\[(.*?)\|\|(.*?)\]\]}{<a href="$1">$2</a>}g;
+  $string=~s{\[\@(.*?)\|\|(.*?)\@\]}{<a name="$1">$2</a>}g;
   $string=~s{'''''(.*?)'''''}{<i><b>$1</b></i>}gs;
 
   # some cases still result in empty paragraphs, remove them for now
@@ -94,13 +95,13 @@ sub format {
 }
 
 sub escape {
-	my $s=shift;
-	my $string=shift;
+        my $s=shift;
+        my $string=shift;
 
-	$string=~s/</&lt;/g;
-	$string=~s/>/&gt;/g;
-	$string=~s/&/&amp;/g;
-	$string;
+        $string=~s/</&lt;/g;
+        $string=~s/>/&gt;/g;
+        $string=~s/&/&amp;/g;
+        $string;
 }
 
 1;
