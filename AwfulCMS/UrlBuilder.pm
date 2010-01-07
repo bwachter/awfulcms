@@ -20,6 +20,7 @@ use strict;
 
 use CGI;
 use Exporter 'import';
+use URI::Escape;
 our @EXPORT_OK=qw(getrequest);
 
 sub new {
@@ -72,6 +73,10 @@ sub param {
   return $s->{args}->{$key};
 }
 
+sub encodeurl {
+
+}
+
 sub buildurl {
   # FIXME, initialize with dir or params, and return cgi style urls, too
   # FIXME, allow removal of baseurl
@@ -83,7 +88,7 @@ sub buildurl {
 
   $baseurl=$s->{baseurl} if ($baseurl eq "");
 
-  $request=$args->{req} if (defined $args->{req});
+  $request=uri_unescape($args->{req}) if (defined $args->{req});
   delete $args->{req};
   foreach my $key (sort(keys(%{$args}))){
     if ($key eq $request){
@@ -111,6 +116,8 @@ sub publish {
   #fixme, check for https
   $url=$s->{rq}->{host}."/$url";
   $url=~s,/+,/,g;
+  uri_escape($url);
+  $url=~s,%2F,/,g;
   "http://$url";
 }
 

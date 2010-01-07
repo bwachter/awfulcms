@@ -76,11 +76,11 @@ sub getArticleGoogle(){
   $ua->agent($s->{mc}->{useragent}) if ($s->{mc}->{useragent});
 
   my $response=$ua->get("http://groups.google.com/groups?selm=$mid&output=gplain");
-  if (!$response->is_success){return $response->status_line};
+  if (!$response->is_success){return "Stage 1 failed: ".$response->status_line};
   $parser->parse($response->decoded_content);
   if (@sourceurl>=1){
-    $response=$ua->get("http://groups.google.com/$sourceurl[1]&output=gplain");
-    if (!$response->is_success){return $response->status_line};
+    $response=$ua->get("http://groups.google.com/$sourceurl[0]&output=gplain");
+    if (!$response->is_success){return "Stage 2 failed: ".$response->status_line};
     $article=$response->decoded_content;
   }
 
@@ -98,7 +98,7 @@ sub getArticleNNTP(){
   eval "require Net::NNTP";
   $p->status(500, $@) if ($@);
 
-  $nntp=Net::NNTP($server)->new()||
+  $nntp=Net::NNTP->new($server)||
     $p->status(500, $@);
   $article=$nntp->article($mid);
   $nntp->quit;
@@ -116,16 +116,17 @@ sub defaultpage(){
 
   $p->title("midget");
   $p->add("<h1>midget</h1>
-<form name=\"foo\" method=\"post\" action=\"/$p->{rq}->{dir}/$p->{rq}->{file}\"><table border=\"0\">
+<form name=\"foo\" method=\"post\" action=\"/".$p->{url}->cgihandler()."\"><table border=\"0\">
 <tr><td>MID:</td><td><input type=\"text\" name=\"mid\" value=\"$mid\" size=\"40\" /></td></tr>
 <tr><td>Server:</td><td><input type=\"text\" name=\"server\" value=\"$server\" size=\"40\" /></td></tr>
 <tr><td><input type=\"submit\" name=\"submit\" value=\"Go!\" /></td><td><input type=\"submit\" name=\"submit\" value=\"GoGoGoogle!\" /></td></tr>
-</table></form><hr>");
+</table></form><hr />");
 
   return if ($mid eq "");
+  $mid=~s/[<>]//g;
 
   my $article;
-    $article=$s->getArticleGoogle($mid);
+
   if ($submit eq "GoGoGoogle!"){
     $article=$s->getArticleGoogle($mid);
   } else {
@@ -135,7 +136,26 @@ sub defaultpage(){
   if ($article eq ""){
     $p->add("<p>Unable to retrieve article <$mid></p>");
   } else {
-    $p->add("<pre>$article</pre>");
+    (my $references)=$article=~m/References:((\s*<[\w%\$\+@\.-]*>\s*){1,})/s;
+    $article=~s/References:(\s*<[\w%\$\+@\.-]*>\s*){1,}/\[\@REFERENCES\@\]\n/s;
+    $references=~s/[\s<]//g;
+    my @references=split('>', $references);
+
+    $article=~s/</&lt;/g;
+    $article=~s/>/&gt;/g;
+    $article=~s/\n/<br \/>/g;
+
+    $references="";
+    foreach(@references){
+      $references.="<a href=\"".$p->{url}->publish({'mid'=>$_,
+                                               'submit'=>$submit})."\">&lt;$_&gt;</a> ";
+    }
+    $article=~s/\[\@REFERENCES\@\]/References: $references/;
+
+    my $url=$p->{url}->publish({'mid'=>$mid,
+                                'submit'=>$submit});
+    $p->add("<p>Use this URL to show this article to someone else: <a href=\"$url\">$url</a></p>");
+    $p->add("<p>$article</p>");
   }
 }
 
