@@ -19,7 +19,7 @@ sub new {
 
   $s->{remote_host}=$ENV{'REMOTE_HOST'} || $ENV{'REMOTE_ADDR'} || 'localhost';
   $s->{remote_ip}=$ENV{'REMOTE_ADDR'} || '127.0.0.2';
-  $s->{host}=http('x_forwarded_host') || http('host') || p('SERVER_NAME') || 'localhost';
+  $s->{host}=$s->http('x_forwarded_host') || $s->http('host') || $s->p('SERVER_NAME') || 'localhost';
   $s->{host}=~s/:\d+$//; #remove port number
   $s->{fileabs}=$ENV{'REQUEST_URI'}; # have a look at the other stuff in CGI.pm
   $s->{fileabs}=~s/^\///;
