@@ -6,17 +6,17 @@ This module provides functions to read and interpret the AwfulCMS config file.
 
 =head2 Configuration parameters
 
-There are no configuration parameters outside this module. 
+There are no configuration parameters outside this module.
 
 =head2 File format
 
-The configuration file is divided in several section, starting with 
-`section <sectionname>' and ending with `endsection'. All text which 
+The configuration file is divided in several section, starting with
+`section <sectionname>' and ending with `endsection'. All text which
 is not between those keywords is treated as comments. Inside a section
 everything after a `#' sign is ignored.
 
 Each section can have its own syntax, though most sections just use
-simple key=value-pairs. 
+simple key=value-pairs.
 
 =head3 Section parsers
 
@@ -42,14 +42,14 @@ sub new(){
   my @lines;
 
   $s->{parsers}={
-		 "main"=>"mainParser",
-		 "modules"=>"mainParser",
-		 "database"=>"dbParser"
-		};
+                 "main"=>"mainParser",
+                 "modules"=>"mainParser",
+                 "database"=>"dbParser"
+                };
 
   # locate the configuration file
   my $home="/tmp";
-  if (defined $ENV{HOME}){ $home=$ENV{HOME}; } 
+  if (defined $ENV{HOME}){ $home=$ENV{HOME}; }
   else {
     my @pw=getpwuid($<);
     $home=$pw[7];
@@ -74,19 +74,19 @@ sub new(){
     $_=~s/ +/ /g;
     $_=~s/^ +//;
     $_=~s/[\t\n]//g;
-    $_=~s/[^\da-zA-Z\@\:=<>\-_\/\.\* ]//g;
+    $_=~s/[^\da-zA-Z\@%\:=<>\-_\/\.\* ]//g;
     next if (/^ *$/);
     if ($type eq ""){
       if (/^section/i){
-	$type=$_;#=~/ .*$/;
-	$type=~s/^.*? //;
+        $type=$_;#=~/ .*$/;
+        $type=~s/^.*? //;
       }
       next;
     } else {
       if (/^endsection/i){
-	$s->{"r_$type"}=$section;
-	$section=$type="";
-	next;
+        $s->{"r_$type"}=$section;
+        $section=$type="";
+        next;
       }
       $section.=$_."\n";
     }

@@ -18,6 +18,7 @@ our @EXPORT_OK=qw(handleCGI);
 
 use strict;
 use Time::HiRes qw(gettimeofday);
+use Date::Format;
 use AwfulCMS::Page;
 use AwfulCMS::Config;
 use AwfulCMS::LibFS qw(openreadclose);
@@ -96,8 +97,8 @@ sub lookupModule{
   my $_rqfile=$p->{rq_fileabs};
 
   $_request=$p->{rq_fileabs} if ($c->getValue("main", "filematch")
-                              && $_request eq "."
-                              && $p->{rq_fileabs});
+                                 && $_request eq "."
+                                 && $p->{rq_fileabs});
 
   # FIXME, need to check physical directories in some cases
   $baseurl=$_modules->{$_request};
@@ -162,11 +163,18 @@ sub doModule{
   $p->status(400, "Require $module failed ($@)") if ($@);
 
   $r->{mc}={};
-  $r->{mc}->{'display-time'}=$c->getValue("main", "display-time");# if ($c->getValue("main", "display-time"));
+  $r->{mc}->{'display-time'}=$c->getValue("main", "display-time") if ($c->getValue("main", "display-time"));
+  $r->{mc}->{'mail-address'}=$c->getValue("main", "mail-address") if ($c->getValue("main", "mail-address"));
   $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short)}} if ($c->getValues($module_short));
   $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short."/".$instance)}} if ($c->getValues($module_short."/".$instance));
 
   $p->{'display-time'}=1 if ($r->{mc}->{'display-time'});
+  if ($r->{mc}->{'mail-address'}){
+    $r->{mc}->{'mail-address'}=time2str($r->{mc}->{'mail-address'}, time);
+    $p->{'mail-address'}=$r->{mc}->{'mail-address'};
+  } else {
+    $p->{'mail-address'}=$r->{mc}->{'mail-address'}='somebody-needs-to-fix-the-configuration@invalid.invalid';
+  }
 
   $m=$module->new($r, $p);
   $p->status(400, "Unable to load module '$module'") if (ref($m) ne $module);
