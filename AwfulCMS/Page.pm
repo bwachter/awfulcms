@@ -20,6 +20,7 @@ our %EXPORT_TAGS = ( tags=>[ @EXPORT_OK ] );
 =cut
 
 use CGI;
+use Time::HiRes qw(gettimeofday tv_interval);
 use strict;
 use AwfulCMS::UrlBuilder;
 
@@ -188,6 +189,12 @@ sub out {
   }
 
   $out.=$s->{postinclude} if ($s->{postinclude});
+
+  if ($s->{'display-time'}){
+      my $timediff=tv_interval($s->{starttime}, [gettimeofday]);
+      $out.="<div id=\"ptime\"><p>Processing took $timediff seconds</p></div>";
+  }
+
   $out.="</body></html>\n";
 
   if (defined $s->{dumppage}){

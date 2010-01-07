@@ -17,6 +17,7 @@ our @EXPORT_OK=qw(handleCGI);
 =cut
 
 use strict;
+use Time::HiRes qw(gettimeofday);
 use AwfulCMS::Page;
 use AwfulCMS::Config;
 use AwfulCMS::LibFS qw(openreadclose);
@@ -35,7 +36,8 @@ my ($p, # the page object
     $module_short, # the module shortname (i.e. without AwfulCMS::)
     $request, # the name of the request to pass through
     $role, # the current role
-    $roles);
+    $roles,
+    $starttime);
 
 my $r={}; # the hash reference for the module configuration / request handlers
 
@@ -59,6 +61,7 @@ sub init{
   $roles=$c->getValues("roles");
 
   $p->{hostname}=$c->getValue("main", "hostname") if ($c->getValue("main", "hostname"));
+  $p->{starttime}=$starttime;
 
   # add stylesheets
   my $stylesheets=$c->getValues("stylesheets");
@@ -159,8 +162,12 @@ sub doModule{
   $p->status(400, "Require $module failed ($@)") if ($@);
 
   $r->{mc}={};
-  $r->{mc}=$c->getValues($module_short) if ($c->getValues($module_short));
+  $r->{mc}->{'display-time'}=$c->getValue("main", "display-time");# if ($c->getValue("main", "display-time"));
+  $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short)}} if ($c->getValues($module_short));
   $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short."/".$instance)}} if ($c->getValues($module_short."/".$instance));
+
+  $p->{'display-time'}=1 if ($r->{mc}->{'display-time'});
+
   $m=$module->new($r, $p);
   $p->status(400, "Unable to load module '$module'") if (ref($m) ne $module);
 }
@@ -271,6 +278,8 @@ TODO
 
 sub handleCGI{
   $mode="CGI";
+  #$starttime=DateTime->now();
+  $starttime=[gettimeofday];
   init();
   doModule();
   doRequest();
