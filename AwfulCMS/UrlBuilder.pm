@@ -6,7 +6,7 @@ This library provides a few functions for graphic manipulation
 
 =head2 Configuration parameters
 
-There are no configuration parameters outside this module. 
+There are no configuration parameters outside this module.
 
 =head2 Module functions
 
@@ -28,6 +28,8 @@ sub new {
   my $s={};
   bless $s;
 
+  #FIXME, make this configurable
+  $s->{pathsep}=":";
   $s->{args}={};
   $s->{baseurl}=$_baseurl;
 
@@ -45,6 +47,7 @@ sub new {
   foreach (@_arguments){
     # FIXME, url quote/unquote
     $_=~s/\%2C/,/g;
+    $_=~s,$s->{pathsep},/,g;
     my @_argarr=split(',', $_);
     my $key=shift(@_argarr);
     my $value=join(',',@_argarr);
@@ -56,7 +59,7 @@ sub new {
 sub param {
   my $s=shift;
   my $key=shift;
-  
+
   return $s->{args}->{$key};
 }
 
@@ -77,6 +80,8 @@ sub buildurl {
     if ($key eq $request){
       $request.=",$args->{$key}";
     } else {
+      $args->{$key}=~s,/+,$s->{pathsep},g;
+      $args->{$key}=~s,^$s->{pathsep},,g;
       $url.="$key,$args->{$key}/";
     }
   }
