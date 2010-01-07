@@ -18,6 +18,7 @@ C<our @EXPORT_OK=qw(thumbnail);>
 
 use strict;
 
+use CGI;
 use Exporter 'import';
 our @EXPORT_OK=qw(getrequest);
 
@@ -27,9 +28,10 @@ sub new {
   my $_baseurl=shift;
   my $s={};
   bless $s;
+  $s->{rq}=shift;
 
   #FIXME, make this configurable
-  $s->{pathsep}=":";
+  $s->{pathsep}=",,";
   $s->{args}={};
   $s->{baseurl}=$_baseurl;
 
@@ -43,11 +45,18 @@ sub new {
   ($s->{request}, $s->{xarguments})=$_request=~m/(.*?)\/(.*)/;
   $s->{request}=~s/,.*$//;
 
+  my $cgi=new CGI;
+  my $vars=$cgi->Vars();
+
+  foreach my $key (sort(keys(%$vars))){
+    $s->{args}->{$key}=$vars->{$key};
+  }
+
   my @_arguments=split('/', $s->{arguments});
   foreach (@_arguments){
     # FIXME, url quote/unquote
-    $_=~s/\%2C/,/g;
     $_=~s,$s->{pathsep},/,g;
+    $_=~s/\%2C/,/g;
     my @_argarr=split(',', $_);
     my $key=shift(@_argarr);
     my $value=join(',',@_argarr);
@@ -86,6 +95,23 @@ sub buildurl {
     }
   }
   "/$baseurl/$request/$url";
+}
+
+sub cgihandler {
+  my $s=shift;
+
+  $s->{baseurl};
+}
+
+sub publish {
+  my $s=shift;
+  my $url=shift;
+
+  $url=$s->buildurl($url) if (ref $url eq "HASH");
+  #fixme, check for https
+  $url=$s->{rq}->{host}."/$url";
+  $url=~s,/+,/,g;
+  "http://$url";
 }
 
 1;

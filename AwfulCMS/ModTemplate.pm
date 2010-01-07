@@ -35,7 +35,7 @@ sub mainsite(){
   my $p=$s->{page};
   my @lines;
 
-  my $filename=$s->{page}->{rq_dir}."/".$s->{page}->{rq_file};
+  my $filename=$s->{page}->{rq}->{dir}."/".$s->{page}->{rq}->{file};
   # FIXME, index.html needs to be found, too
   $filename=~s/\.html$/.tpl/;
   $filename.="index.tpl" if ($filename=~/\/$/);

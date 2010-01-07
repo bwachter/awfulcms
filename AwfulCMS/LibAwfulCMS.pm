@@ -50,10 +50,10 @@ TODO
 
 sub init{
   # set up a page for later use and find out about module and request foo
-  $p=AwfulCMS::Page->new({'mode'=>$mode});
+  $p=new AwfulCMS::Page({'mode'=>$mode});
 
   # read the configuration file
-  $c=AwfulCMS::Config->new($p->{rq_host});
+  $c=new AwfulCMS::Config($p->{rq}->{host});
   $p->status(400, "$c") if (ref($c) ne "AwfulCMS::Config");
 
   eval "require Tie::RegexpHash" if ($c->getValue("main", "filematch"));
@@ -73,15 +73,6 @@ sub init{
     # todo, check icon type. so far only png is supported
     $p->{head}.="<link rel=\"icon\" href=\"$favicon\" type=\"image/png\" />\n";
   }
-
-# REMOVE, moved to doRequest()
-#  if (defined($p->{rq_vars}->{req})){
-#    $request=$p->{rq_vars}->{req};
-#  } else {
-#    ($request)=$p->{rq_dir}=~/.*\/(.*)$/;# if ($p->{rq_dir}=~/\//);
-    #($request)=$p->{rq_file}=~/\/.*\/(.*)$/ if ($p->{rq_file}=~/\//);
-#  }
-  #die $request."--".$p->{rq_dir}."--".$p->{rq_file}."--".$p->{cgi}->param("req")."--";
 }
 
 =item lookupModule()
@@ -93,12 +84,12 @@ TODO
 sub lookupModule{
   my $_modules=$c->getValues("mapping");
   my $_defaultmodule=$c->getValue("main", "defaultmodule")||"ModExample";
-  my $_request=$p->{rq_dir};
-  my $_rqfile=$p->{rq_fileabs};
+  my $_request=$p->{rq}->{dir};
+  my $_rqfile=$p->{rq}->{fileabs};
 
-  $_request=$p->{rq_fileabs} if ($c->getValue("main", "filematch")
+  $_request=$p->{rq}->{fileabs} if ($c->getValue("main", "filematch")
                                  && $_request eq "."
-                                 && $p->{rq_fileabs});
+                                 && $p->{rq}->{fileabs});
 
   # FIXME, need to check physical directories in some cases
   $baseurl=$_modules->{$_request};
@@ -114,17 +105,24 @@ sub lookupModule{
     }
   }
 
+  # match all keys (=directories configured) against the beginning
+  # of the URL. Return an array with the matching module as well
+  # as the configured pathname
   if ($c->getValue("main", "filematch")){
-    my $rehash = Tie::RegexpHash->new();
+    my $rehash = new Tie::RegexpHash;
     while (my($key, $value)=each(%$_modules)){
       next if ($key eq ".");
       $key=~s/\*$// if ($c->getValue("main", "wildcardmappings"));
-      $rehash->add(qr/^$key/, $value);
+      $rehash->add(qr/^$key/, [$key, $value]);
     }
     my $match=$rehash->match($_rqfile);
-    return $match if ($match);
+    if ($match){
+      $baseurl=@$match[0];
+      return @$match[1];
+    }
   }
 
+  # FIXME, unlikely to return anything. Can we get a baseurl here?
   $baseurl=$_modules->{$_request};
   return $_defaultmodule;
 }
@@ -137,10 +135,6 @@ TODO
 
 sub doModule{
   $module=lookupModule();
-  if (defined($p->{rq_vars}->{mod})){
-    # module validation, whatever
-  } else {
-  }
 
   if ($module=~/\//){
     ($instance)=$module=~m/\/(.*)$/;
@@ -176,7 +170,7 @@ sub doModule{
     $p->{'mail-address'}=$r->{mc}->{'mail-address'}='somebody-needs-to-fix-the-configuration@invalid.invalid';
   }
 
-  $m=$module->new($r, $p);
+  $m=new $module($r, $p);
   $p->status(400, "Unable to load module '$module'") if (ref($m) ne $module);
 }
 
@@ -189,14 +183,10 @@ TODO
 sub doRequest{
   $p->setModule($module, $instance, $baseurl);
 
-  if (defined($p->{rq_vars}->{req})){
-    $request=$p->{rq_vars}->{req};
-  } else {
-    #$request=getrequest($p->{target}, $baseurl);
-    $request=$p->{url}->{request};
-    #($request)=$p->{rq_dir}=~/.*\/(.*)$/;# if ($p->{rq_dir}=~/\//);
-    #($request)=$p->{rq_file}=~/\/.*\/(.*)$/ if ($p->{rq_file}=~/\//);
-  }
+  # cgi style requests are broken until basic cgi support gets added to url
+  # tool scripts still work since all requests are default
+  #$request=getrequest($p->{target}, $baseurl);
+  $request=$p->{url}->{request};
 
   # FIXME, include code needs some serious redesigning
   $p->preinclude(openreadclose($c->getValue("main", "top-include")))

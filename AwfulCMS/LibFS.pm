@@ -6,7 +6,7 @@ This library provides a few functions for file(system) operations.
 
 =head2 Configuration parameters
 
-There are no configuration parameters outside this module. 
+There are no configuration parameters outside this module.
 
 =head2 Module functions
 
@@ -88,7 +88,7 @@ sub lsx{
     undef $dotfiles;
   }
 
-  my $ft=File::Type->new();
+  my $ft=new File::Type;
 
   opendir(D, $dir)||return 0;
   my @f = readdir(D);
@@ -102,11 +102,11 @@ sub lsx{
       next;
     } elsif ($file =~ /^\./||$file eq 'CVS') {
       if ($checktype==1){
-	my $type = $ft->checktype_filename("$filename");
-	$dotfiles->{$file}={'type'=>$type,
-			    'size'=>-s $filename};
+        my $type = $ft->checktype_filename("$filename");
+        $dotfiles->{$file}={'type'=>$type,
+                            'size'=>-s $filename};
       } else {
-	$dotfiles->{$file}={'foo'=>'bar'};
+        $dotfiles->{$file}={'foo'=>'bar'};
       }
       next;
     } elsif (-d $filename) {
@@ -114,12 +114,12 @@ sub lsx{
       next;
     } else {
       if ($checktype==1){
-	my $type = $ft->checktype_filename("$filename");
-	$files->{$file}={'type'=>$type,
-			 'size'=>-s $filename};
-	} else {
-	  $files->{$file}={$filename};
-	}
+        my $type = $ft->checktype_filename("$filename");
+        $files->{$file}={'type'=>$type,
+                         'size'=>-s $filename};
+        } else {
+          $files->{$file}={$filename};
+        }
     }
   }
   return 1;
@@ -127,7 +127,7 @@ sub lsx{
 
 =item openreadclose($file, [\@resultlist])
 
-Opens the file `$file', reads it completely, joins the line, and returns a 
+Opens the file `$file', reads it completely, joins the line, and returns a
 scalar containing the file contents.
 
 =cut

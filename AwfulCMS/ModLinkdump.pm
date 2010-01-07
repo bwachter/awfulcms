@@ -2,7 +2,7 @@ package AwfulCMS::ModLinkdump;
 
 =head1 AwfulCMS::ModLinkdump
 
-This module provides a method to dump links into several categories, 
+This module provides a method to dump links into several categories,
 and display either all links, all links in one category, or a single link.
 
 =head2 Configuration parameters
@@ -16,8 +16,8 @@ and this value are allowed to add new links.
 
 =item * setcookie=<int>
 
-Set a cookie with the value specified in `authcookie' on requests. 
-Obviously you need to set `authcookie' for this to work. 
+Set a cookie with the value specified in `authcookie' on requests.
+Obviously you need to set `authcookie' for this to work.
 Default is 0 (disabled)
 
 =back
@@ -37,13 +37,13 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html",
-			   -dbhandle=>"linkdump"},
-	       "createdb"=>{-handler=>"createdb",
-			    -content=>"html",
-			    -dbhandle=>"linkdump",
-			    -role=>"admin"}
-	       };
+                           -content=>"html",
+                           -dbhandle=>"linkdump"},
+               "createdb"=>{-handler=>"createdb",
+                            -content=>"html",
+                            -dbhandle=>"linkdump",
+                            -role=>"admin"}
+               };
 
   $s->{mc}=$r->{mc};
   bless $s;
@@ -144,11 +144,11 @@ sub defaultpage(){
   $p->addCookie("canpost=$s->{mc}->{authcookie}; path=$p->{target}")
     if ($s->{mc}->{authcookie} && $s->{mc}->{setcookie});
 
-  my $bCookie=$p->{cgi}->raw_cookie('canpost');
-  my $bQ=$p->{cgi}->param('q');
+  my $bCookie;#FIXME, need cookie support =$p->{url}->raw_cookie('canpost');
+  my $bQ=$p->{url}->param('q');
 
   my $canpost=1 if ($bCookie eq $s->{mc}->{authcookie} &&
-		   $s->{mc}->{authcookie});
+                   $s->{mc}->{authcookie});
   $p->title("Linkdump");
 
   $p->add("<h3><a href=\"$p->{target}\">up</a>");
@@ -163,7 +163,7 @@ sub defaultpage(){
   } elsif ($bQ eq "new" && $canpost) {
     $s->printAddForm();
   } elsif ($bQ eq "add" && $canpost) {
-    $s->addLink($p->{cgi}->param('cat'), $p->{cgi}->param('link'), $p->{cgi}->param('description'));
+    $s->addLink($p->{url}->param('cat'), $p->{url}->param('link'), $p->{url}->param('description'));
     $p->add("<h3>added link</h3>");
   } else {
     $p->add("<p>Linkdump. Nothing to see here. Really. I don't know who you are - read only.</p>") if (!$canpost);

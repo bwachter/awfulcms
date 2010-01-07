@@ -23,13 +23,13 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html"},
-	       "roles"=>{-handler=>"mainsite",
-			 -content=>"html",
-			 -role=>"author"},
-	       "orq"=>{-handler=>"orq",
-		       -content=>"html"}
-	       };
+                           -content=>"html"},
+               "roles"=>{-handler=>"mainsite",
+                         -content=>"html",
+                         -role=>"author"},
+               "orq"=>{-handler=>"orq",
+                       -content=>"html"}
+               };
   bless $s;
   $s;
 }
@@ -52,9 +52,9 @@ sub defaultpage(){
   my $s=shift;
   my $p=$s->{page};
 
-  my $digType=$p->{cgi}->param('digType');
-  my $digNS=$p->{cgi}->param('digNS');
-  my $digDomain=$p->{cgi}->param('digDomain');
+  my $digType=$p->{url}->param('digType');
+  my $digNS=$p->{url}->param('digNS');
+  my $digDomain=$p->{url}->param('digDomain');
   my @digDomains=split("\n", $digDomain);
   my ($digTypeName, $digQuery, $url);
 
@@ -71,11 +71,14 @@ sub defaultpage(){
 
   if ($digDomain) { $digQuery=$s->queryDig($digNS, $digTypeName, @digDomains); }
 
-  $url="http://$p->{rq_host}/$p->{rq_dir}/$p->{rq_file}?digType=$digType&digNS=$digNS&digDomain=$digDomain";
+  $url=$p->{url}->buildurl({'digType'=>$digType,
+                            'digNS'=>$digNS,
+                            'digDomain'=>$digDomain});
+  $url=$p->{url}->publish($url);
   $url=~s/\r\n/%0D%0A/g;
 
   $p->add("
-    <form action=\"/$p->{rq_dir}/$p->{rq_file}\" method=\"post\">
+    <form action=\"/".$p->{url}->cgihandler()."\" method=\"post\">
     <table border=\"0\">
     <tr>
      <td colspan=\"2\">Domains, one per line</td>
@@ -119,8 +122,3 @@ sub defaultpage(){
 }
 
 1;
-
-
-
-
-

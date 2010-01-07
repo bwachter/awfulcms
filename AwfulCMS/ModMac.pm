@@ -2,7 +2,7 @@ package AwfulCMS::ModMac;
 
 =head1 AwfulCMS::ModMac
 
-This module allows manufacturer lookups for MAC-addresses against a 
+This module allows manufacturer lookups for MAC-addresses against a
 MySQL database.
 
 =head2 Configuration parameters
@@ -24,13 +24,13 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html",
-			   -dbhandle=>"mac"},
-	       "createdb"=>{-handler=>"createdb",
-			    -content=>"html",
-			    -dbhandle=>"mac",
-			    -role=>"admin"}
-	       };
+                           -content=>"html",
+                           -dbhandle=>"mac"},
+               "createdb"=>{-handler=>"createdb",
+                            -content=>"html",
+                            -dbhandle=>"mac",
+                            -role=>"admin"}
+               };
 
   bless $s;
   $s;
@@ -56,18 +56,18 @@ sub defaultpage{
   my $p=$s->{page};
 
   $p->title("MAC manufacturer lookup");
-  $p->add("<p>This script allows you to look up the manufacturer behind a MAC address, 
+  $p->add("<p>This script allows you to look up the manufacturer behind a MAC address,
 using a local database based on the IEEE assignments. You need to give at least
 the first 24 bits of the address (i.e. 01:23:45), if you give more digits the script
-will consult a device database to find out if it can give you more details. You can 
-enter multiple MAC addresses separated by ';' at once (e.g. 01:23:45:67;C0:FF:EE will 
+will consult a device database to find out if it can give you more details. You can
+enter multiple MAC addresses separated by ';' at once (e.g. 01:23:45:67;C0:FF:EE will
 work)</p>");
 
-  my $mac=$p->{cgi}->param('mac');
-  my $url="http://$p->{rq_host}/$p->{rq_dir}/$p->{rq_file}";
+  my $mac=$p->{url}->param('mac');
+  my $url=$p->{url}->publish({'mac'=>$mac});
   $url=~s/\r\n/%0D%0A/g;
 
-  $p->add("<form action=\"$url\" method=\"post\">
+  $p->add("<form action=\"/".$p->{url}->cgihandler()."\" method=\"post\">
     <table border=\"0\"><tr>
     <tr><td>MAC: </td><td><input type=\"text\" name=\"mac\" value=\"$mac\" /></td></tr>
     </tr><td><input type=\"submit\" name=\"submit\" value=\"Go!\" /></td></tr>
@@ -75,13 +75,14 @@ work)</p>");
 
   if ($mac =~ /.*[\da-zA-z][\da-zA-z]:[\da-zA-z][\da-zA-z]:[\da-zA-z][\da-zA-z].*/ ){
     my @macs=split(";", $mac);
-    $p->add("<p>your query returned the following result: </p><dl>");
+    $p->add("<p>Your query returned the following result: </p><dl>");
     foreach (@macs) {
       $_ =~ s/.*?([\da-zA-z][\da-zA-z]:[\da-zA-z][\da-zA-z]:[\da-zA-z][\da-zA-z]).*/$1/;
       my @qresult=$s->lookupMAC($_);
       $p->add("<dt>$qresult[0]</dt><dd>$qresult[1]</dd>");
     }
     $p->add("</dl>");
+    $p->add("You can use this link to save the query: <a href=\"$url\">$url</a>");
   } else {
     $p->add("<p>Sorry, but the MAC address you gave me ($mac) seems not to be valid</p>")
       if ($mac ne "");

@@ -15,27 +15,27 @@ sub new{
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html",
-			   -dbhandle=>"blog"},
-	       "article"=>{-handler=>"getArticle",
-			   -content=>"html",
-			   -dbhandle=>"blog"},
-	       "comment"=>{-handler=>"editform",
-		       -content=>"html",
-		       -dbhandle=>"blog",
-		       -role=>"author"},
-	       "edit"=>{-handler=>"editsite",
-			-content=>"html",
-			-role=>"moderator"},
-	       "createdb"=>{-handler=>"createdb",
-			    -content=>"html",
-			    -dbhandle=>"blog",
-			    -role=>"admin"},
-	       "dropdb"=>{-handler=>"dropdb",
-			  -content=>"html",
-			  -dbhandle=>"blog",
-			  -role=>"admin"}
-	       };
+                           -content=>"html",
+                           -dbhandle=>"blog"},
+               "article"=>{-handler=>"getArticle",
+                           -content=>"html",
+                           -dbhandle=>"blog"},
+               "comment"=>{-handler=>"editform",
+                       -content=>"html",
+                       -dbhandle=>"blog",
+                       -role=>"author"},
+               "edit"=>{-handler=>"editsite",
+                        -content=>"html",
+                        -role=>"moderator"},
+               "createdb"=>{-handler=>"createdb",
+                            -content=>"html",
+                            -dbhandle=>"blog",
+                            -role=>"admin"},
+               "dropdb"=>{-handler=>"dropdb",
+                          -content=>"html",
+                          -dbhandle=>"blog",
+                          -role=>"admin"}
+               };
   #$r->{mc}={} unless (defined $r->{mc});
   $s->{mc}=$r->{mc};
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
@@ -50,8 +50,8 @@ sub formatArticle{
   my $ret=
     div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?article=$d->{id}\">$d->{id}] $d->{caption}</a>", {'class'=>'newshead'}).
       div("<p>$d->{body}</p>", {'class'=>'newsbody'}).
-	div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
-	  "<br class=\"l\" /><br class=\"l\" />";
+        div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">comment</a>", {'class'=>'newsfoot'}).
+          "<br class=\"l\" /><br class=\"l\" />";
   $ret;
 }
 
@@ -60,7 +60,7 @@ sub getArticle{
   my $p=$s->{page};
   my $dbh=$s->{page}->{dbh};
 
-  my $article=int($p->{cgi}->param("article"))||
+  my $article=int($p->{url}->param("article"))||
     $p->status(404, "No such article");
   my $q_a=$dbh->prepare("select * from blog where id=?") ||
     $p->status(400, "Unable to prepare query: $!");
@@ -89,7 +89,7 @@ sub getPosts{
   my $pages=int($cnt/$s->{mc}->{numarticles});
   $pages++ unless ($cnt=~/0$/);
 
-  my $page=int($p->{cgi}->param("page"))||1;
+  my $page=int($p->{url}->param("page"))||1;
   $page=1 if ($page<0);
   $offset=($page-1)*$s->{mc}->{numarticles};
 
@@ -99,8 +99,8 @@ sub getPosts{
   #TODO: urlbuilder
 
   $p->add(div(p(navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
-	      {'class'=>'navw'})
-	 );
+              {'class'=>'navw'})
+         );
 
   $q_s->execute(0, $s->{mc}->{numarticles}, $offset) || $p->status(400, "Unable to execute query: $!");
   while (my $d=$q_s->fetchrow_hashref()){
@@ -117,16 +117,16 @@ sub getPosts{
     $d->{name}="<a href=\"$d->{homepage}\">$d->{name}</a>" if ($d->{homepage}=~/^http:\/\//);
 
     $p->add(div("<!-- start news entry -->".
-		    div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?article=$d->{id}\">$d->{id}] $d->{caption}</a>", {'class'=>'newshead'}).
-		    div("<p>$d->{body}</p>", {'class'=>'newsbody'}).
-		    div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">$ccnt comment</a>", {'class'=>'newsfoot'}).
-		    "<br class=\"l\" /><br class=\"l\" />", {'class'=>'news'}));
+                    div("<a name=\"$d->{id}\">[$d->{date}]</a>[$d->{topic}] [<a href=\"#$d->{id}\">#</a><a href=\"?article=$d->{id}\">$d->{id}] $d->{caption}</a>", {'class'=>'newshead'}).
+                    div("<p>$d->{body}</p>", {'class'=>'newsbody'}).
+                    div("Posted by $d->{name} $d->{email}-- <a href=\"?comment&pid=$d->{id}\">$ccnt comment</a>", {'class'=>'newsfoot'}).
+                    "<br class=\"l\" /><br class=\"l\" />", {'class'=>'news'}));
   }
 
   $p->add(div(p("There are $cnt articles on $pages pages").
-	      p(navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
-	      {'class'=>'navw-full'})
-	 );
+              p(navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
+              {'class'=>'navw-full'})
+         );
 }
 
 sub editform{
@@ -181,7 +181,7 @@ sub editform{
    </td>
   </tr>
   </table></form><hr>
-	 ");
+         ");
 }
 
 sub defaultpage(){
@@ -267,4 +267,3 @@ sub dropdb{
 }
 
 1;
-

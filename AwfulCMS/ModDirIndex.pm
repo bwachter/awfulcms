@@ -2,7 +2,7 @@ package AwfulCMS::ModDirIndex;
 
 =head1 AwfulCMS::ModDirIndex
 
-This module provides a fancy directory listing. 
+This module provides a fancy directory listing.
 Features like showing file type information and generating thumbnails
 of images are configurable.
 
@@ -12,7 +12,7 @@ of images are configurable.
 
 =item * iconset=<string>
 
-A (preferably absolute) path to the directory where the icons reside. 
+A (preferably absolute) path to the directory where the icons reside.
 The path needs to be absolute to the document root.
 
 =item * fileinfo=<int>
@@ -63,8 +63,8 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html"}
-	      };
+                           -content=>"html"}
+              };
   $s->{mc}=$r->{mc};
   $s->{mc}->{iconset}="/icons/themes/simple" unless (defined $s->{mc}->{iconset});
   $s->{mc}->{diricon}="directory.png" unless (defined $s->{mc}->{diricon});
@@ -86,16 +86,16 @@ sub defaultpage(){
   my $icon="file.png";
   my ($maxx,$maxy) = (150,150);
 
-  if ($s->{page}->{rq_dir} eq "." && $s->{page}->{rq_file} eq ""){
+  if ($s->{page}->{rq}->{dir} eq "." && $s->{page}->{rq}->{file} eq ""){
     $s->{page}->status(403, "You're not allowed to view this");
     return;
   }
 
   # prevent listing the parent directory if the given filename
   # does not exist as a directory, but is configured for ModDirIndex
-  $s->{page}->{rq_dir}.="/".$s->{page}->{rq_file} 
-    if ($s->{page}->{rq_dir} ne "" && $s->{page}->{rq_file} ne "");
-  unless (-d $s->{page}->{rq_dir}){
+  $s->{page}->{rq}->{dir}.="/".$s->{page}->{rq}->{file}
+    if ($s->{page}->{rq}->{dir} ne "" && $s->{page}->{rq}->{file} ne "");
+  unless (-d $s->{page}->{rq}->{dir}){
     $s->{page}->status(404, "Directory does not exist");
     return;
   }
@@ -105,7 +105,7 @@ sub defaultpage(){
     $maxy=$s->{mc}->{'preview-maxy'} if defined $s->{mc}->{'preview-maxy'};
   }
 
-  lsx($s->{page}->{rq_dir}, $files, \@dirs, $s->{mc}->{fileinfo});
+  lsx($s->{page}->{rq}->{dir}, $files, \@dirs, $s->{mc}->{fileinfo});
 
   $s->{page}->add("<div class=\"dirview-group\">");
   my $icon="$s->{mc}->{iconset}/$s->{mc}->{diricon}";
@@ -121,9 +121,9 @@ sub defaultpage(){
     }
     if ($s->{mc}->{preview}==1){
       %$value=(%$value, 'filename'=>$key,
-	       'directory'=>$s->{page}->{rq_dir},
-	       'maxx'=>$maxx,
-	       'maxy'=>$maxy);
+               'directory'=>$s->{page}->{rq}->{dir},
+               'maxx'=>$maxx,
+               'maxy'=>$maxy);
       my $ret=thumbnail($value);
       $icon="/$ret" unless $ret eq "";
     }

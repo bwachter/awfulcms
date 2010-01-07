@@ -2,7 +2,7 @@ package AwfulCMS::ModExample;
 
 =head1 AwfulCMS::ModExample
 
-This is a small example module to demonstrate how to build an AwfulCMS module. 
+This is a small example module to demonstrate how to build an AwfulCMS module.
 Currently it just displays the requested host/file/directory
 
 =head2 Configuration parameters
@@ -24,13 +24,13 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"mainsite",
-			   -content=>"html"},
-	       "roles"=>{-handler=>"mainsite",
-			 -content=>"html",
-			 -role=>"author"},
-	       "status"=>{-handler=>"status",
-		       -content=>"html"}
-	       };
+                           -content=>"html"},
+               "roles"=>{-handler=>"mainsite",
+                         -content=>"html",
+                         -role=>"author"},
+               "status"=>{-handler=>"status",
+                       -content=>"html"}
+               };
   $s->{mc}=$r->{mc};
   bless $s;
   $s;
@@ -49,26 +49,19 @@ sub mainsite(){
   $p->add("<h2>Request parameters</h2>");
 
   $p->add("<ul>".
-	  "<li>Mode: $s->{page}->{mode}</li>".
-	  "<li>Module name: $s->{page}->{module}</li>".
-	  "<li>Module instance: $s->{page}->{module_instance}</li>".
-	  "<li>Module request: $s->{page}->{url}->{request}</li>".
-	  "<li>Module arguments: $s->{page}->{url}->{arguments}</li>".
-	  "<li>Base URL: $s->{page}->{baseurl}</li>".
-	  "<li>Target URL: $s->{page}->{target}</li>".
-	  "<li>Requested host: $s->{page}->{rq_host}</li>".
-	  "<li>Requested file: $s->{page}->{rq_file} ($s->{page}->{rq_fileabs})</li>".
-	  "<li>Requested directory: $s->{page}->{rq_dir}</li>".
-	  "<li>Remote host: $s->{page}->{rq_remote_host}</li>".
-	  "<li>Remote IP: $s->{page}->{rq_remote_ip}</li>".
-	  "</ul>");
-
-  $p->add("<h2>CGI parameters</h2>");
-  $p->add("<dl>");
-  foreach my $key (sort(keys(%{$s->{page}->{rq_vars}}))){
-    $p->add("<dt>$key</dt><dd>$s->{page}->{rq_vars}->{$key}</dd>\n");
-  }
-  $p->add("</dl>");
+          "<li>Mode: $s->{page}->{mode}</li>".
+          "<li>Module name: $s->{page}->{module}</li>".
+          "<li>Module instance: $s->{page}->{module_instance}</li>".
+          "<li>Module request: $s->{page}->{url}->{request}</li>".
+          "<li>Module arguments: $s->{page}->{url}->{arguments}</li>".
+          "<li>Base URL: $s->{page}->{baseurl}</li>".
+          "<li>Target URL: $s->{page}->{target}</li>".
+          "<li>Requested host: $s->{page}->{rq}->{host}</li>".
+          "<li>Requested file: $s->{page}->{rq}->{file} ($s->{page}->{rq}->{fileabs})</li>".
+          "<li>Requested directory: $s->{page}->{rq}->{dir}</li>".
+          "<li>Remote host: $s->{page}->{rq}->{remote_host}</li>".
+          "<li>Remote IP: $s->{page}->{rq}->{remote_ip}</li>".
+          "</ul>");
 
   $p->add("<h2>URL parameters</h2>");
   $p->add("<dl>");
@@ -86,11 +79,10 @@ sub mainsite(){
 
   $p->add("<h2>Generate status page</h2>");
   $p->add("<form name=\"foo\" method=\"post\" action=\"$p->{target}\">".
-	  "<input type=\"hidden\" name=\"req\" value=\"status\" />".
-	  "<input type=\"text\" name=\"message\" value=\"status message\" />".
-	  "<input type=\"text\" name=\"status\" size=\"4\" value=\"404\" />".
-	  "<input type=\"submit\" name=\"submit\" value=\"Submit\" />");
-
+          "<input type=\"hidden\" name=\"req\" value=\"status\" />".
+          "<input type=\"text\" name=\"message\" value=\"status message\" />".
+          "<input type=\"text\" name=\"status\" size=\"4\" value=\"404\" />".
+          "<input type=\"submit\" name=\"submit\" value=\"Submit\" />");
 }
 
 sub status(){
@@ -98,9 +90,9 @@ sub status(){
   my $p=$s->{page};
   my $status=400;
   my $message="Sample message";
-  
-  $status=$p->{cgi}->param('status') if ($p->{cgi}->param('status'));
-  $message=$p->{cgi}->param('message') if ($p->{cgi}->param('message'));
+
+  $status=$p->{url}->param('status') if ($p->{url}->param('status'));
+  $message=$p->{url}->param('message') if ($p->{url}->param('message'));
   $p->status($status, $message);
 }
 

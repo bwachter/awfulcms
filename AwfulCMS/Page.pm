@@ -19,9 +19,9 @@ our %EXPORT_TAGS = ( tags=>[ @EXPORT_OK ] );
 
 =cut
 
-use CGI;
 use Time::HiRes qw(gettimeofday tv_interval);
 use strict;
+use AwfulCMS::Request;
 use AwfulCMS::UrlBuilder;
 
 use Exporter 'import';
@@ -63,18 +63,8 @@ sub new {
       unless defined $s->{doctype};
 
     $s->{header}->{"Content-type"}="text/html" unless defined $s->{header}->{"Content-type"};
-    $s->{cgi}=new CGI;
-    $s->{rq_host}=$s->{cgi}->virtual_host();
-    $s->{rq_remote_host}=$s->{cgi}->remote_host();
-    $s->{rq_remote_ip}=$s->{cgi}->remote_addr();
-    $s->{rq_fileabs}=$s->{cgi}->url(-absolute => 1);
-    $s->{rq_fileabs}=~s/^\///;
-    $s->{rq_fileabs}=~s/%20/ /;
-    ($s->{rq_dir})=$s->{rq_fileabs}=~m/(.*)\/(.*)/;
-    $s->{rq_dir}="." if ($s->{rq_dir} eq "");
-    ($s->{rq_file})=$s->{rq_fileabs}=~m/.*\/(.*)/;
-    $s->{rq_vars}=$s->{cgi}->Vars();
-    $s->{target}="/$s->{rq_dir}/$s->{rq_file}";
+    $s->{rq}=new AwfulCMS::Request;
+    $s->{target}="/$s->{rq}->{dir}/$s->{rq}->{file}";
   }
 
   $s->{sdesc}={
@@ -137,7 +127,7 @@ sub setModule{
   my $baseurl=shift;
   my $request=shift;
 
-  $s->{url}=AwfulCMS::UrlBuilder->new($s->{target}, $baseurl);
+  $s->{url}=new AwfulCMS::UrlBuilder($s->{target}, $baseurl, $s->{rq}) unless ($s->{url});
   $s->{module}=$module;
   $s->{module_instance}=$instance;
   $s->{baseurl}=$baseurl;

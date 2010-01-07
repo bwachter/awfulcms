@@ -2,7 +2,7 @@ package AwfulCMS::ModGallery;
 
 =head1 AwfulCMS::ModGallery
 
-This module provides a fancy directory listing. 
+This module provides a fancy directory listing.
 Features like showing file type information and generating thumbnails
 of images are configurable.
 
@@ -12,7 +12,7 @@ of images are configurable.
 
 =item * iconset=<string>
 
-A (preferably absolute) path to the directory where the icons reside. 
+A (preferably absolute) path to the directory where the icons reside.
 The path needs to be absolute to the document root.
 
 =item * fileinfo=<int>
@@ -63,8 +63,8 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html"}
-	      };
+                           -content=>"html"}
+              };
   $s->{mc}=$r->{mc};
   $s->{mc}->{iconset}="/icons/themes/simple" unless (defined $s->{mc}->{iconset});
   $s->{mc}->{diricon}="directory.png" unless (defined $s->{mc}->{diricon});
@@ -95,21 +95,21 @@ sub defaultpage(){
   for (@resizemodes) { $sizecheck[$_]=1; };
   push(@resizemodes, $maxx) unless $sizecheck[$_];
 
-  if ($s->{page}->{rq_dir} eq "." && $s->{page}->{rq_file} eq ""){
+  if ($s->{page}->{rq}->{dir} eq "." && $s->{page}->{rq}->{file} eq ""){
     #$s->{page}->status(403, "You're not allowed to view this");
     #return;
   }
 
   # prevent listing the parent directory if the given filename
   # does not exist as a directory, but is configured for ModGallery
-  $s->{page}->{rq_dir}.="/".$s->{page}->{rq_file} 
-    if ($s->{page}->{rq_dir} ne "" && $s->{page}->{rq_file} ne "");
-  unless (-d $s->{page}->{rq_dir}){
+  $s->{page}->{rq}->{dir}.="/".$s->{page}->{rq}->{file}
+    if ($s->{page}->{rq}->{dir} ne "" && $s->{page}->{rq}->{file} ne "");
+  unless (-d $s->{page}->{rq}->{dir}){
     $s->{page}->status(404, "Directory does not exist");
     return;
   }
 
-  lsx($s->{page}->{rq_dir}, $files, \@dirs, 1);
+  lsx($s->{page}->{rq}->{dir}, $files, \@dirs, 1);
 
   $s->{page}->add("<div class=\"gallery-group\">");
   my $icon="$s->{mc}->{iconset}/$s->{mc}->{diricon}";
@@ -126,11 +126,11 @@ sub defaultpage(){
 
     foreach(@resizemodes){
       %$value=(%$value, 'filename'=>$key,
-	       'directory'=>$s->{page}->{rq_dir},
-	       'prepend'=>"$_.",
-	       'ignorelarger'=>"1",
-	       'maxx'=>$_,
-	       'maxy'=>$_);
+               'directory'=>$s->{page}->{rq}->{dir},
+               'prepend'=>"$_.",
+               'ignorelarger'=>"1",
+               'maxx'=>$_,
+               'maxy'=>$_);
       my $ret=thumbnail($value);
       # alle zu einem hash dazuwerfen, wenn voll. danach dann aussuchen was wir haben
       $icon="/$ret" unless $ret eq "";

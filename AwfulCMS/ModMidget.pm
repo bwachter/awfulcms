@@ -2,7 +2,7 @@ package AwfulCMS::ModMidget;
 
 =head1 AwfulCMS::ModMidget
 
-This module allows retrieving a Usenet article by message-ID from either a 
+This module allows retrieving a Usenet article by message-ID from either a
 NNTP-server or Google groups.
 
 =head2 Configuration parameters
@@ -18,7 +18,7 @@ should work fine.
 =item * newsserver=<string>
 
 The default newsserver to display in the web form. The name can be changed
-before submitting the form, it's just a bit more convenient not having to 
+before submitting the form, it's just a bit more convenient not having to
 type in a newsserver name for every lookup
 
 =back
@@ -38,8 +38,8 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html"}
-	       };
+                           -content=>"html"}
+               };
 
   $s->{mc}=$r->{mc};
   bless $s;
@@ -72,7 +72,7 @@ sub getArticleGoogle(){
 
   my $parser=HTML::LinkExtor->new(\&cb);
 
-  my $ua=LWP::UserAgent->new;
+  my $ua=LWP::UserAgent->new();
   $ua->agent($s->{mc}->{useragent}) if ($s->{mc}->{useragent});
 
   my $response=$ua->get("http://groups.google.com/groups?selm=$mid&output=gplain");
@@ -98,7 +98,7 @@ sub getArticleNNTP(){
   eval "require Net::NNTP";
   $p->status(500, $@) if ($@);
 
-  $nntp = Net::NNTP->new($server)||
+  $nntp=Net::NNTP($server)->new()||
     $p->status(500, $@);
   $article=$nntp->article($mid);
   $nntp->quit;
@@ -110,13 +110,13 @@ sub defaultpage(){
   my $p=$s->{page};
 
   my $server=$s->{mc}->{newsserver} if ($s->{mc}->{newsserver});
-  $server=$p->{cgi}->param('server') if ($p->{cgi}->param('server'));
-  my $mid=$p->{cgi}->param('mid') if ($p->{cgi}->param('mid'));
-  my $submit=$p->{cgi}->param('submit');
+  $server=$p->{url}->param('server') if ($p->{url}->param('server'));
+  my $mid=$p->{url}->param('mid') if ($p->{url}->param('mid'));
+  my $submit=$p->{url}->param('submit');
 
   $p->title("midget");
   $p->add("<h1>midget</h1>
-<form name=\"foo\" method=\"post\" action=\"/$p->{rq_dir}/$p->{rq_file}\"><table border=\"0\">
+<form name=\"foo\" method=\"post\" action=\"/$p->{rq}->{dir}/$p->{rq}->{file}\"><table border=\"0\">
 <tr><td>MID:</td><td><input type=\"text\" name=\"mid\" value=\"$mid\" size=\"40\" /></td></tr>
 <tr><td>Server:</td><td><input type=\"text\" name=\"server\" value=\"$server\" size=\"40\" /></td></tr>
 <tr><td><input type=\"submit\" name=\"submit\" value=\"Go!\" /></td><td><input type=\"submit\" name=\"submit\" value=\"GoGoGoogle!\" /></td></tr>
