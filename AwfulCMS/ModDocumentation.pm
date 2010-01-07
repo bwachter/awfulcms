@@ -42,10 +42,10 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-			   -content=>"html"},
-	       "pod"=>{-handler=>"podview",
-			-content=>"html"}
-	       };
+                           -content=>"html"},
+               "pod"=>{-handler=>"podview",
+                        -content=>"html"}
+               };
 
   $s->{mc}=$r->{mc};
   bless $s;
@@ -67,7 +67,7 @@ sub contentlisting(){
     $p->add("<li>$dir<ul>");
     foreach(sort(@files)){
       next unless ($_=~/(\.p[ml])$|(\.pod)$|(\.cgi)$/);
-      $p->add("<li><a href=\"$p->{target}?req=pod&file=$dir/$_\">$_</a></li>");
+      $p->add("<li><a href=\"".$p->{url}->buildurl({'req'=>'pod', 'file'=>"$dir/$_"})."\">$_</a></li>");
     }
     $p->add("</ul></li>");
   }
@@ -85,9 +85,9 @@ sub defaultpage(){
 sub podview(){
   my $s=shift;
   my $p=$s->{page};
-  my $file=$p->{cgi}->param("file");
+  my $file=$p->{url}->param("file");
 
-  $p->add("<p><a href=\"$p->{target}\">Go back to the index</a></p>");
+  $p->add("<p><a href=\"".$p->{url}->buildurl()."\">Go back to the index</a></p>");
 
   eval "require Pod::Simple::HTML";
   $p->status(500, $@) if ($@);
