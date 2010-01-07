@@ -100,9 +100,10 @@ sub getArticleNNTP(){
 
   $nntp=Net::NNTP->new($server)||
     $p->status(500, $@);
-  $article=$nntp->article($mid);
+  $article=$nntp->article("<$mid>");
   $nntp->quit;
-  $article;
+  return join('', @$article) if (ref($article) eq "ARRAY");
+  return $article;
 }
 
 sub defaultpage(){
@@ -134,7 +135,7 @@ sub defaultpage(){
   }
 
   if ($article eq ""){
-    $p->add("<p>Unable to retrieve article <$mid></p>");
+    $p->add("<p>Unable to retrieve article &lt;$mid&gt;</p>");
   } else {
     (my $references)=$article=~m/References:((\s*<[\w%\$\+@\.-]*>\s*){1,})/s;
     $article=~s/References:(\s*<[\w%\$\+@\.-]*>\s*){1,}/\[\@REFERENCES\@\]\n/s;
