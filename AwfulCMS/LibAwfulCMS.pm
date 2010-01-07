@@ -58,6 +58,8 @@ sub init{
 
   $roles=$c->getValues("roles");
 
+  $p->{hostname}=$c->getValue("main", "hostname") if ($c->getValue("main", "hostname"));
+
   # add stylesheets
   my $stylesheets=$c->getValues("stylesheets");
   while (my ($media,$stylesheet)=each(%$stylesheets)){

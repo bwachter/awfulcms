@@ -372,6 +372,7 @@ sub preinclude{
   my $s=shift;
   my $content=shift;
 
+  $content=~s/HOSTNAME/$s->{hostname}/g;
   $s->{preinclude}.=$content;
 }
 
@@ -385,6 +386,7 @@ sub postinclude{
   my $s=shift;
   my $content=shift;
 
+  $content=~s/HOSTNAME/$s->{hostname}/g;
   $s->{postinclude}.=$content;
 }
 
