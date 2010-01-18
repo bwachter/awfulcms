@@ -106,6 +106,8 @@ sub podview(){
   $parser->set_source(\$input);
   $parser->run();
   $output="<p>Sorry, no documentation exists for $file</p>" if ($output eq "");
+  $output=~s/.*<!-- start doc -->//s;
+  $output=~s/<!-- end doc -->.*//s;
   $p->add($output);
   return;
 }
