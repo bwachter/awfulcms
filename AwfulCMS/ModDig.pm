@@ -61,6 +61,7 @@ sub defaultpage(){
   $p->title("digger");
   if ($digType==0) { $digTypeName="any"; }
   elsif ($digType==1) { $digTypeName="A"; }
+  elsif ($digType==8) { $digTypeName="AAAA"; }
   elsif ( $digType==2) { $digTypeName="MX"; }
   elsif ( $digType==3) { $digTypeName="SIG"; }
   elsif ( $digType==4) { $digTypeName="CNAME"; }
@@ -90,6 +91,7 @@ sub defaultpage(){
      <td><select name=\"digType\">".
       $p->pOption(0,"any",$digType).
       $p->pOption(1,"A",$digType).
+      $p->pOption(8,"AAAA",$digType).
       $p->pOption(2,"MX",$digType).
       $p->pOption(3,"SIG",$digType).
       $p->pOption(4,"CNAME",$digType).
