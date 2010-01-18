@@ -69,7 +69,7 @@ sub defaultpage(){
   elsif ( $digType==7) { $digTypeName="AXFR"; }
   else { $digTypeName="any"; }
 
-  if ($digDomain) { $digQuery=$s->queryDig($digNS, $digTypeName, @digDomains); }
+  $digQuery=$s->queryDig($digNS, $digTypeName, @digDomains) if ($digDomain);
 
   $url=$p->{url}->buildurl({'digType'=>$digType,
                             'digNS'=>$digNS,
@@ -116,9 +116,11 @@ sub defaultpage(){
      <td>trace</td>
     </tr>
     -->
-    </table></form><hr>
-    Use this link if you want to show the query to someone else: <a href=\"$url\">$url</a><hr>
-    <pre>$digQuery</pre>");
+    </table></form><hr>");
+
+  $p->add("Use this link if you want to show the query to someone else: <a href=\"$url\">$url</a><hr>") if ($digDomain);
+
+  $p->add("<pre>$digQuery</pre>");
 }
 
 1;
