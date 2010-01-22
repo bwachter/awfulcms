@@ -30,6 +30,11 @@ require DBI;
 use strict;
 use XML::RSS;
 
+# make conditional
+require Net::Trackback::Client;
+require Net::Trackback::Ping;
+require RPC::XML::Client;
+
 # config part
 my $handle="ModBlog";
 
@@ -157,6 +162,62 @@ sub connectDB{
                       die "DBI->connect(): ". DBI->errstr;
 }
 
+sub pingURLs{
+  my $args=shift;
+
+  return if ($args->{draft}!=0);
+  eval "require HTML::FormatText::WithLinks::AndTables";
+  print $OUT "Require HTML::FormatText::WithLinks::AndTables failed ($@)" if ($@);
+
+  my $body=AwfulCMS::SynBasic->format($args->{body},
+                                      {blogurl=>$mcm->{'content-prefix'}});
+
+  my $text=HTML::FormatText::WithLinks::AndTables->convert($body);
+  my $excerpt=substr($text, 0, 240);
+  $excerpt.=" [...]" if (length $text > 240);
+  my $url="$mcm->{'baselink'}/article,$args->{id}/";
+  $url=~s,//,/,g;
+
+  my @urls=$args->{body}=~m{\[\[(http://[^ |\]]*)}gx;
+  foreach(@urls){
+    print $OUT "Pinging '$_'..";
+
+    my $client = Net::Trackback::Client->new;
+    my $data = $client->discover($_);
+    if ($data){ # we found a trackback url
+      for my $resource (@$data) {
+        print $OUT "(".$resource->ping.")";
+        my $p = {
+                 ping_url=>$resource->ping,
+                 blog_name=>$mcm->{'title-prefix'},
+                 excerpt=>$excerpt,
+                 url=>"$url",
+                 title=>$args->{title}
+                };
+        my $ping = Net::Trackback::Ping->new($p);
+        my $msg = $client->send_ping($ping);
+        print $OUT $msg->to_xml;
+      }
+    } else {
+      my $ua=LWP::UserAgent->new();
+      my $response=$ua->head($_);
+      my $ping;
+      if ($response->is_success && ($ping=$response->header("X-Pingback"))){
+        print $OUT "Pingback to: $ping\n";
+        my $client = RPC::XML::Client->new($ping);
+        my $response = $client->send_request('pingback.ping', $url, $_);
+        if (not ref $response) {
+          print $OUT "Failed to ping back '$ping': $response\n";
+        } else {
+          print $OUT "Got a response from '$ping': \n" . $response->as_string . "\n";
+        }
+      } else {
+        print $OUT "Unable to retrieve trackback URL\n";
+      }
+    }
+  }
+}
+
 sub writeArticleDB{
   my $args=shift;
   my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=?, created=?, tease=? where id=?");
@@ -272,6 +333,7 @@ sub editArticle{
     my %newhash=(%$d, %newarticle);
     print writeArticleDB(\%newhash)."\n";
     setTags($d->{id}, $d->{tags}, %newhash->{tags});
+    pingURLs(\%newhash);
     updateRSS();
     unlink $tmp;
   } else {
@@ -338,6 +400,7 @@ END
   setTags(%newarticle->{id}, %newarticle->{tags});
   unlink $tmp;
   updateRSS();
+  pingURLs(\%newarticle);
   # 1 english 2 german
   #$q_i->execute(0, 0, $subject, $text, 0, 1, $name, $email, $homepage, time());
 }
