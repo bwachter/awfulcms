@@ -77,6 +77,7 @@ sub format {
   $string=~s{''(.*?)''}{<i>$1</i>}gs;
   $string=~s{\[\!(.*?)\!\]}{<i>$1</i>}gs;
   $string=~s{\[\[img:\/\/(.*?)\|\|(.*?)\]\]}{<img src="$1" alt="$2" />}g;
+  $string=~s{\[\[blogimg:\/\/(.*?)\|\|(.*?)\]\]}{<img src="$vars->{'blogurl'}/$1" alt="$2" />}g;
   $string=~s{\[\[blog:\/\/(.*?)\|\|(.*?)\]\]}{<a href="$vars->{'blogurl'}/$1">$2</a>}g;
   $string=~s{\[\[(.*?)\|\|(.*?)\]\]}{<a href="$1">$2</a>}g;
   $string=~s{\[\[([^<]*?)\]\]}{<a href="$1">$1</a>}g;
