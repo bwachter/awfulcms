@@ -39,7 +39,7 @@ sub new {
   $_request=~s/^\/*//;
   $_request=~s/^$_baseurl//;
   $_request=~s/^\/*//;
-  $_request=~s/\%2C/,/g;
+  $_request=~s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
 
   # sometimes we need req= as additional argument
   $s->{arguments}=$_request;
@@ -57,7 +57,7 @@ sub new {
   foreach (@_arguments){
     # FIXME, url quote/unquote
     $_=~s,$s->{pathsep},/,g;
-    $_=~s/\%2C/,/g;
+    $_=~s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
     my @_argarr=split(',', $_);
     my $key=shift(@_argarr);
     my $value=join(',',@_argarr);
@@ -123,7 +123,7 @@ sub publish {
   #fixme, check for https
   $url=$s->{rq}->{host}."/$url";
   $url=~s,/+,/,g;
-  uri_escape($url);
+  $url=~s/([^A-Za-z0-9\.])/sprintf("%%%02X", ord($1))/seg;
   $url=~s,%2F,/,g;
   "http://$url";
 }
