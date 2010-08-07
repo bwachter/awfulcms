@@ -126,13 +126,14 @@ sub formatArticle{
   my $url = $p->{url}->buildurl({'req'=>'article',
                                  'article'=>$d->{id}});
 
+  my $flattr;
   if ($p->{mc}->{flattr}){
-    my $flattr="<br />".$p->flattrButton({
-                                          subject => $d->{subject},
-                                          text => $body,
-                                          tags => join(', ', @tags),
-                                          url => $p->{url}->publish($url)
-                                         });
+    $flattr="<br />".$p->flattrButton({
+                                       subject => $d->{subject},
+                                       text => $body,
+                                       tags => join(', ', @tags),
+                                       url => $p->{url}->publish($url)
+                                      });
   }
 
   $cmtstring = "<a href=\"".
