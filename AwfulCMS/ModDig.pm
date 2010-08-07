@@ -38,10 +38,10 @@ sub queryDig {
   my $s=shift;
   my $digNS=shift;
   my $digTypeName=shift;
-  my @digDomains=shift;
+  my $digDomains=shift;
   my $digQuery;
 
-  foreach(@digDomains) {
+  foreach(@$digDomains) {
     $digQuery.=`dig $digNS $_ $digTypeName`;
     $digQuery.="<hr>\n";
   }
@@ -71,13 +71,12 @@ sub defaultpage(){
   elsif ( $digType==7) { $digTypeName="AXFR"; }
   else { $digTypeName="any"; }
 
-  $digQuery=$s->queryDig($digNS, $digTypeName, @digDomains) if ($digDomain);
+  $digQuery=$s->queryDig($digNS, $digTypeName, \@digDomains) if ($digDomain);
 
   $url=$p->{url}->buildurl({'digType'=>$digType,
                             'digNS'=>$digNS,
                             'digDomain'=>$digDomain});
   $url=$p->{url}->publish($url);
-  $url=~s/\r\n/%0D%0A/g;
 
   $p->add("
     <form action=\"/".$p->{url}->cgihandler()."\" method=\"post\">
