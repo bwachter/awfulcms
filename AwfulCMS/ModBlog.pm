@@ -129,20 +129,23 @@ sub formatArticle{
   my $flattr;
   if ($s->{mc}->{flattr}){
     my %flattr_vars=(
-                     flattr_uid => $s->{mc}->{'flattr-uid'},
                      flattr_btn => "compact",
+                     flattr_uid => $s->{mc}->{'flattr-uid'},
+                     flattr_tle => $d->{subject},
+                     flattr_dsc => substr($body, 0, 240),
                      flattr_cat => "text",
                      flattr_lng => "en_GB",
                      flattr_tag => join(', ', @tags),
-                     flattr_tle => $d->{subject},
                      flattr_url => $p->{url}->publish($url),
-                     flattr_dsc => substr($body, 0, 240),
                      flattr_hide => "true"
                     );
     $flattr_vars{flattr_dsc}.=" [...]" if (length $body > 240);
     $flattr_vars{flattr_dsc}=~s/<.*?>//g;
-    $flattr="<br /><script type=\"text/javascript\">";
+    $flattr_vars{flattr_tle}.="     " if (length $flattr_vars{flattr_tle} < 5);
+    $flattr="<br /><script type=\"text/javascript\">\n";
     foreach my $key (keys(%flattr_vars)){
+      $flattr_vars{$key}=~s/'/\\'/g;
+      $flattr_vars{$key}=~s/\n//g;
       $flattr.="var $key = '$flattr_vars{$key}';\n";
     }
     $flattr.="</script><script src=\"http://api.flattr.com/button/load.js\" type=\"text/javascript\"></script>";
