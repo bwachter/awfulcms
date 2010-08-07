@@ -59,10 +59,7 @@ sub new {
   $s->{header}={};
 
   if ($s->{mode} eq "CGI"){
-    # FIXME, allow using non-xhtml by config
-    $s->{xmldecl}='<?xml version="1.0" encoding="UTF-8"?>' unless defined $s->{xmldecl};
-    $s->{doctype}=
-      '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'."\n"
+    $s->{doctype}='<!DOCTYPE html>'."\n"
       unless defined $s->{doctype};
 
     $s->{header}->{"Content-type"}="text/html; charset=utf-8" unless defined $s->{header}->{"Content-type"};
@@ -168,9 +165,8 @@ sub out {
     $hdr.="\n";
   }
 
-  $out.=$s->{xmldecl} if defined $s->{xmldecl};
   $out.=$s->{doctype} if defined $s->{doctype};
-  $out.="<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>$s->{head}\n".
+  $out.="<html><head>$s->{head}\n".
     "<title>$s->{title}</title>\n";
 
   if (defined $s->{htmlheader} && ref($s->{htmlheader}) eq "HASH"){

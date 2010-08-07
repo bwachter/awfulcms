@@ -68,7 +68,7 @@ sub mainsite(){
 
   $p->title($metadata{title});
   $p->setHtmlHeader("meta", {"http-equiv" => "Content-Type",
-                             content => "text/html, charset=UTF-8"});
+                             content => "text/html; charset=UTF-8"});
   $p->excerpt($metadata{excerpt}) if ($metadata{excerpt});
   my $body;
   $body.="<h1>$metadata{title}</h1>" if defined $metadata{title};
