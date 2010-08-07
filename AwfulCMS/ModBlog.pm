@@ -120,9 +120,6 @@ sub formatArticle{
   $tagstr.=join(', ', @tagref);
   $tagstr.=" None" if (@tagref == 0);
 
-  my $taglist;
-  $taglist=join(', ', @tags) if (@tags != 0);
-
   my $ccnt=$s->getCommentCnt($d->{id});
   my $cmtstring="$ccnt comments";
   $cmtstring = "1 comment" if ($ccnt==1);
@@ -131,18 +128,24 @@ sub formatArticle{
 
   my $flattr;
   if ($s->{mc}->{flattr}){
-    $flattr="<br /><script type=\"text/javascript\">
-var flattr_btn = 'compact';
-var flattr_uid = '".$s->{mc}->{'flattr-uid'}."';
-var flattr_tle = '$d->{subject}';
-var flattr_dsc = 'the entry description, please be as thorough as possible';
-var flattr_cat = 'text';
-var flattr_lng = 'en_GB';
-var flattr_tag = 'taglist';
-var flattr_url = '$url';
-var flattr_hide = 'true';
-</script>
-<script src=\"http://api.flattr.com/button/load.js\" type=\"text/javascript\"></script>";
+    my %flattr_vars=(
+                     flattr_uid => $s->{mc}->{'flattr-uid'},
+                     flattr_btn => "compact",
+                     flattr_cat => "text",
+                     flattr_lng => "en_GB",
+                     flattr_tag => join(', ', @tags),
+                     flattr_tle => $d->{subject},
+                     flattr_url => $p->{url}->publish($url),
+                     flattr_dsc => substr($body, 0, 240),
+                     flattr_hide => "true"
+                    );
+    $flattr_vars{flattr_dsc}.=" [...]" if (length $body > 240);
+    $flattr_vars{flattr_dsc}=~s/<.*?>//g;
+    $flattr="<br /><script type=\"text/javascript\">";
+    foreach my $key (keys(%flattr_vars)){
+      $flattr.="var $key = '$flattr_vars{$key}';\n";
+    }
+    $flattr.="</script><script src=\"http://api.flattr.com/button/load.js\" type=\"text/javascript\"></script>";
   }
 
   $cmtstring = "<a href=\"".
