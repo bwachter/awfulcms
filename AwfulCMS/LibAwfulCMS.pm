@@ -165,6 +165,8 @@ sub doModule{
   $r->{mc}={%{$r->{mc}}, %{$c->getValues("default")}} if ($c->getValues("default"));
   $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short)}} if ($c->getValues($module_short));
   $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short."/".$instance)}} if ($c->getValues($module_short."/".$instance));
+  # merge module parameters into page
+  $p->{mc}={%{$p->{mc}}, %{$r->{mc}}};
 
   $p->{'display-time'}=1 if ($r->{mc}->{'display-time'});
   if ($r->{mc}->{'mail-address'}){

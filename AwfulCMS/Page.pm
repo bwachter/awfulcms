@@ -442,7 +442,7 @@ sub expandInclude{
       $flattr=$s->flattrButton({
                                 subject => $s->{title},
                                 text => $excerpt,
-                                url => $s->{url}->myurl()
+                                url => $s->{url}->myurl(),
                                });
     }
     $$content=~s/FLATTR/$flattr/g;
@@ -643,9 +643,9 @@ sub flattrButton {
     unless (defined $s->{mc}->{'flattr-js'});
 
   $pm->{lang}="en_GB" unless (defined $pm->{lang});
-  $pm->{hide}="true" unless (defined $pm->{hide});
-  $pm->{cat}="text" unless (defined $pm->{cat});
-  $pm->{style}="compact" unless (defined $pm->{style});
+  $pm->{hide}=$s->{mc}->{'flattr-hide'} || "true" unless (defined $pm->{hide});
+  $pm->{cat}=$s->{mc}->{'flattr-cat'} || "text" unless (defined $pm->{cat});
+  $pm->{style}=$s->{mc}->{'flattr-style'} || "compact" unless (defined $pm->{style});
 
   my %flattr_vars=(
                    flattr_btn => $pm->{style},
@@ -664,7 +664,7 @@ sub flattrButton {
 
   $code="<script type=\"text/javascript\">\n";
 
-  foreach my $key (keys(%flattr_vars)){
+  foreach my $key (sort(keys(%flattr_vars))){
     $flattr_vars{$key}=~s/'/\\'/g;
     $flattr_vars{$key}=~s/\n//g;
     $code.="var $key = '$flattr_vars{$key}';\n";
