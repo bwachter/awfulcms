@@ -40,33 +40,36 @@ sub new{
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"displayPage",
-			   -content=>"html",
-			   -dbhandle=>"blog"},
-	       "article"=>{-handler=>"displayArticle",
-			   -content=>"html",
-			   -dbhandle=>"blog"},
-	       "draft"=>{-handler=>"displayArticle",
-			   -content=>"html",
-			   -dbhandle=>"blog"},
-	       "tag"=>{-handler=>"displayTag",
-		       -content=>"html",
-		       -dbhandle=>"blog"},
-	       "comment"=>{-handler=>"editform",
-		       -content=>"html",
-		       -dbhandle=>"blog",
-		       -role=>"author"},
-	       "edit"=>{-handler=>"editsite",
-			-content=>"html",
-			-role=>"moderator"},
-	       "createdb"=>{-handler=>"createdb",
-			    -content=>"html",
-			    -dbhandle=>"blog",
-			    -role=>"admin"},
-	       "dropdb"=>{-handler=>"dropdb",
-			  -content=>"html",
-			  -dbhandle=>"blog",
-			  -role=>"admin"}
-	       };
+                           -content=>"html",
+                           -dbhandle=>"blog"},
+               "article"=>{-handler=>"displayArticle",
+                           -content=>"html",
+                           -dbhandle=>"blog"},
+               "draft"=>{-handler=>"displayArticle",
+                         -content=>"html",
+                         -dbhandle=>"blog"},
+               "tag"=>{-handler=>"displayTag",
+                       -content=>"html",
+                       -dbhandle=>"blog"},
+               "comment"=>{-handler=>"editform",
+                           -content=>"html",
+                           -dbhandle=>"blog",
+                           -role=>"author"},
+               "trackback"=>{-handler=>"trackback",
+                             -content=>"html",
+                             -dbhandle=>"blog"},
+               "edit"=>{-handler=>"editsite",
+                        -content=>"html",
+                        -role=>"moderator"},
+               "createdb"=>{-handler=>"createdb",
+                            -content=>"html",
+                            -dbhandle=>"blog",
+                            -role=>"admin"},
+               "dropdb"=>{-handler=>"dropdb",
+                          -content=>"html",
+                          -dbhandle=>"blog",
+                          -role=>"admin"}
+               };
   #$r->{mc}={} unless (defined $r->{mc});
   $s->{mc}=$r->{mc};
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
@@ -106,34 +109,54 @@ sub formatArticle{
   $d->{date}=localtime($d->{created});
 
   my $body=AwfulCMS::SynBasic->format($d->{body},
-				     {blogurl=>$s->{mc}->{'content-prefix'}});
+                                     {blogurl=>$s->{mc}->{'content-prefix'}});
 
   my @tags=$s->getTags($d->{id});
   my @tagref;
   my $tagstr="<a href=\"".$p->{url}->buildurl({'req'=>'tag'})."\">Tags</a>: ";
   push(@tagref, "<a href=\"".
        $p->{url}->buildurl({'req'=>'tag',
-			    'tag'=>$_})."\">$_</a>") foreach (@tags);
+                            'tag'=>$_})."\">$_</a>") foreach (@tags);
   $tagstr.=join(', ', @tagref);
   $tagstr.=" None" if (@tagref == 0);
+
+  my $taglist;
+  $taglist=join(', ', @tags) if (@tags != 0);
 
   my $ccnt=$s->getCommentCnt($d->{id});
   my $cmtstring="$ccnt comments";
   $cmtstring = "1 comment" if ($ccnt==1);
+  my $url = $p->{url}->buildurl({'req'=>'article',
+                                 'article'=>$d->{id}});
+
+  my $flattr;
+  if ($s->{mc}->{flattr}){
+    $flattr="<br /><script type=\"text/javascript\">
+var flattr_btn = 'compact';
+var flattr_uid = '".$s->{mc}->{'flattr-uid'}."';
+var flattr_tle = '$d->{subject}';
+var flattr_dsc = 'the entry description, please be as thorough as possible';
+var flattr_cat = 'text';
+var flattr_lng = 'en_GB';
+var flattr_tag = 'taglist';
+var flattr_url = '$url';
+var flattr_hide = 'true';
+</script>
+<script src=\"http://api.flattr.com/button/load.js\" type=\"text/javascript\"></script>";
+  }
 
   $cmtstring = "<a href=\"".
     $p->{url}->buildurl({'req'=>'article',
-			 'article'=>"$d->{id}"})."#comments\">$cmtstring</a>" if ($ccnt>0);
+                         'article'=>"$d->{id}"})."#comments\">$cmtstring</a>" if ($ccnt>0);
 
   $d->{name}="<a href=\"$d->{homepage}\">$d->{name}</a>" if ($d->{homepage}=~/^http:\/\//);
 
   my $ret=
-    div("<!-- start news entry --><a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"".
-	$p->{url}->buildurl({'req'=>'article',
-			    'article'=>$d->{id}})."\">$d->{id}] $d->{subject}</a>", {'class'=>'newshead'}).
-			      div("$body", {'class'=>'newsbody'}).
-				div("<div class=\"tags\">$tagstr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
-	  "<br class=\"l\" /><br class=\"l\" />";
+    div("<!-- start news entry --><a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$url\">$d->{id}] $d->{subject}</a>",
+        {'class'=>'newshead'}).
+          div("$body", {'class'=>'newsbody'}).
+            div("<div class=\"tags\">$tagstr$flattr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
+          "<br class=\"l\" /><br class=\"l\" />";
 
   $ret;
 }
@@ -192,7 +215,7 @@ sub getTeasers{
     my $p=$s->{page};
     my ($data, @teasers);
     my $q=$dbh->prepare("select subject from blog where draft=1 and tease=1 order by created desc")||
-	$p->status(400, "Unable to prepare query: $!");
+        $p->status(400, "Unable to prepare query: $!");
     $q->execute();
     $data=$q->fetchall_arrayref({});
 
@@ -234,8 +257,8 @@ sub displayTag{
     $q_t->execute($tag);
     my $data=$q_t->fetchall_arrayref({});
     push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'article',
-						  'article'=>$_->{id}}).
-	 "\">$_->{subject}</a>") foreach (@$data);
+                                                  'article'=>$_->{id}}).
+         "\">$_->{subject}</a>") foreach (@$data);
     $tagstr.=join(', ', @tags);
   } else {
     my @tags;
@@ -244,20 +267,42 @@ sub displayTag{
     my $data=$q_a->fetchall_arrayref({});
 
     push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'tag',
-						  'tag'=>$_->{tag}}).
-	 "\">$_->{tag}</a>")  foreach (@$data);
+                                                  'tag'=>$_->{tag}}).
+         "\">$_->{tag}</a>")  foreach (@$data);
     $tagstr.=join(', ', @tags);
   }
   $p->title($s->{mc}->{'title-prefix'}." - $header");
   $p->add(div(div($header, {'class'=>'newshead'}).
-	      div($tagstr,{'class'=>'newsbody'})
-	      , {'class'=>'news'}));
+              div($tagstr,{'class'=>'newsbody'})
+              , {'class'=>'news'}));
   #push(@tags, $_->{tag}) foreach (@$data);
 
   if ($s->{mc}->{'cached-tags'}){
     mkpath($s->{page}->{rq}->{dir});
     $p->dumpto($s->{page}->{rq}->{dir}."/index.html");
   }
+}
+
+
+sub trackbackStatus{
+  my $s=shift;
+  my $status=shift;
+  my $message=shift;
+  my $p=$s->{page};
+  $p->{'custom-content'}="<?xml version=\"1.0\" encoding=\"utf-8\"?><response>
+                             <error>$status</error>\n";
+  $p->{'custom-content'}.="<message>$message</message>" if ($message);
+  $p->{'custom-content'}.="</response>\n";
+}
+
+sub trackback{
+  my $s=shift;
+  my $p=$s->{page};
+  my $dbh=$s->{page}->{dbh};
+
+  my $article=int($p->{url}->param("article")) || return $s->trackbackStatus(1, "No such article");
+
+  $s->trackbackStatus(0);
 }
 
 =item displayArticle() CGI(int article)
@@ -294,6 +339,20 @@ sub displayArticle{
   $q_c->execute($d->{id}) || $p->status(400, "Unable to execute query: $!");
   while (my $d=$q_c->fetchrow_hashref()){
     $p->add(div($s->formatArticle($d), {'class'=>'news'}));
+  }
+
+  if ($s->{mc}->{'trackback'}){
+    $p->{tb}=({
+               'identifier'=>$p->{url}->publish({'req'=>'article', 'article'=>$article}),
+               'trackback'=>$p->{url}->publish({'req'=>'trackback', 'article'=>$article}),
+               'about'=>$p->{url}->publish({'req'=>'article', 'article'=>$article})
+              });
+  }
+
+  if ($s->{mc}->{'pingback'}){
+    my $pingback=$p->{url}->publish({'req'=>'pingback',
+                                      'article'=>$article});
+    $p->setHeader("X-Pingback", $pingback);
   }
 
   if ($s->{mc}->{'cached-articles'}){
@@ -338,13 +397,13 @@ sub displayPage{
 
   if ($s->{mc}->{tease}){
       $p->add(div(p("Upcoming articles: ".$s->getTeasers()),
-		  {'class'=>'navw'})
-	  );
+                  {'class'=>'navw'})
+          );
   }
 
   $p->add(div(p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
-	      {'class'=>'navw'})
-	 );
+              {'class'=>'navw'})
+         );
 
   $q_s->execute(0, $s->{mc}->{numarticles}, $offset) || $p->status(400, "Unable to execute query: $!");
 
@@ -353,9 +412,9 @@ sub displayPage{
   }
 
   $p->add(div(p("There are $cnt articles on $pages pages").
-	      p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
-	      {'class'=>'navw-full'})
-	 );
+              p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),
+              {'class'=>'navw-full'})
+         );
 
   if ($s->{mc}->{'cached-page'}){
     mkpath($s->{page}->{rq}->{dir});
@@ -420,7 +479,7 @@ sub editform{
    </td>
   </tr>
   </table></form><hr>
-	 ");
+         ");
 }
 
 =item createdb()
