@@ -59,10 +59,13 @@ sub new {
   $s->{header}={};
 
   if ($s->{mode} eq "CGI"){
-    $s->{doctype}='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'."\n"
+    # FIXME, allow using non-xhtml by config
+    $s->{xmldecl}='<?xml version="1.0" encoding="UTF-8"?>' unless defined $s->{xmldecl};
+    $s->{doctype}=
+      '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'."\n"
       unless defined $s->{doctype};
 
-    $s->{header}->{"Content-type"}="text/html" unless defined $s->{header}->{"Content-type"};
+    $s->{header}->{"Content-type"}="text/html; charset=utf-8" unless defined $s->{header}->{"Content-type"};
     $s->{rq}=new AwfulCMS::Request;
     $s->{target}="/$s->{rq}->{dir}/$s->{rq}->{file}";
   }
@@ -165,10 +168,19 @@ sub out {
     $hdr.="\n";
   }
 
+  $out.=$s->{xmldecl} if defined $s->{xmldecl};
   $out.=$s->{doctype} if defined $s->{doctype};
   $out.="<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>$s->{head}\n".
-    "<title>$s->{title}</title>\n".
-      "</head><body>\n";
+    "<title>$s->{title}</title>\n";
+
+  if (defined $s->{htmlheader} && ref($s->{htmlheader}) eq "HASH"){
+    my ($key, $value);
+    while (($key, $value)=each(%{$s->{htmlheader}})){
+      $out.=tag($key, $value);
+    }
+  }
+
+  $out.="</head><body>\n";
 
   if ($s->{tb}){
     # fixme, validate elements of tb hash
@@ -478,6 +490,23 @@ sub appendHeader {
   my $headerValue=shift;
 
   $s->{header}->{$headerName}.=$headerValue;
+}
+
+=item setHtmlHeader($headerName, $headerValue)
+
+Sets a HTML-header to the given value. If a header with this name
+already exists it will be overwritten.
+
+C<setHeader("Location", "http://www.example.com")>
+
+=cut
+
+sub setHtmlHeader {
+  my $s=shift;
+  my $headerName=shift;
+  my $headerValue=shift;
+
+  $s->{htmlheader}->{$headerName}=$headerValue;
 }
 
 =item addCookie($cookie)
