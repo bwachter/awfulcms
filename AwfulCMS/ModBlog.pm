@@ -126,30 +126,12 @@ sub formatArticle{
   my $url = $p->{url}->buildurl({'req'=>'article',
                                  'article'=>$d->{id}});
 
-  my $flattr;
-  if ($s->{mc}->{flattr}){
-    my %flattr_vars=(
-                     flattr_btn => "compact",
-                     flattr_uid => $s->{mc}->{'flattr-uid'},
-                     flattr_tle => $d->{subject},
-                     flattr_dsc => substr($body, 0, 240),
-                     flattr_cat => "text",
-                     flattr_lng => "en_GB",
-                     flattr_tag => join(', ', @tags),
-                     flattr_url => $p->{url}->publish($url),
-                     flattr_hide => "true"
-                    );
-    $flattr_vars{flattr_dsc}.=" [...]" if (length $body > 240);
-    $flattr_vars{flattr_dsc}=~s/<.*?>//g;
-    $flattr_vars{flattr_tle}.="     " if (length $flattr_vars{flattr_tle} < 5);
-    $flattr="<br /><script type=\"text/javascript\">\n";
-    foreach my $key (keys(%flattr_vars)){
-      $flattr_vars{$key}=~s/'/\\'/g;
-      $flattr_vars{$key}=~s/\n//g;
-      $flattr.="var $key = '$flattr_vars{$key}';\n";
-    }
-    $flattr.="</script><script src=\"http://api.flattr.com/button/load.js\" type=\"text/javascript\"></script>";
-  }
+  my $flattr="<br />".$p->flattrButton({
+                               subject => $d->{subject},
+                               text => $body,
+                               tags => join(', ', @tags),
+                               url => $p->{url}->publish($url)
+                              });
 
   $cmtstring = "<a href=\"".
     $p->{url}->buildurl({'req'=>'article',

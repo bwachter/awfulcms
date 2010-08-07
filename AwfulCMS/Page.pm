@@ -144,6 +144,11 @@ sub out {
   my $hdr;
   my $out;
 
+  if ($s->{'custom-content'}){
+    print $s->{'custom-content'};
+    return;
+  }
+
   if (defined $s->{header}){
     if (ref($s->{header}) eq "HASH"){
       my ($key, $value);
@@ -165,7 +170,25 @@ sub out {
     "<title>$s->{title}</title>\n".
       "</head><body>\n";
 
-  $out.=$s->{preinclude} if ($s->{preinclude});
+  if ($s->{tb}){
+    # fixme, validate elements of tb hash
+    $out.="<!--
+           <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"
+             xmlns:dc=\"http://purl.org/dc/elements/1.1/\"
+             xmlns:trackback=\"http://madskills.com/public/xml/rss/module/trackback/\">
+           <rdf:Description
+             rdf:about=\"$s->{tb}->{about}\"
+             dc:identifier=\"$s->{tb}->{identifier}\"
+             dc:title=\"$s->{title}\"
+             trackback:ping=\"$s->{tb}->{trackback}\" />
+           </rdf:RDF>
+           -->";
+  }
+
+  if ($s->{preinclude}){
+    $s->expandInclude(\$s->{preinclude});
+      $out.=$s->{preinclude};
+  }
   # a hash to hold all main divs
   #  $s->{divmap}->{500}={'id'=>'content'};
   # a hash to hold divname -> number mappings
@@ -178,7 +201,10 @@ sub out {
     $out.=div($s->{divhash}->{$divattr->{id}}, $divattr);
   }
 
-  $out.=$s->{postinclude} if ($s->{postinclude});
+  if ($s->{postinclude}){
+    $s->expandInclude(\$s->{postinclude});
+    $out.=$s->{postinclude};
+  }
 
   if ($s->{'display-time'}){
       my $timediff=tv_interval($s->{starttime}, [gettimeofday]);
@@ -344,6 +370,18 @@ sub clear {
   $s->{divhash}->{$divname}=""
 }
 
+=item excerpt()
+
+TODO
+
+=cut
+
+sub excerpt {
+  my $s=shift;
+  my $excerpt=shift;
+  $s->{excerpt}=$excerpt;
+}
+
 =item prepend()
 
 TODO
@@ -369,8 +407,6 @@ sub preinclude{
   my $s=shift;
   my $content=shift;
 
-  $content=~s/HOSTNAME/$s->{hostname}/g;
-  $content=~s/ADDRESS/$s->{'mail-address'}/g;
   $s->{preinclude}.=$content;
 }
 
@@ -384,9 +420,33 @@ sub postinclude{
   my $s=shift;
   my $content=shift;
 
-  $content=~s/HOSTNAME/$s->{hostname}/g;
-  $content=~s/ADDRESS/$s->{'mail-address'}/g;
   $s->{postinclude}.=$content;
+}
+
+sub expandInclude{
+  my $s=shift;
+  my $content=shift;
+
+  $$content=~s/HOSTNAME/$s->{hostname}/g;
+  $$content=~s/ADDRESS/$s->{'mail-address'}/g;
+
+  if ($s->{mc}->{flattr}){
+    my $flattr="";
+    my $excerpt;
+    if ($s->{excerpt}){
+      $excerpt=$s->{excerpt};
+    } else {
+      $excerpt="";
+    }
+    if (length $excerpt >= 40){
+      $flattr=$s->flattrButton({
+                                subject => $s->{title},
+                                text => $excerpt,
+                                url => $s->{url}->myurl()
+                               });
+    }
+    $$content=~s/FLATTR/$flattr/g;
+  }
 }
 
 =item setHeader($headerName, $headerValue)
@@ -572,6 +632,44 @@ sub pRSS {
 #  $string=~s/</&lt;/g;
 
   $string;
+}
+
+sub flattrButton {
+  my $s=shift;
+  my $pm=shift;
+  my $code;
+
+  $s->{mc}->{'flattr-js'}="http://api.flattr.com/button/load.js"
+    unless (defined $s->{mc}->{'flattr-js'});
+
+  $pm->{lang}="en_GB" unless (defined $pm->{lang});
+  $pm->{hide}="true" unless (defined $pm->{hide});
+  $pm->{cat}="text" unless (defined $pm->{cat});
+  $pm->{style}="compact" unless (defined $pm->{style});
+
+  my %flattr_vars=(
+                   flattr_btn => $pm->{style},
+                   flattr_uid => $s->{mc}->{'flattr-uid'},
+                   flattr_tle => $pm->{subject},
+                   flattr_dsc => substr($pm->{text}, 0, 240),
+                   flattr_cat => $pm->{cat},
+                   flattr_lng => $pm->{lang},
+                   flattr_tag => $pm->{tags},
+                   flattr_url => $pm->{url},
+                   flattr_hide => $pm->{hide}
+                  );
+  $flattr_vars{flattr_dsc}.=" [...]" if (length $pm->{text} > 240);
+  $flattr_vars{flattr_dsc}=~s/<.*?>//g;
+  $flattr_vars{flattr_tle}.="     " if (length $flattr_vars{flattr_tle} < 5);
+
+  $code="<script type=\"text/javascript\">\n";
+
+  foreach my $key (keys(%flattr_vars)){
+    $flattr_vars{$key}=~s/'/\\'/g;
+    $flattr_vars{$key}=~s/\n//g;
+    $code.="var $key = '$flattr_vars{$key}';\n";
+  }
+  $code.="</script><script src=\"$s->{mc}->{'flattr-js'}\" type=\"text/javascript\"></script>";
 }
 
 1;

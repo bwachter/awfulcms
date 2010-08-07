@@ -63,6 +63,9 @@ sub init{
 
   $p->{hostname}=$c->getValue("main", "hostname") if ($c->getValue("main", "hostname"));
   $p->{starttime}=$starttime;
+  $p->{mc}={};
+  $p->{mc}={%{$p->{mc}}, %{$c->getValues("default")}} if ($c->getValues("default"));
+  $p->{mc}={%{$p->{mc}}, %{$c->getValues("page")}} if ($c->getValues("page"));
 
   # add stylesheets
   my $stylesheets=$c->getValues("stylesheets");
@@ -159,6 +162,7 @@ sub doModule{
   $r->{mc}={};
   $r->{mc}->{'display-time'}=$c->getValue("main", "display-time") if ($c->getValue("main", "display-time"));
   $r->{mc}->{'mail-address'}=$c->getValue("main", "mail-address") if ($c->getValue("main", "mail-address"));
+  $r->{mc}={%{$r->{mc}}, %{$c->getValues("default")}} if ($c->getValues("default"));
   $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short)}} if ($c->getValues($module_short));
   $r->{mc}={%{$r->{mc}}, %{$c->getValues($module_short."/".$instance)}} if ($c->getValues($module_short."/".$instance));
 

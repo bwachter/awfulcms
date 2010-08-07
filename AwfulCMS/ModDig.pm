@@ -59,6 +59,7 @@ sub defaultpage(){
   my ($digTypeName, $digQuery, $url);
 
   $p->title("digger");
+  $p->excerpt("digger is a web frontend to the 'dig' commandline tool for querying web servers");
   if ($digType==0) { $digTypeName="any"; }
   elsif ($digType==1) { $digTypeName="A"; }
   elsif ($digType==8) { $digTypeName="AAAA"; }

@@ -102,6 +102,13 @@ sub buildurl {
   "/$baseurl/$request/$url";
 }
 
+sub myurl {
+  my $s=shift;
+  my $url;
+
+  #fixme, check for https
+  $url="http://".$s->{rq}->{host}."/".$s->{rq}->{dir}."/".$s->{page}->{rq}->{file}
+}
 sub cgihandler {
   my $s=shift;
 

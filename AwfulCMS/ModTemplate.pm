@@ -67,6 +67,7 @@ sub mainsite(){
   }
 
   $p->title($metadata{title});
+  $p->excerpt($metadata{excerpt}) if ($metadata{excerpt});
   my $body;
   $body.="<h1>$metadata{title}</h1>" if defined $metadata{title};
   $body.=AwfulCMS::SynBasic->format($content,

@@ -56,6 +56,7 @@ sub defaultpage{
   my $p=$s->{page};
 
   $p->title("MAC manufacturer lookup");
+  $p->excerpt("A simple script to allow looking up the manufacturer of your ethernet card");
   $p->add("<p>This script allows you to look up the manufacturer behind a MAC address,
 using a local database based on the IEEE assignments. You need to give at least
 the first 24 bits of the address (i.e. 01:23:45), if you give more digits the script

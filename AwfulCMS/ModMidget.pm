@@ -116,6 +116,7 @@ sub defaultpage(){
   my $submit=$p->{url}->param('submit');
 
   $p->title("midget");
+  $p->excerpt("midget is a tool receive messages bei message-ID from either google groups or a public newsserver");
   $p->add("<h1>midget</h1>
 <form name=\"foo\" method=\"post\" action=\"/".$p->{url}->cgihandler()."\"><table border=\"0\">
 <tr><td>MID:</td><td><input type=\"text\" name=\"mid\" value=\"$mid\" size=\"40\" /></td></tr>
