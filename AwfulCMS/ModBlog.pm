@@ -127,7 +127,7 @@ sub formatArticle{
                                  'article'=>$d->{id}});
 
   my $flattr;
-  if ($p->{mc}->{flattr}){
+  if ($s->{mc}->{flattr}){
     $flattr="<br />".$p->flattrButton({
                                        subject => $d->{subject},
                                        text => $body,
