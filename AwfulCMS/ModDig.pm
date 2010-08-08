@@ -64,16 +64,18 @@ sub defaultpage(){
   my ($digQuery, $url);
 
   my %digTypes=(
-                '0' => "any",
-                '1' => "A",
-                '2' => "MX",
-                '3' => "SIG",
-                '4' => "CNAME",
-                '5' => "PTR",
-                '6' => "NS",
-                '7' => "AXFR",
-                '8' => "AAAA",
-                '9' => "SOA"
+                '00' => "any",
+                '01' => "A",
+                '02' => "AAAA",
+                '03' => "MX",
+                '04' => "CNAME",
+                '05' => "PTR",
+                '06' => "NS",
+                '07' => "AXFR",
+                '08' => "SIG",
+                '09' => "SOA",
+                '10' => "SRV",
+                '11' => "TXT"
                );
 
   my %digOptions=(
