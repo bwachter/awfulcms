@@ -171,7 +171,7 @@ sub doModule{
   $p->{'display-time'}=1 if ($r->{mc}->{'display-time'});
   if ($r->{mc}->{'mail-address'}){
     $r->{mc}->{'mail-address'}=time2str($r->{mc}->{'mail-address'}, time);
-    $p->{'mail-address'}=$r->{mc}->{'mail-address'};
+    $p->{mc}->{'mail-address'}=$r->{mc}->{'mail-address'};
   } else {
     $p->{'mail-address'}=$r->{mc}->{'mail-address'}='somebody-needs-to-fix-the-configuration@invalid.invalid';
   }
