@@ -60,7 +60,7 @@ sub defaultpage(){
   my $digNS=$p->{url}->param('digNS');
   my $digDomain=$p->{url}->param('digDomain');
   my @digDomains=split("\n", $digDomain);
-  my %digOpt={};
+  my %digOpt;
   my ($digQuery, $url);
 
   my %digTypes=(
@@ -123,7 +123,8 @@ sub defaultpage(){
     $url=$p->{url}->buildurl({'digType'=>$digType,
                               'digNS'=>$digNS,
                               'digDomain'=>$digDomain,
-                              %digOpt});
+                              %digOpt
+                             });
     $url=$p->{url}->publish($url);
   }
 
