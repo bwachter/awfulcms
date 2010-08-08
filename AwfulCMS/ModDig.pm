@@ -72,7 +72,8 @@ sub defaultpage(){
                 '5' => "PTR",
                 '6' => "NS",
                 '7' => "AXFR",
-                '8' => "AAAA"
+                '8' => "AAAA",
+                '9' => "SOA"
                );
 
   my %digOptions=(
@@ -117,7 +118,7 @@ sub defaultpage(){
       }
     }
 
-    $digType=0 if ($digType > 8 || $digType < 0);
+    $digType=0 if ($digType > keys(%digTypes) || $digType < 0);
     $digQuery=$s->queryDig($digNS, %digTypes->{$digType}, \@digDomains, $_optstring);
 
     $url=$p->{url}->buildurl({'digType'=>$digType,
