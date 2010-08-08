@@ -56,15 +56,11 @@ sub defaultpage(){
   my $s=shift;
   my $p=$s->{page};
 
-  my $digType=$p->{url}->param('digType');
-  my $digNS=$p->{url}->param('digNS');
   my $digDomain=$p->{url}->param('digDomain');
-  my @digDomains=split("\n", $digDomain);
-  my %digOpt;
-  my ($digQuery, $url);
+  my ($digType, $digNS, $url, $digQuery);
 
   my %digTypes=(
-                '00' => "any",
+                '0' => "any",
                 '01' => "A",
                 '02' => "AAAA",
                 '03' => "MX",
@@ -97,7 +93,7 @@ sub defaultpage(){
                            description => "Display the additional section of a reply" },
                   mlt => { default => 'no',  opt => 'multiline',
                            description => 'Print records like SOA-records in a multi-line format with verbose comments' },
-                  );
+                 );
 
   # maybe: tcp, ign, aaflag, adflag, cdflag, cl, nssearch, recurse,
   # qr, fail, besteffort, dnssec, sigchase, topdown, nsid
@@ -106,6 +102,12 @@ sub defaultpage(){
   $p->excerpt("digger is a web frontend to the 'dig' commandline tool for querying web servers");
 
   if ($digDomain){
+    my %digOpt;
+    my @digDomains=split("\n", $digDomain);
+
+    $digType=$p->{url}->param('digType');
+    $digNS=$p->{url}->param('digNS');
+
     my $_optstring="";
     foreach my $key(keys(%digOptions)){
       my $_opt=$p->{url}->param($key);
@@ -173,7 +175,7 @@ sub defaultpage(){
     </tr>
     <tr>
      <td colspan=\"3\">
-
+      <!-- <input type=\"checkbox\" name=\"save\" value=\"yes\" />Save current options for future use -->
      </td>
     </tr>
     </table></form>
