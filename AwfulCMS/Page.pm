@@ -436,7 +436,7 @@ sub expandInclude{
   my $content=shift;
 
   $$content=~s/HOSTNAME/$s->{hostname}/g;
-  $$content=~s/ADDRESS/$s->{'mail-address'}/g;
+  $$content=~s/ADDRESS/$s->{mc}->{'mail-address'}/g;
 
   if ($s->{mc}->{flattr}){
     my $flattr="";
@@ -633,6 +633,20 @@ sub pOption {
 
   "<option value=\"$value\" $add>$name</option>";
 }
+
+sub pRadio {
+  my $s=shift;
+  my $name=shift;
+  my $value=shift;
+  my $default=shift;
+  my $add;
+
+  if ( $value eq $default ) { $add='checked="checked"' }
+  else { $add="" }
+
+  "<input type=\"radio\" name=\"$name\" value=\"$value\" $add />";
+}
+
 
 sub pString {
   my $s=shift;
