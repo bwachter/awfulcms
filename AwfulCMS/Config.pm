@@ -74,7 +74,7 @@ sub new(){
     $_=~s/ +/ /g;
     $_=~s/^ +//;
     $_=~s/[\t\n]//g;
-    $_=~s/[^\da-zA-Z\@%\:=<>\-_\/\.\* ]//g;
+    $_=~s/[^\da-zA-Z\@%\:=<>\-_\/\.\*\?& ]//g;
     next if (/^ *$/);
     if ($type eq ""){
       if (/^section/i){
@@ -165,7 +165,7 @@ sub mainParser(){
 
   foreach (@lines){
     if (/=/){
-      my ($key,$value)=split('=', $_);
+      my ($key,$value)=$_=~/(.*?)=(.*)/;
       $s->{"c_$type"}->{$key}=$value;
     } else {
       $s->{"c_$type"}->{$_}=0;
