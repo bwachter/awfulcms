@@ -10,6 +10,7 @@ This module does not have any configurable options.
 
 =cut
 
+# TODO: Allow saving default options in a cookie
 use strict;
 
 sub new(){
@@ -39,10 +40,13 @@ sub queryDig {
   my $digNS=shift;
   my $digTypeName=shift;
   my $digDomains=shift;
+  my $digOptionString=shift;
   my $digQuery;
 
+  $digNS="\@$digNS" unless ($digNS eq "");
+
   foreach(@$digDomains) {
-    $digQuery.=`dig $digNS $_ $digTypeName`;
+    $digQuery.=`dig $digOptionString $digNS $_ $digTypeName`;
     $digQuery.="<hr>\n";
   }
   $digQuery;
@@ -56,69 +60,124 @@ sub defaultpage(){
   my $digNS=$p->{url}->param('digNS');
   my $digDomain=$p->{url}->param('digDomain');
   my @digDomains=split("\n", $digDomain);
-  my ($digTypeName, $digQuery, $url);
+  my %digOpt={};
+  my ($digQuery, $url);
+
+  my %digTypes=(
+                '0' => "any",
+                '1' => "A",
+                '2' => "MX",
+                '3' => "SIG",
+                '4' => "CNAME",
+                '5' => "PTR",
+                '6' => "NS",
+                '7' => "AXFR",
+                '8' => "AAAA"
+               );
+
+  my %digOptions=(
+                  ttl => { default => 'yes', opt => 'ttlid',
+                           description => "Display the TTL" },
+                  trc => { default => 'no',  opt => 'trace',
+                           description => "Enable tracing of the delegation path from root name servers "},
+                  cmt => { default => 'yes', opt => 'comments',
+                           description => "Toggle the display of comment lines in the output" },
+                  sts => { default => 'yes', opt => 'stats',
+                           description => 'Display query statistics' },
+                  qst => { default => 'yes', opt => 'question',
+                           description => "Display the question section of a query as a comment" },
+                  ans => { default => 'yes', opt => 'answer',
+                           description => "Display the answer section of a reply" },
+                  aut => { default => 'yes', opt => 'authority',
+                           description => "Display the authority section of a reply" },
+                  add => { default => 'yes', opt => 'additional',
+                           description => "Display the additional section of a reply" },
+                  mlt => { default => 'no',  opt => 'multiline',
+                           description => 'Print records like SOA-records in a multi-line format with verbose comments' },
+                  );
+
+  # maybe: tcp, ign, aaflag, adflag, cdflag, cl, nssearch, recurse,
+  # qr, fail, besteffort, dnssec, sigchase, topdown, nsid
 
   $p->title("digger");
   $p->excerpt("digger is a web frontend to the 'dig' commandline tool for querying web servers");
-  if ($digType==0) { $digTypeName="any"; }
-  elsif ($digType==1) { $digTypeName="A"; }
-  elsif ($digType==8) { $digTypeName="AAAA"; }
-  elsif ( $digType==2) { $digTypeName="MX"; }
-  elsif ( $digType==3) { $digTypeName="SIG"; }
-  elsif ( $digType==4) { $digTypeName="CNAME"; }
-  elsif ( $digType==5) { $digTypeName="PTR"; }
-  elsif ( $digType==6) { $digTypeName="NS"; }
-  elsif ( $digType==7) { $digTypeName="AXFR"; }
-  else { $digTypeName="any"; }
 
-  $digQuery=$s->queryDig($digNS, $digTypeName, \@digDomains) if ($digDomain);
+  if ($digDomain){
+    my $_optstring="";
+    foreach my $key(keys(%digOptions)){
+      my $_opt=$p->{url}->param($key);
+      if (($_opt eq "yes" || $_opt eq "no") && $_opt ne %digOptions->{$key}->{default}){
+        my $_optname=%digOptions->{$key}->{opt};
+        %digOpt->{$key}=$_opt;
+        if ($_opt eq "yes"){
+          $_optstring.=" +$_optname";
+        } else {
+          $_optstring.=" +no$_optname";
+        }
+      }
+    }
 
-  $url=$p->{url}->buildurl({'digType'=>$digType,
-                            'digNS'=>$digNS,
-                            'digDomain'=>$digDomain});
-  $url=$p->{url}->publish($url);
+    $digType=0 if ($digType > 8 || $digType < 0);
+    $digQuery=$s->queryDig($digNS, %digTypes->{$digType}, \@digDomains, $_optstring);
 
+    $url=$p->{url}->buildurl({'digType'=>$digType,
+                              'digNS'=>$digNS,
+                              'digDomain'=>$digDomain,
+                              %digOpt});
+    $url=$p->{url}->publish($url);
+  }
+
+  my ($optString, $typeString);
+  foreach my $key(sort(keys(%digTypes))){
+    $typeString.=$p->pOption($key, %digTypes->{$key}, $digType);
+  }
+  foreach my $key(sort(keys(%digOptions))){
+    my $_description=%digOptions->{$key}->{description};
+    my $_name=%digOptions->{$key}->{opt};
+    $optString.="<tr>
+     <td>$_name</td>
+     <td>".$p->pRadio($key, "yes", $p->{url}->param($key)||%digOptions->{$key}->{default})."</td>
+     <td>".$p->pRadio($key, "no", $p->{url}->param($key)||%digOptions->{$key}->{default})."</td>
+     <td>$_description</td>
+    </tr>";
+  }
   $p->add("
     <form action=\"/".$p->{url}->cgihandler()."\" method=\"post\">
-    <table border=\"0\">
+    <table>
     <tr>
-     <td colspan=\"2\">Domains, one per line</td>
+     <td colspan=\"3\">Domains, one per line</td>
+     <td rowspan=\"5\"><table>
+      <tr>
+       <th>Option</th>
+       <th>+</th>
+       <th>-</th>
+       <th>Description</th>
+      </tr>
+      $optString
+      </table></td>
+    </tr><tr>
      <td colspan=\"3\">
-      <textarea cols=\"40\" rows=\"4\" name=\"digDomain\">$digDomain</textarea>
+      <textarea cols=\"40\" rows=\"8\" name=\"digDomain\">$digDomain</textarea>
      </td>
     </tr><tr>
-     <td>Type</td>
-     <td><select name=\"digType\">".
-      $p->pOption(0,"any",$digType).
-      $p->pOption(1,"A",$digType).
-      $p->pOption(8,"AAAA",$digType).
-      $p->pOption(2,"MX",$digType).
-      $p->pOption(3,"SIG",$digType).
-      $p->pOption(4,"CNAME",$digType).
-      $p->pOption(5,"PTR",$digType).
-      $p->pOption(6,"NS",$digType).
-      $p->pOption(7,"AXFR",$digType).
-     "</select>
-     </td>
      <td>NS (optional)</td>
-     <td><input type=\"text\" name=\"digNS\" value=\"$digNS\" /></td>
-    </tr>
-    <tr>
+     <td colspan=\"2\"><input type=\"text\" name=\"digNS\" value=\"$digNS\" /></td>
+    </tr><tr>
+     <td>Type</td>
+     <td><select name=\"digType\">$typeString</select></td>
      <td><input type=\"submit\" name=\"submit\" value=\"Go!\" /></td>
     </tr>
     <tr>
-     <th>+</th>
-     <th>-</th>
-     <th>Option</th>
+     <td colspan=\"3\">
+
+     </td>
     </tr>
-    <!--
-    <tr>
-     <td><input type=\"checkbox\" name=\"x_trace\" value=\"yes\"></td>
-     <td><input type=\"radio\" name=\"x_trace\" value=\"no\"></td>
-     <td>trace</td>
-    </tr>
-    -->
-    </table></form><hr>");
+    </table></form>
+    <hr>
+     Please <a href=\"mailto:$p->{mc}->{'mail-address'}\">drop me a note</a> if
+     you see any breakage or have feature requests. If you want to support my work
+     you could use the above flattr button, or follow this
+     <a href=\"$p->{mc}->{'paypal-donation'}\">paypal donation link</a>.<hr>");
 
   $p->add("Use this link if you want to show the query to someone else: <a href=\"$url\">$url</a><hr>") if ($digDomain);
 
