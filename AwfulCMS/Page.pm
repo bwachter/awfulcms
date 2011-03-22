@@ -25,7 +25,7 @@ use AwfulCMS::Request;
 use AwfulCMS::UrlBuilder;
 
 use Exporter 'import';
-our @EXPORT_OK=qw(a div h1 h2 h3 h4 h5 h6 hr p);
+our @EXPORT_OK=qw(a div h1 h2 h3 h4 h5 h6 hr img p);
 our %EXPORT_TAGS = ( tags=>[ @EXPORT_OK ] );
 
 sub new {
@@ -522,11 +522,16 @@ sub addCookie {
 
 tag() inserts a new tag into the current page
 
-tag() accepts up to 4 arguments: tag name, attributes, content
-and valid attributes.
+tag() accepts an unlimited number of arguments. The first scalar
+encountered must be the tag name, all others will be used as content.
 
-The first parameter needs to be a scalar containing the tag name.
+The first hash found will be used for attributes, the second to validate
+attributes. All other hashes will be ignored.
 
+tag() can be called with an object reference to AwfulCMS::Page. . In that
+case tag() will take care of adding the content to the current page.
+
+(Old?)
 The first hash is used as argument list, the first array for
 argument validation. The second scalar is used as content.
 
@@ -536,17 +541,20 @@ argument validation. The second scalar is used as content.
 sub tag {
   my ($tag, $attributes, $content, $allowedAttributes);
   my $attributeString="";
+  my ($s, $r);
 
-  for (my $i=0;$i<4;$i++){
-    my $x=shift;
-    last unless defined $x;
+  for (my $x=shift;defined $x;$x=shift){
     my $r=ref($x);
-    if ($r eq "HASH"){
+    if ($r eq "AwfulCMS::Page"){
+      $s=$x;
+      next;
+    } elsif ($r eq "HASH"){
       unless (defined $attributes) { $attributes=$x; next; }
       unless (defined $allowedAttributes) { $allowedAttributes=$x; next; }
     } else {
       unless (defined $tag) { $tag=$x; next; }
-      unless (defined $content) { $content=$x; next; }
+      $content.=$x;
+      next;
     }
   }
 
@@ -563,28 +571,34 @@ sub tag {
     $attributeString.=" $key=\"$value\""
    }
 
+  my $result;
   if (defined $content){
-    #print "-:-<$tag $attributeString>$content</$tag>\n-:-";
-    return "<$tag $attributeString>$content</$tag>\n";
+    $result="<$tag $attributeString>$content</$tag>";
   } else {
-    #print "-:-<$tag $attributeString/>\n-:-";
-    return "<$tag $attributeString/>\n";
+    $result="<$tag $attributeString/>";
   }
+
+  if (defined $s){
+    $s->add($result);
+  }
+
+  $result;
 }
 
 
 # a bunch of standard tags, all implemented using tag()
 
-sub div {
-  my $content=shift;
-  my $attributes=shift;
-  $attributes={} unless defined $attributes;
-#  my %allowedAttributes=("align"=>("left", "center", "right", "justify"),
-  my %allowedAttributes=("align"=>"",
-                         "class"=>"", "id"=>"", "style"=>"", "title"=>"");
-  tag("div", $content, $attributes, \%allowedAttributes);
-}
+# sub div {
+#   my $content=shift;
+#   my $attributes=shift;
+#   $attributes={} unless defined $attributes;
+# #  my %allowedAttributes=("align"=>("left", "center", "right", "justify"),
+#   my %allowedAttributes=("align"=>"",
+#                          "class"=>"", "id"=>"", "style"=>"", "title"=>"");
+#   tag("div", $content, $attributes, \%allowedAttributes);
+# }
 
+sub div { tag("div", @_); }
 
 # http://de.selfhtml.org/html/referenz/elemente.htm
 
@@ -615,10 +629,10 @@ sub h5 { h("h5", @_); }
 sub h6 { h("h6", @_); }
 
 sub hr { tag("hr", @_); }
+sub img { tag("img", @_); }
 sub p { tag("p", @_); }
 
 sub option { tag("option", @_); }
-
 
 # historical foo, need better code
 sub pOption {
