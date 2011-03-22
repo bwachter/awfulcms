@@ -6,7 +6,7 @@ This library provides a few functions for graphic manipulation
 
 =head2 Configuration parameters
 
-There are no configuration parameters outside this module. 
+There are no configuration parameters outside this module.
 
 =head2 Module functions
 
@@ -62,7 +62,7 @@ sub thumbnail {
   if (($y/$x) < 1) { # wide not tall
     if ($x < $opts->{maxx}){ # image smaller than thumbnail
       return if ($opts->{ignorelarger});
-      $dx=$x; $dy=$y; 
+      $dx=$x; $dy=$y;
     } else {
       $dx=$opts->{maxx};
       $dy=(($y/$x)*$dx);
@@ -71,7 +71,7 @@ sub thumbnail {
     if ($y < $opts->{maxy}){ # image smaller than thumbnail
       return if ($opts->{ignorelarger});
       $dy=$y; $dx=$x;
-    } else { 
+    } else {
       $dy=$opts->{maxy};
       $dx=(($x/$y)*$dy);
     }
