@@ -19,8 +19,10 @@ C<our @EXPORT_OK=qw(thumbnail);>
 use strict;
 
 use CGI;
-use Exporter 'import';
 use URI::Escape;
+use AwfulCMS::LibUtil qw(stripFilename);
+
+use Exporter 'import';
 our @EXPORT_OK=qw(getrequest);
 
 sub new {
@@ -71,6 +73,19 @@ sub param {
   my $key=shift;
 
   return $s->{args}->{$key};
+}
+
+sub paramFile {
+  my $s=shift;
+  my $key=shift;
+
+  $key=stripFilename($s->{args}->{$key});
+
+  my @tmp=$key=~m,(.*)/(.*),;
+
+  my @ret=($key, @tmp);
+
+  @ret;
 }
 
 sub encodeurl {
