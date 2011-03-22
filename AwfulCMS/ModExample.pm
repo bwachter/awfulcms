@@ -45,44 +45,54 @@ baz";
 sub mainsite(){
   my $s=shift;
   my $p=$s->{page};
-  $p->add("<h1>Example page</h1>");
-  $p->add("<h2>Request parameters</h2>");
+  $p->h1("Example page");
+  $p->h2("Request parameters");
 
-  $p->add("<ul>".
-          "<li>Mode: $s->{page}->{mode}</li>".
-          "<li>Module name: $s->{page}->{module}</li>".
-          "<li>Module instance: $s->{page}->{module_instance}</li>".
-          "<li>Module request: $s->{page}->{url}->{request}</li>".
-          "<li>Module arguments: $s->{page}->{url}->{arguments}</li>".
-          "<li>Base URL: $s->{page}->{baseurl}</li>".
-          "<li>Target URL: $s->{page}->{target}</li>".
-          "<li>Requested host: $s->{page}->{rq}->{host}</li>".
-          "<li>Requested file: $s->{page}->{rq}->{file} ($s->{page}->{rq}->{fileabs})</li>".
-          "<li>Requested directory: $s->{page}->{rq}->{dir}</li>".
-          "<li>Remote host: $s->{page}->{rq}->{remote_host}</li>".
-          "<li>Remote IP: $s->{page}->{rq}->{remote_ip}</li>".
-          "</ul>");
+  $p->ul(li("Mode: $s->{page}->{mode}"),
+         li("Module name: $s->{page}->{module}"),
+         li("Module instance: $s->{page}->{module_instance}"),
+         li("Module request: $s->{page}->{url}->{request}"),
+         li("Module arguments: $s->{page}->{url}->{arguments}"),
+         li("Base URL: $s->{page}->{baseurl}"),
+         li("Target URL: $s->{page}->{target}"),
+         li("Requested host: $s->{page}->{rq}->{host}"),
+         li("Requested file: $s->{page}->{rq}->{file} ($s->{page}->{rq}->{fileabs})"),
+         li("Requested directory: $s->{page}->{rq}->{dir}"),
+         li("Remote host: $s->{page}->{rq}->{remote_host}"),
+         li("Remote IP: $s->{page}->{rq}->{remote_ip}"));
 
-  $p->add("<h2>URL parameters</h2>");
+  $p->h2("URL parameters");
   $p->add("<dl>");
   foreach my $key (sort(keys(%{$s->{page}->{url}->{args}}))){
     $p->add("<dt>$key</dt><dd>$s->{page}->{url}->{args}->{$key}</dd>\n");
   }
   $p->add("</dl>");
 
-  $p->add("<h2>Module configuration</h2>");
+  $p->h2("Module configuration");
   $p->add("<dl>");
   foreach my $key (sort(keys(%{$s->{mc}}))){
     $p->add("<dt>$key</dt><dd>$s->{mc}->{$key}</dd>\n");
   }
   $p->add("</dl>");
 
-  $p->add("<h2>Generate status page</h2>");
-  $p->add("<form name=\"foo\" method=\"post\" action=\"$p->{target}\">".
-          "<input type=\"hidden\" name=\"req\" value=\"status\" />".
-          "<input type=\"text\" name=\"message\" value=\"status message\" />".
-          "<input type=\"text\" name=\"status\" size=\"4\" value=\"404\" />".
-          "<input type=\"submit\" name=\"submit\" value=\"Submit\" />");
+  $p->h2("Generate status page");
+  $p->form({name=>"foo",
+            method=>"post",
+            action=>"$p->{target}"},
+           input({type=>"hidden",
+                  name=>"req",
+                  value=>"status"}),
+           input({type=>"text",
+                  name=>"message",
+                  value=>"status message"}),
+           input({type=>"text",
+                  name=>"status",
+                  size=>"4",
+                  value=>"404"}),
+           input({type=>"submit",
+                  name=>"submit",
+                  value=>"Submit"})
+          );
 }
 
 sub status(){
