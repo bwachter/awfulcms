@@ -51,6 +51,17 @@ use strict;
 use AwfulCMS::LibFS qw(lsx ls);
 use AwfulCMS::LibGraphic qw(thumbnail);
 use AwfulCMS::Page qw(:tags);
+use AwfulCMS::LibUtil qw(toUTF8);
+
+my $hasexif=1;
+eval "require Image::ExifTool";
+$hasexif=0 if ($@);
+%Image::ExifTool::UserDefined::Options=(
+                                        Charset => 'Latin',
+                                        CoordFormat => '%.8f',
+                                        Duplicates => 0,
+                                        DateFormat => '%Y:%m:%d %H:%M:%S'
+                                       );
 
 sub new(){
   shift;
@@ -63,19 +74,112 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
-                           -content=>"html"}
+                           -content=>"html"},
+               "displayPicture"=>{-handler=>"display",
+                                  -content=>"html"}
               };
   $s->{mc}=$r->{mc};
   $s->{mc}->{iconset}="/icons/themes/simple" unless (defined $s->{mc}->{iconset});
   $s->{mc}->{diricon}="directory.png" unless (defined $s->{mc}->{diricon});
   $s->{mc}->{fileicon}="file.png" unless (defined $s->{mc}->{fileicon});
 
-#  if ($s->{mc}->{typeinfo}=1){
-#    eval "require File::Type";
-#  }
-
   bless $s;
   $s;
+}
+
+sub extractExif{
+  my $s=shift;
+  my $filename=shift;
+
+  my $info=Image::ExifTool::ImageInfo($filename);
+  if ($$info{Title} eq ""){
+    $$info{Title}=$filename;
+    $$info{Title}=~s,.*/,,;
+  }
+
+  $$info{City}=toUTF8($$info{City});
+
+  if ($$info{City} ne "" && $$info{Country} ne ""){
+    $$info{_location}="$$info{City}, $$info{Country}";
+  } elsif ($$info{City} ne ""){
+    $$info{_location}="$$info{City}";
+  }
+
+  $$info{_date_location}=$$info{_location};
+
+  if ($$info{GPSLatitude} ne "" && $$info{GPSLongitude} ne ""){
+    my ($lat)=$$info{GPSLatitude}=~m/(.*) .*/;
+    my ($lon)=$$info{GPSLongitude}=~m/(.*) .*/;
+    $$info{_date_location_href}="<a href=\"http://maps.google.com/maps?q=$lat+$lon\">$$info{_date_location}</a>";
+  }
+
+  if ($s->{mc}->{'dump-exif'}==1){
+    $info->{'html-dump'}="<br/><hr>";
+    foreach (sort keys %$info){
+      next if ($_ eq 'html-dump');
+      $info->{'html-dump'}.="$_ = $$info{$_}<br>";
+    }
+  }
+
+  $info;
+}
+
+sub display(){
+  my $s=shift;
+  my $p=$s->{page};
+  my ($filepath, $path, $file)=$p->{url}->paramFile("picture");
+  my $info={};
+
+  my $icon;
+  my ($maxx,$maxy)=(300,300);
+  $maxx=$maxy=$s->{mc}->{'display-size'} if defined $s->{mc}->{'display-size'};
+
+  my @modelist=(640, 1024);
+  if (defined $s->{mc}->{'resize-modes'}){
+    $s->{mc}->{'resize-modes'}=~s/ //g;
+    @modelist=split(',', $s->{mc}->{'resize-modes'});
+  }
+  push(@modelist, $maxx);
+
+  my %tmp=();
+  my @resizemodes=();
+  foreach(@modelist){
+    #unless ($tmp{$_}){
+    #  $tmp{$_}=1;
+      push(@resizemodes, $_)
+    #}
+  }
+
+  my %thumblist;
+
+  foreach(@resizemodes){
+    my $ret=thumbnail({'type'=>File::Type->mime_type($filepath),
+                      'filename'=>$file,
+                      'directory'=>$path,
+                      'prepend'=>"$_.",
+                      'ignorelarger'=>"1",
+                      'maxx'=>$_,
+                      'maxy'=>$_});
+
+    %thumblist->{$_}="/$ret" unless $ret eq "";
+    $icon="/$ret" unless $ret eq "";
+  }
+
+  if ($hasexif){
+    $info=$s->extractExif($filepath);
+    $p->title($$info{Title});
+    $p->h1($$info{Title});
+  }
+
+  $p->p(a({href=>"/$path"}, "Overview"));
+
+  foreach (sort {$a<=>$b} keys %thumblist){
+    $p->add("| $_ ");
+  }
+
+  $p->a({href=>"/$filepath"}, img({src=>$icon, alt=>""}));
+
+  $p->add($$info{'html-dump'});
 }
 
 sub defaultpage(){
@@ -86,14 +190,6 @@ sub defaultpage(){
   my $icon="file.png";
   my ($maxx,$maxy)=(300,300);
   $maxx=$maxy=$s->{mc}->{'preview-size'} if defined $s->{mc}->{'preview-size'};
-  my @resizemodes=(640, 1024);
-  if (defined $s->{mc}->{'resize-modes'}){
-    $s->{mc}->{'resize-modes'}=~s/ //g;
-    @resizemodes=split(',', $s->{mc}->{'resize-modes'});
-  }
-  my @sizecheck;
-  for (@resizemodes) { $sizecheck[$_]=1; };
-  push(@resizemodes, $maxx) unless $sizecheck[$_];
 
   if ($s->{page}->{rq}->{dir} eq "." && $s->{page}->{rq}->{file} eq ""){
     #$s->{page}->status(403, "You're not allowed to view this");
@@ -114,29 +210,61 @@ sub defaultpage(){
   $s->{page}->add("<div class=\"gallery-group\">");
   my $icon="$s->{mc}->{iconset}/$s->{mc}->{diricon}";
   foreach(sort @dirs){
-    $s->{page}->add("<div class=\"gallery-item\"><div class=\"gallery-info\"><a href=\"$_\"><img src=\"$icon\" border=\"0\" alt=\"Directory\" /><br />$_</a></div></div>");
+    $s->{page}->div({class=>"gallery-item",
+                     style=>"width:150px"},
+                    div({class=>"gallery-info" },
+                        a({href=>$_},
+                          img({src=>$icon,
+                               border=>0,
+                               alt=>"Directory"}),
+                          "<br/>$_"
+                         )
+                       )
+                   );
   }
+  $s->{page}->add("</div><div class=\"gallery-group\">");
 
   foreach my $key (sort (keys(%$files))){
+    my $url;
     my $icon="$s->{mc}->{iconset}/$s->{mc}->{fileicon}";
     my $value=$files->{$key};
     if ($s->{mc}->{fileinfo}==1){
       $icon = "$s->{mc}->{iconset}/".$s->{mc}->{"icon-".$value->{type}} if (defined $s->{mc}->{"icon-".$value->{type}});
     }
 
-    foreach(@resizemodes){
-      %$value=(%$value, 'filename'=>$key,
-               'directory'=>$s->{page}->{rq}->{dir},
-               'prepend'=>"$_.",
-               'ignorelarger'=>"1",
-               'maxx'=>$_,
-               'maxy'=>$_);
-      my $ret=thumbnail($value);
-      # alle zu einem hash dazuwerfen, wenn voll. danach dann aussuchen was wir haben
-      $icon="/$ret" unless $ret eq "";
+    %$value=(%$value, 'filename'=>$key,
+             'directory'=>$s->{page}->{rq}->{dir},
+             'prepend'=>"$maxx.",
+             'ignorelarger'=>"1",
+             'maxx'=>$maxx,
+             'maxy'=>$maxy);
+    my $ret=thumbnail($value);
+    # alle zu einem hash dazuwerfen, wenn voll. danach dann aussuchen was wir haben
+    $icon="/$ret" unless $ret eq "";
+
+    # FIXME, hook in preview stuff for other content as well
+    # maybe add an option to relocate all viewing stuff under a /viewer/ namespace?
+    if ($$value{type}=~/image\//){
+      $url=$s->{page}->{url}->buildurl({'req'=>'displayPicture',
+                                          'picture'=>$s->{page}->{rq}->{dir}."/$key"});
+    } else {
+      $url=$key;
     }
 
-    $s->{page}->add("<div class=\"gallery-item\"><div class=\"gallery-info\"><a href=\"$key\"><img src=\"$icon\" border=\"2\" alt=\"File\" /><br />$key<br />$value->{type}</a></div></div>\n");
+    $s->{page}->add("<div class=\"gallery-item\" style=\"width:$s->{mc}->{'preview-size'}px height:$s->{mc}->{'preview-size'}px\">" .
+                    "<div class=\"gallery-info\">" .
+                    "<a href=\"$url\">"
+                   );
+
+    if ($hasexif){
+      my $info=$s->extractExif($s->{page}->{rq}->{dir}."/$key");
+
+      $s->{page}->add("<img src=\"$icon\" border=\"2\" alt=\"File\" /><br />$$info{Title}</a>" .
+                      "<br />$$info{_date_location_href}\n");
+    } else {
+      $s->{page}->add("<img src=\"$icon\" border=\"2\" alt=\"File\" /><br />$key<br />$value->{type}\n");
+    }
+    $s->{page}->add("</a></div></div>\n");
   }
   $s->{page}->add("</div>");
 }
