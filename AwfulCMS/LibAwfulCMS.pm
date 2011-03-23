@@ -260,6 +260,11 @@ sub doRequest{
                  handle=>$handle});
   }
 
+  if (defined $r->{rqmap}->{$request}->{-setup}){
+    my $setup=$r->{rqmap}->{$request}->{-setup};
+    $m->$setup();
+  }
+
   $call=$r->{rqmap}->{$request}->{-handler};
 }
 

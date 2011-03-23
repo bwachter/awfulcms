@@ -86,6 +86,10 @@ sub lsx{
   if (ref($dotfiles) ne "HASH"){
     $checktype=$dotfiles;
     undef $dotfiles;
+    if (ref($dirs) ne "ARRAY"){
+      $checktype=$dirs;
+      undef $dirs;
+    }
   }
 
   my $ft=new File::Type;
