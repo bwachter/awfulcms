@@ -25,7 +25,7 @@ use AwfulCMS::Request;
 use AwfulCMS::UrlBuilder;
 
 use Exporter 'import';
-our @EXPORT_OK=qw(a div h1 h2 h3 h4 h5 h6 hr img p);
+our @EXPORT_OK=qw(a div h1 h2 h3 h4 h5 h6 hr img p dl dt dd ul li form input);
 our %EXPORT_TAGS = ( tags=>[ @EXPORT_OK ] );
 
 sub new {
@@ -252,9 +252,9 @@ sub status {
   $s->setHeader("Status", $status);
   $s->title("$status $s->{sdesc}->{$status}->{short} ($s->{module})");
   $s->clear();
-  $s->add("<h1>$status $s->{sdesc}->{$status}->{short}</h1>");
-  $s->add("<p>$s->{sdesc}->{$status}->{long}</p>");
-  $s->add("<p>Additional information:</p><pre>$description</pre>");
+  $s->h1("$status $s->{sdesc}->{$status}->{short}");
+  $s->p("$s->{sdesc}->{$status}->{long}");
+  $s->p("Additional information: <pre>$description</pre>");
   $s->out();
   exit;
   #die "Foo";
@@ -631,6 +631,13 @@ sub h6 { h("h6", @_); }
 sub hr { tag("hr", @_); }
 sub img { tag("img", @_); }
 sub p { tag("p", @_); }
+sub ul { tag("ul", @_); }
+sub li { tag("li", @_); }
+sub dl { tag("dl", @_); }
+sub dt { tag("dt", @_); }
+sub dd { tag("dd", @_); }
+sub form { tag("form", @_); }
+sub input { tag("input", @_); }
 
 sub option { tag("option", @_); }
 
