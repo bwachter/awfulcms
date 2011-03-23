@@ -74,17 +74,23 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"defaultpage",
+                           -setup=>"commonsetup",
                            -content=>"html"},
                "displayPicture"=>{-handler=>"display",
+                                  -setup=>"commonsetup",
                                   -content=>"html"}
               };
   $s->{mc}=$r->{mc};
-  $s->{mc}->{iconset}="/icons/themes/simple" unless (defined $s->{mc}->{iconset});
-  $s->{mc}->{diricon}="directory.png" unless (defined $s->{mc}->{diricon});
-  $s->{mc}->{fileicon}="file.png" unless (defined $s->{mc}->{fileicon});
 
   bless $s;
   $s;
+}
+
+sub commonsetup(){
+  my $s=shift;
+  $s->{mc}->{iconset}="/icons/themes/konqueror" unless (defined $s->{mc}->{iconset});
+  $s->{mc}->{diricon}="directory.png" unless (defined $s->{mc}->{diricon});
+  $s->{mc}->{fileicon}="file.png" unless (defined $s->{mc}->{fileicon});
 }
 
 sub extractExif{
@@ -129,6 +135,7 @@ sub display(){
   my $p=$s->{page};
   my ($filepath, $path, $file)=$p->{url}->paramFile("picture");
   my $info={};
+  my $files={};
 
   my $icon;
   my ($maxx,$maxy)=(300,300);
@@ -165,6 +172,21 @@ sub display(){
     $icon="/$ret" unless $ret eq "";
   }
 
+  lsx($path, $files,  1);
+  my ($prevPic, $hit, $nextPic);
+  foreach (sort keys %$files){
+    if ($_ eq $file) {
+      $hit=1;
+      next;
+    }
+    if ($hit){
+      $nextPic=$_;
+      last;
+    }
+    $prevPic=$_;
+  }
+
+  $p->p(":: $prevPic | $nextPic ::");
   if ($hasexif){
     $info=$s->extractExif($filepath);
     $p->title($$info{Title});
