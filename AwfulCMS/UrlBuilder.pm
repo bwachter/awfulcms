@@ -20,7 +20,7 @@ use strict;
 
 use CGI;
 use URI::Escape;
-use AwfulCMS::LibUtil qw(stripFilename);
+use AwfulCMS::LibUtil qw(escapeShellMetachars stripFilename);
 
 use Exporter 'import';
 our @EXPORT_OK=qw(getrequest);
@@ -86,6 +86,14 @@ sub paramFile {
   my @ret=($key, @tmp);
 
   @ret;
+}
+
+sub paramShellEscape {
+  my $s=shift;
+  my $key=shift;
+
+  $key=escapeShellMetachars($s->{args}->{$key});
+  $key;
 }
 
 sub encodeurl {

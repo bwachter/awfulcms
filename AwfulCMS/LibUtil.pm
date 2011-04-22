@@ -21,7 +21,7 @@ use AwfulCMS::Page qw(:tags);
 use Encode qw(decode encode FB_QUIET);
 
 use Exporter 'import';
-our @EXPORT_OK=qw(navwidget stripFilename toUTF8);
+our @EXPORT_OK=qw(navwidget escapeShellMetachars stripFilename stripShellMetachars toUTF8);
 
 =item navwidget(%options)
 
@@ -107,6 +107,35 @@ sub stripFilename{
 
   $name;
 }
+
+=item stripShellMetachars()
+
+stripShellMetachars() removes characters having a special meaning
+for the Bourne shell
+
+=cut
+
+sub stripShellMetachars {
+  my $s=shift;
+  $s=~s/([;<>\*\|`&\$!#\(\)\[\]\{\}:'"])//g;
+  $s
+}
+
+=item escapeShellMetachars()
+
+escapeShellMetachars() escapes characters having a special meaning
+for the Bourne shell
+
+=cut
+
+sub escapeShellMetachars {
+  my $s=shift;
+  $s=~s/\\//g;
+  # FIXME, should check for properly escaped chars and ignore them
+  $s=~s/([;<>\*\|`&\$!#\(\)\[\]\{\}:'"])/\\$1/g;
+  $s
+}
+
 
 1;
 
