@@ -32,10 +32,12 @@ for a section the key=value-parser is used.
 =cut
 
 use strict;
+use Sys::Hostname;
 
 sub new(){
   shift;
   my $vhost=shift;
+  my $hostname=hostname;
   my $s={};
 
   my $cfg="";
@@ -56,6 +58,7 @@ sub new(){
   }
 
   if (-f "$home/.awfulcms/config-$vhost"){ $cfg="$home/.awfulcms/config-$vhost" }
+  elsif (-f "$home/.awfulcms/config-$hostname"){ $cfg="$home/.awfulcms/config-$hostname" }
   elsif (-f "$home/.awfulcms/config"){ $cfg="$home/.awfulcms/config" }
   elsif (-f "$home/.awfulcms/awfulcmsrc"){ $cfg="$home/.awfulcms/awfulcmsrc" }
   elsif (-f "$home/.awfulcmsrc"){ $cfg="$home/.awfulcmsrc" }
