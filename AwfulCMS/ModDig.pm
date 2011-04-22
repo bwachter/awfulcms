@@ -46,6 +46,7 @@ sub queryDig {
   $digNS="\@$digNS" unless ($digNS eq "");
 
   foreach(@$digDomains) {
+    #next if (/^;/);
     $digQuery.=`dig $digOptionString $digNS $_ $digTypeName`;
     $digQuery.="<hr>\n";
   }
@@ -56,7 +57,8 @@ sub defaultpage(){
   my $s=shift;
   my $p=$s->{page};
 
-  my $digDomain=$p->{url}->param('digDomain');
+  my $digDomain=$p->{url}->paramShellEscape('digDomain');
+  #my $digDomain=$p->{url}->param('digDomain');
   my ($digType, $digNS, $url, $digQuery);
 
   my %digTypes=(
@@ -106,7 +108,7 @@ sub defaultpage(){
     my @digDomains=split("\n", $digDomain);
 
     $digType=$p->{url}->param('digType');
-    $digNS=$p->{url}->param('digNS');
+    $digNS=$p->{url}->paramShellEscape('digNS');
 
     my $_optstring="";
     foreach my $key(keys(%digOptions)){
