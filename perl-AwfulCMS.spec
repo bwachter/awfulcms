@@ -29,6 +29,21 @@ Requires: perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 %{perl_vendorlib}/AwfulCMS/*.pm
 %doc %{_mandir}/man3/*.3pm*
 
+
+%package tools
+Summary: Command line tools for AwfulCMS
+Group: Development/Libraries
+Requires: %{name} = %{version}-%{release}
+
+%description tools
+%{summary}.
+
+%files tools
+%defattr(-,root,root,-)
+%{_bindir}/*
+%doc %{_mandir}/man1/*.pl.1.*
+
+
 %prep
 %setup -q -n %{_name}-%{version}
 

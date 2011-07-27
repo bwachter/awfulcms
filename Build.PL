@@ -15,7 +15,7 @@ use Module::Build;
 my %module_build_args = (
                          'build_requires' => {
                                               'Module::Build' => '0.2808',
-                                              'Test::More' => '0.88'
+                                              'Test::More' => '0.80'
                                              },
                          'configure_requires' => {
                                                   'Module::Build' => '0.2808'

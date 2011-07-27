@@ -2,6 +2,10 @@ awfulcms.cgi
 bin/blog.pl
 bin/mac.pl
 Build.PL
+debian/changelog
+debian/compat
+debian/control
+debian/rules
 debug.css
 default.css
 INSTALL.pod

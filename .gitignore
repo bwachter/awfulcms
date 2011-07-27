@@ -10,3 +10,5 @@ blib/
 *.bak
 MYMETA.yml
 MANIFEST.SKIP
+debian/awfulcms-perl*
+debian/files

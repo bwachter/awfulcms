@@ -2,7 +2,7 @@ Source: awfulcms-perl
 Section: perl
 Priority: extra
 Build-Depends: perl, debhelper (>= 7),
- perl (>= 5.10.1) | libtest-simple-perl (>= 0.88),
+ perl (>= 5.10.1) | libtest-simple-perl (>= 0.80),
  libmodule-build-perl (>= 0.2808), liburi-perl (>= 1.35),
  libfile-type-perl (>= 0.22), libgd-gd2-perl (>= 2.39)
 Maintainer: Bernd Wachter <bwachter@lart.info>
