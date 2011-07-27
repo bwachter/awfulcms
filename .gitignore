@@ -4,3 +4,9 @@ menu
 *.rss
 .htaccess
 oui.txt
+Build
+_build/
+blib/
+*.bak
+MYMETA.yml
+MANIFEST.SKIP
