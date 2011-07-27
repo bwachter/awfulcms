@@ -57,12 +57,12 @@ sub defaultpage{
 
   $p->title("MAC manufacturer lookup");
   $p->excerpt("A simple script to allow looking up the manufacturer of your ethernet card");
-  $p->add("<p>This script allows you to look up the manufacturer behind a MAC address,
+  $p->p("This script allows you to look up the manufacturer behind a MAC address,
 using a local database based on the IEEE assignments. You need to give at least
 the first 24 bits of the address (i.e. 01:23:45), if you give more digits the script
 will consult a device database to find out if it can give you more details. You can
 enter multiple MAC addresses separated by ';' at once (e.g. 01:23:45:67;C0:FF:EE will
-work)</p>");
+work)");
 
   my $mac=$p->{url}->param('mac');
   my $url=$p->{url}->publish({'mac'=>$mac});
@@ -85,7 +85,7 @@ work)</p>");
     $p->add("</dl>");
     $p->add("You can use this link to save the query: <a href=\"$url\">$url</a>");
   } else {
-    $p->add("<p>Sorry, but the MAC address you gave me ($mac) seems not to be valid</p>")
+    $p->p("Sorry, but the MAC address you gave me ($mac) seems not to be valid")
       if ($mac ne "");
   }
 }
