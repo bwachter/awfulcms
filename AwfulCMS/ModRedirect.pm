@@ -3,7 +3,7 @@ package AwfulCMS::ModRedirect;
 =head1 AwfulCMS::ModRedirect
 
 This module allows redirection using the HTTP location header
-in case it's more convenient to do redirections using the 
+in case it's more convenient to do redirections using the
 application than the webserver configuration.
 
 =head2 Configuration parameters
@@ -13,7 +13,7 @@ application than the webserver configuration.
 =item * location=<string>
 
 The location where to redirect. Use different configuration
-instances for different mounts if you need to redirect to 
+instances for different mounts if you need to redirect to
 different locations.
 
 =back
@@ -33,8 +33,8 @@ sub new(){
 
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"mainsite",
-			   -content=>"html"}
-	       };
+                           -content=>"html"}
+               };
   $s->{mc}=$r->{mc};
   bless $s;
   $s;
@@ -43,14 +43,14 @@ sub new(){
 sub mainsite(){
   my $s=shift;
   my $p=$s->{page};
-  $p->status(500, "No redirection URL specified") 
+  $p->status(500, "No redirection URL specified")
     unless defined ($s->{mc}->{location});
 
   my $newLocation=$s->{mc}->{location};
   $p->setHeader("Location", "$newLocation");
-  $p->add("<h1>Moved content</h1>");
-  $p->add("<p>This site has moved. If you're not redirected please ".
-	  "follow <a href=\"$newLocation\">this link</a></p>");
+  $p->h1("Moved content");
+  $p->p("This site has moved. If you're not redirected please ".
+          "follow <a href=\"$newLocation\">this link</a>");
 }
 
 
