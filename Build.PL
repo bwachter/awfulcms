@@ -10,15 +10,15 @@ Foo.
 
 use strict;
 
-use Module::Build 0.3601;
+use Module::Build;
 
 my %module_build_args = (
                          'build_requires' => {
-                                              'Module::Build' => '0.3601',
+                                              'Module::Build' => '0.2808',
                                               'Test::More' => '0.88'
                                              },
                          'configure_requires' => {
-                                                  'Module::Build' => '0.3601'
+                                                  'Module::Build' => '0.2808'
                                                  },
                          'dist_abstract' => 'An attempt at creating an ugly CMS',
                          'dist_author' => [

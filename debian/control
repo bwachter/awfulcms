@@ -1,0 +1,15 @@
+Source: awfulcms-perl
+Section: perl
+Priority: extra
+Build-Depends: perl, debhelper (>= 7),
+ perl (>= 5.10.1) | libtest-simple-perl (>= 0.88),
+ libmodule-build-perl (>= 0.2808), liburi-perl (>= 1.35),
+ libfile-type-perl (>= 0.22), libgd-gd2-perl (>= 2.39)
+Maintainer: Bernd Wachter <bwachter@lart.info>
+Standards-Version: 3.9.1
+Homepage: http://bwachter.lart.info/awfulcms/
+
+Package: awfulcms-perl
+Architecture: any
+Depends: ${misc:Depends}, ${perl:Depends}, ${shlibs:Depends}
+Description: An awful CMS
