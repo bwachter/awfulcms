@@ -28,6 +28,9 @@ sub new(){
                "roles"=>{-handler=>"mainsite",
                          -content=>"html",
                          -role=>"author"},
+               "ssl"=>{-handler=>"mainsite",
+                       -content=>"html",
+                       -ssl=>"1"},
                "status"=>{-handler=>"status",
                        -content=>"html"}
                };
@@ -59,7 +62,9 @@ sub mainsite(){
          li("Requested file: $s->{page}->{rq}->{file} ($s->{page}->{rq}->{fileabs})"),
          li("Requested directory: $s->{page}->{rq}->{dir}"),
          li("Remote host: $s->{page}->{rq}->{remote_host}"),
-         li("Remote IP: $s->{page}->{rq}->{remote_ip}"));
+         li("Remote IP: $s->{page}->{rq}->{remote_ip}"),
+         li("SSL: $s->{page}->{rq}->{ssl}")
+        );
 
   $p->h2("URL parameters");
   $p->add("<dl>");

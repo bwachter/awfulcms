@@ -16,6 +16,10 @@ our @EXPORT_OK=qw(handleCGI);
 
 =cut
 
+## implement command-line stuff by having a param-flag 'interactive',
+## and executing different code for interactive usage
+## optional, export parameters expected by forms
+
 use strict;
 use Time::HiRes qw(gettimeofday);
 use Date::Format;
@@ -91,8 +95,8 @@ sub lookupModule{
   my $_rqfile=$p->{rq}->{fileabs};
 
   $_request=$p->{rq}->{fileabs} if ($c->getValue("main", "filematch")
-                                 && $_request eq "."
-                                 && $p->{rq}->{fileabs});
+                 && $_request eq "."
+                 && $p->{rq}->{fileabs});
 
   # FIXME, need to check physical directories in some cases
   $baseurl=$_modules->{$_request};
@@ -153,7 +157,7 @@ sub doModule{
   }
 
   $p->status(400, "Module '$module' not available") if ($c->getValue("modules", $module) != 1 &&
-                                              $c->getValue("modules", $module_short) != 1);
+                          $c->getValue("modules", $module_short) != 1);
   $p->status(404, "Module '$module' not found") if ($module eq "");
 
   eval "require $module";
@@ -212,6 +216,12 @@ sub doRequest{
     }
   }
 
+  # check if we should only display over a secure channel
+  if (defined $r->{rqmap}->{$request}->{-ssl}){
+    $p->status(403, "Viewing this page is not allowed over unencrypted connections")
+      unless ($p->{rq}->{ssl}==1);
+  }
+
   # check and enforce roles
   if (defined $r->{rqmap}->{$request}->{-role}){
 
@@ -256,8 +266,8 @@ sub doRequest{
     $o->{password}=$dbc->{$handle}->{$snum}->{password}||$dbc->{$handle}->{password}||"";
 
     $p->dbhandle({dsn=>"dbi:$o->{type}:dbname=$o->{dbname}", user=>"$o->{user}",
-                  password=>"$o->{password}", attr=>{RaiseError=>0,AutoCommit=>1},
-                 handle=>$handle});
+          password=>"$o->{password}", attr=>{RaiseError=>0,AutoCommit=>1},
+         handle=>$handle});
   }
 
   if (defined $r->{rqmap}->{$request}->{-setup}){
