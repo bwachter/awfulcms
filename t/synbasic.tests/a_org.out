@@ -1,0 +1,5 @@
+<p><a href="http://foo">bar</a>
+
+</p><p><a href="http://foo">bar</a> <a href="http://foo/bar">bar</a></p><p>
+
+<a href="http://foo">bar</a><a href="http://foo/bar">bar</a></p>

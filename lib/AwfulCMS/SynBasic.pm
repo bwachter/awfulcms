@@ -61,11 +61,11 @@ sub format {
   # org-mode headings
   #FIXME, support for attributes
   # Note: * (top heading) becomes h2, as we reserve h1 for page title
-  $string=~s{\*{5} *(.*?)\n((?: \w*="\w*")*)}{<h6$2>$1</h6>\n}gs;
-  $string=~s{\*{4} *(.*?)\n((?: \w*="\w*")*)}{<h5$2>$1</h5>\n}gs;
-  $string=~s{\*{3} *(.*?)\n((?: \w*="\w*")*)}{<h4$2>$1</h4>\n}gs;
-  $string=~s{\*{2} *(.*?)\n((?: \w*="\w*")*)}{<h3$2>$1</h3>\n}gs;
-  $string=~s{\*{1} *(.*?)\n((?: \w*="\w*")*)}{<h2$2>$1</h2>\n}gs;
+  $string=~s{^\*{5} *(.*?)\n((?: \w*="\w*")*)}{<h6$2>$1</h6>\n}gs;
+  $string=~s{^\*{4} *(.*?)\n((?: \w*="\w*")*)}{<h5$2>$1</h5>\n}gs;
+  $string=~s{^\*{3} *(.*?)\n((?: \w*="\w*")*)}{<h4$2>$1</h4>\n}gs;
+  $string=~s{^\*{2} *(.*?)\n((?: \w*="\w*")*)}{<h3$2>$1</h3>\n}gs;
+  $string=~s{^\*{1} *(.*?)\n((?: \w*="\w*")*)}{<h2$2>$1</h2>\n}gs;
 
   $string=~s{-\[(.*?)\]-((?: \w*="\w*")*)}{<pre$2>$1</pre>}gs;
   $string=~s{--"(.*?)"--((?: \w*="\w*")*)}{<blockquote$2><p>$1</p></blockquote>}gs;
@@ -84,7 +84,8 @@ sub format {
   # inline elements
 
   # org-mode
-  $string=~s{\[\[(.*?)\]\[(.*?)\]\]}{<a href="$1">$2</a>}g;
+  # org-mode links are [[link target][link description]]
+  $string=~s{\[\[([^\]]*?)\]\[([^\[]*?)\]\]}{<a href="$1">$2</a>}g;
 
   # old syntax
   $string=~s{'''(.*?)'''}{<b>$1</b>}gs;

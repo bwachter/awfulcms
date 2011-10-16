@@ -1,0 +1,2 @@
+<pre foo="bar" bar="baz">foobar</pre><pre foo="bar">foobar</pre><p> bar=baz
+</p><pre foo="bar">foobar</pre><pre>foobar</pre><p> foo=bar</p>

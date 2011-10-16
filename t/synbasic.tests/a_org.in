@@ -1,0 +1,5 @@
+[[http://foo][bar]]
+
+[[http://foo][bar]] [[http://foo/bar][bar]]
+
+[[http://foo][bar]][[http://foo/bar][bar]]
