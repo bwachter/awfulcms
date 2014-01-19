@@ -33,8 +33,8 @@ seek(OUI, 61, 0);
 while(<OUI>){
   next if (/^[\da-zA-z]{6}/);
   next if (/^$/);
-  if (/^[\da-zA-z]{2}-[\da-zA-z]{2}-[\da-zA-z]{2}/){
-    my ($mac, $manufacturer)=m/^([\da-zA-z]{2}-[\da-zA-z]{2}-[\da-zA-z]{2})\s*\(.*?\)\s*(.*)/;
+  if (/^\s*[\da-zA-z]{2}-[\da-zA-z]{2}-[\da-zA-z]{2}/){
+    my ($mac, $manufacturer)=m/^\s*([\da-zA-z]{2}-[\da-zA-z]{2}-[\da-zA-z]{2})\s*\(.*?\)\s*(.*)/;
     $mac=~s/-/:/g;
     %macs->{$mac}={'manufacturer'=>$manufacturer,
                    'address'=>''};
