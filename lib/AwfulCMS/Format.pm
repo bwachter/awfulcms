@@ -16,7 +16,7 @@ sub new {
   my $s={};
   bless $s;
 
-  $o="Basic" if ($o eq "");
+  $o="Basic" unless (defined $o);
 
   eval "require AwfulCMS::Syn$o";
   if ($@){
