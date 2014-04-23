@@ -1,7 +1,48 @@
 package AwfulCMS::ModTemplate;
 
+=head1 AwfulCMS::ModTemplate
+
+This module creates dynamic and optionally static pages from template files
+
+=head2 Configuration parameters
+
+=over
+
+=item * prefix=<string>
+
+TODO
+
+=item * path=<string>
+
+TODO
+
+=back
+
+=head2 Template metadata
+
+A template my use additional metadata which will be either used as metadata in the resulting HTML page, or used to change the way the template is parsed. Metadata is specified at the very beginning of the file, starting with {: on an empty line, ended with :} on an empty line.
+
+=over
+
+=item * title
+
+The page title
+
+=item * excerpt
+
+Page excerpt to be used for services like Flattr.
+
+=item * markup
+
+The markup engine to use for parsing this file
+
+=back
+
+=cut
+
+
 use strict;
-use AwfulCMS::SynBasic;
+use AwfulCMS::Format;
 
 sub new(){
   shift;
@@ -72,9 +113,17 @@ sub mainsite(){
   $p->excerpt($metadata{excerpt}) if ($metadata{excerpt});
   my $body;
   $body.="<h1>$metadata{title}</h1>" if defined $metadata{title};
-  $body.=AwfulCMS::SynBasic->format($content,
-                                      {blogurl=>$s->{mc}->{'content-prefix'},
-                                      htmlhack=>1});
+
+  my $f;
+  if (defined $metadata{markup}){
+    $f=new AwfulCMS::Format($metadata{markup});
+  } else {
+    $f=new AwfulCMS::Format();
+  }
+
+  $body.=$f->format($content,
+                    {blogurl=>$s->{mc}->{'content-prefix'},
+                     htmlhack=>1});
 
   #foreach my $key (sort(keys(%metadata))){ $body.="'$key' =&gt; '$metadata{$key}'<br />"; }
 
