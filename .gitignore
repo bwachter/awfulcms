@@ -9,6 +9,8 @@ _build/
 blib/
 *.bak
 MYMETA.yml
+MYMETA.json
 MANIFEST.SKIP
 debian/awfulcms-perl*
 debian/files
+gallery/
