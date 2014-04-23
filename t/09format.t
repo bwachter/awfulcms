@@ -10,7 +10,7 @@ ok (defined $f1);
 ok ($f1->isa('AwfulCMS::Format'));
 ok ($f1->{formatter}->isa('AwfulCMS::SynBasic'), 'Default module is SynBasic');
 
-my @modules=("Basic");
+my @modules=("Basic", "Markdown");
 
 foreach (@modules){
   my $dir="t/syn".lc($_).".tests";
@@ -34,7 +34,7 @@ foreach (@modules){
     close(F);
 
     $_=~s/\.out$//;
-    is (AwfulCMS::SynBasic->format(join('', @in)), join('', @out), "$_");
+    is ($syn->format(join('', @in)), join('', @out), "$_");
   }
 }
 
