@@ -38,7 +38,7 @@ require RPC::XML::Client;
 # config part
 my $handle="ModBlog";
 
-my @keys=('pid', 'rpid', 'subject', 'body', 'lang', 'name', 'email', 'homepage', 'draft', 'tease');
+my @keys=('pid', 'rpid', 'subject', 'body', 'lang', 'name', 'email', 'homepage', 'draft', 'tease', 'markup');
 my @fixedkeys=('id');
 
 # global values
@@ -133,6 +133,9 @@ sub parseArticle{
       $value=~s/\s*,\s*/,/g;
       my @tags=split(',', $value);
       $output->{tags}=\@tags;
+    } elsif (/^markup:\s*$/){
+      # old articles have empty markup, set those to the 'Basic' default on next edit
+      $output->{markup}="Basic";
     } else {
       my ($key)=/^(.*?):/;
       my ($value)=/: *(.*)$/;
@@ -231,9 +234,9 @@ sub pingURLs{
 
 sub writeArticleDB{
   my $args=shift;
-  my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=?, created=?, tease=? where id=?");
-  my $q_i = $dbh->prepare("insert into blog(pid, rpid, subject, body, lang, name, email, homepage, draft, tease, created) values (?,?,?,?,?,?,?,?,?,?,?)");
-  my $q_s = $dbh->prepare("select id from blog where pid=? and rpid=? and subject=? and body=? and lang=? and name=? and email=? and homepage=? and draft=? and  created=?");
+  my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=?, created=?, tease=?, markup=? where id=?");
+  my $q_i = $dbh->prepare("insert into blog(pid, rpid, subject, body, lang, name, email, homepage, draft, tease, markup, created) values (?,?,?,?,?,?,?,?,?,?,?,?)");
+  my $q_s = $dbh->prepare("select id from blog where pid=? and rpid=? and subject=? and body=? and lang=? and name=? and email=? and homepage=? and draft=? and markup=? and created=?");
 
   $args->{homepage}="" unless (defined $args->{homepage});
   foreach (@keys){
@@ -245,17 +248,17 @@ sub writeArticleDB{
     $q_u->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
                   $args->{lang}, $args->{name}, $args->{email},
                   $args->{homepage}, $args->{draft}, $args->{created},
-                  $args->{tease}, $args->{id})||return "Unable to insert new record: $!\n";
+                  $args->{tease}, $args->{markup}, $args->{id})||return "Unable to insert new record: $!\n";
   } else {
     my $created=time();
     my $href;
     $q_i->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
                   $args->{lang}, $args->{name}, $args->{email},
-                  $args->{homepage}, $args->{draft}, $args->{tease},
+                  $args->{homepage}, $args->{draft}, $args->{tease}, $args->{markup},
                   $created)||return "Unable to insert new record: $!\n";
     $q_s->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
                   $args->{lang}, $args->{name}, $args->{email},
-                  $args->{homepage}, $args->{draft}, $created)||return "Unable to insert new record: $!\n";
+                  $args->{homepage}, $args->{draft}, $args->{markup}, $created)||return "Unable to insert new record: $!\n";
     $href=$q_s->fetchrow_hashref();
     $args->{id}=$href->{id};
   }
@@ -387,6 +390,7 @@ sub newArticle{
   my %newarticle;
   my @result;
   my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
+  my $markup=$mc->{markup}||"Basic";
   print $tmp <<END;
 Subject:
 Name: $mc->{name}
@@ -397,6 +401,7 @@ Rpid: 0
 Lang: $mc->{lang}
 Draft: $mc->{draft}
 Tease: $mc->{tease}
+Markup: $markup
 Tags:
 
 END

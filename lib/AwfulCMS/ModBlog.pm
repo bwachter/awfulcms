@@ -24,7 +24,7 @@ use strict;
 use AwfulCMS::Page qw(:tags);
 use AwfulCMS::LibUtil qw(navwidget);
 
-use AwfulCMS::SynBasic;
+use AwfulCMS::Format;
 
 # newer versions come with a make_path function
 use File::Path qw(mkpath);
@@ -108,8 +108,15 @@ sub formatArticle{
   }
   $d->{date}=localtime($d->{created});
 
-  my $body=AwfulCMS::SynBasic->format($d->{body},
-                                     {blogurl=>$s->{mc}->{'content-prefix'}});
+  my $f;
+  if (defined $d->{markup}){
+    $f=new AwfulCMS::Format($d->{markup});
+  } else {
+    $f=new AwfulCMS::Format();
+  }
+
+  my $body.=$f->format($d->{body},
+                    {blogurl=>$s->{mc}->{'content-prefix'}});
 
   my @tags=$s->getTags($d->{id});
   my @tagref;
@@ -135,6 +142,7 @@ sub formatArticle{
                                        url => $p->{url}->publish($url)
                                       });
   }
+  # TODO: Add some social media variable, containing all the codes for flattr, twitter, google+, whatever
 
   $cmtstring = "<a href=\"".
     $p->{url}->buildurl({'req'=>'article',
@@ -495,6 +503,7 @@ sub createdb{
        "`name` tinytext NOT NULL,".
        "email tinytext NOT NULL,".
        "homepage tinytext,".
+       "markup tinytext,",
        "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,".
        "draft int(4) NOT NULL default '1',".
        "PRIMARY KEY  (id),".
@@ -531,6 +540,7 @@ sub createdb{
        "`name` tinytext NOT NULL,".
        "email tinytext NOT NULL,".
        "homepage tinytext,".
+       "markup tinytext,".
        "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP".
        ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
   push(@queries, "DROP TABLE IF EXISTS blog_tags");
