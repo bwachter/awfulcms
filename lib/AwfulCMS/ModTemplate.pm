@@ -16,11 +16,23 @@ TODO
 
 TODO
 
+=item * cache=<string>
+
+The path to use for caching files. If the directory is not writeable for the script the page will not be cached (though no error shown to the user)
+
+=item * content-prefix=<string>
+
+TODO
+
+=item * disable-cache=[0|1]
+
+Disable or enable caching of files
+
 =back
 
 =head2 Template metadata
 
-A template my use additional metadata which will be either used as metadata in the resulting HTML page, or used to change the way the template is parsed. Metadata is specified at the very beginning of the file, starting with {: on an empty line, ended with :} on an empty line.
+A template may use additional metadata which will be either used as metadata in the resulting HTML page, or used to change the way the template is parsed. Metadata is specified at the very beginning of the file, starting with {: on an empty line, ended with :} on an empty line.
 
 =over
 
@@ -129,14 +141,17 @@ sub mainsite(){
 
   # FIXME, more elegant solution
   $p->add($body);
-  my $dumpfile=$filename;
-  $dumpfile=~s/\.tpl$/.html/;
 
-  if ($s->{mc}->{cache}){
+  unless ($s->{mc}->{'disable-cache'}==1){
+    my $dumpfile=$filename;
+    $dumpfile=~s/\.tpl$/.html/;
+
+    if ($s->{mc}->{cache}){
       $dumpfile=~s,/,_,g;
       $dumpfile=$s->{mc}->{cache}."/$dumpfile";
+    }
+    $p->dumpto($dumpfile);
   }
-  $p->dumpto($dumpfile);
 }
 
 1;
