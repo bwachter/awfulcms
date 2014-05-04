@@ -31,7 +31,7 @@ open(OUI, "<oui.txt")||die "Unable to open oui.txt: $!";
 # get rid of the oui header
 seek(OUI, 61, 0);
 while(<OUI>){
-  next if (/^[\da-zA-z]{6}/);
+  next if (/^\s*[\da-zA-z]{6}\s*\(base 16\)/);
   next if (/^$/);
   if (/^\s*[\da-zA-z]{2}-[\da-zA-z]{2}-[\da-zA-z]{2}/){
     my ($mac, $manufacturer)=m/^\s*([\da-zA-z]{2}-[\da-zA-z]{2}-[\da-zA-z]{2})\s*\(.*?\)\s*(.*)/;
@@ -41,6 +41,9 @@ while(<OUI>){
     #print "New Mac: $mac / $manufacturer\n";
     $lastmac=$mac;
   } else {
+    # the file header changes now and then, this makes sure
+    # recording only starts after first mac found
+    next unless defined $lastmac;
     $_=~s/^\s*//;
     %macs->{$lastmac}->{'address'}.=$_;
   }
@@ -75,15 +78,16 @@ if ($ARGV[0] eq "mysql"){
   $dbh=DBI->connect("dbi:$o->{type}:dbname=$o->{dbname}", $o->{user},
                     $o->{password}, {RaiseError=>0,AutoCommit=>1}) ||
                       die "DBI->connect(): ". DBI->errstr;
-  $q=$dbh->prepare("insert into mac (mac, manufacturer) values (?, ?) on duplicate key update manufacturer=?")||
+  $q=$dbh->prepare("insert into mac (mac, manufacturer, address) values (?, ?, ?) on duplicate key update manufacturer=?, address=?")||
     die("Database problem: $!");
 }
 
 foreach my $key (sort(keys(%macs))){
   if ($ARGV[0] eq "csv"){
-    print "$key;".%macs->{$key}->{'manufacturer'}.";0\n";
+    print "$key;".%macs->{$key}->{'manufacturer'}.";".%macs->{$key}->{'address'}.";0\n";
   } elsif ($ARGV[0] eq "mysql") {
-    $q->execute($key, %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'manufacturer'})||
+    $q->execute($key, %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'address'},
+                %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'address'})||
       die("Database problem: $!");
   } else {
     print "$key ".%macs->{$key}->{'manufacturer'}."\n";
