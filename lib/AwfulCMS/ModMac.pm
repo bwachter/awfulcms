@@ -42,7 +42,7 @@ sub lookupMAC {
   my $dbh=$s->{page}->{dbh};
   my $mac=shift;
 
-  my $q_c = $dbh->prepare("select mac,manufacturer from mac where mac=?")||
+  my $q_c = $dbh->prepare("select mac,manufacturer,address from mac where mac=?")||
     $p->status(400, "Unable to prepare query: $!");
 
   $q_c->execute($mac)||
@@ -71,18 +71,20 @@ work)");
   $p->add("<form action=\"/".$p->{url}->cgihandler()."\" method=\"post\">
     <table border=\"0\"><tr>
     <tr><td>MAC: </td><td><input type=\"text\" name=\"mac\" value=\"$mac\" /></td></tr>
-    </tr><td><input type=\"submit\" name=\"submit\" value=\"Go!\" /></td></tr>
+    <tr><td><input type=\"submit\" name=\"submit\" value=\"Go!\" /></td></tr>
     </table></form><hr>");
 
   if ($mac =~ /.*[\da-zA-z][\da-zA-z]:[\da-zA-z][\da-zA-z]:[\da-zA-z][\da-zA-z].*/ ){
     my @macs=split(";", $mac);
-    $p->add("<p>Your query returned the following result: </p><dl>");
+    $p->add("<p>Your query returned the following result: </p>");
+    $p->add("<table class=\"border\"><tr><th>MAC</th><th>Manufacturer</th><th>Address</th></tr>");
     foreach (@macs) {
       $_ =~ s/.*?([\da-zA-z][\da-zA-z]:[\da-zA-z][\da-zA-z]:[\da-zA-z][\da-zA-z]).*/$1/;
       my @qresult=$s->lookupMAC($_);
-      $p->add("<dt>$qresult[0]</dt><dd>$qresult[1]</dd>");
+      $qresult[2]=~s/\n/<br \/>/g;
+      $p->add("<tr><td>$qresult[0]</td><td>$qresult[1]</td><td>$qresult[2]</td></tr>");
     }
-    $p->add("</dl>");
+    $p->add("</table>");
     $p->add("You can use this link to save the query: <a href=\"$url\">$url</a>");
   } else {
     $p->p("Sorry, but the MAC address you gave me ($mac) seems not to be valid")
@@ -98,6 +100,7 @@ sub createdb{
   push(@queries, "CREATE TABLE mac ( ".
        "mac varchar(17) NOT NULL default '', ".
        "manufacturer varchar(255) NOT NULL default '0', ".
+       "address varchar(1000), ".
        "deviceinfo int(11) NOT NULL default '0', ".
        "PRIMARY KEY  (mac), ".
        "UNIQUE KEY mac_2 (mac), ".
