@@ -28,8 +28,9 @@ sub format {
   my $string=shift;
   my $vars=shift;
 
-
-
+  foreach my $key (keys(%$vars)){
+    $string =~ s/$key:\:/$vars->{$key}/g
+  }
 
   # [@...||@]
   #$string=~s{\[\@([^<(]*?)\@\]\((.*?)\)}{<a name="$2" id="$2">$1</a>}g;
