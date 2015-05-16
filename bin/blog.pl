@@ -30,10 +30,29 @@ require DBI;
 use strict;
 use XML::RSS;
 
-# make conditional
-require Net::Trackback::Client;
-require Net::Trackback::Ping;
-require RPC::XML::Client;
+my %features = {
+                trackback_client => 1,
+                trackback_ping => 1,
+                rpc_xml_client => 1,
+               };
+
+eval "require Net::Trackback::Client";
+if ($@){
+  print "Net::Trackback::Client not found, pingbacks and trackbacks won't work.\n";
+  %features->{trackback_client}=0;
+}
+
+eval "require Net::Trackback::Ping";
+if ($@){
+  print "Net::Trackback::Ping not found, trackbacks won't work.\n";
+  %features->{trackback_ping}=0;
+}
+
+eval "require RPC::XML::Client";
+if ($@){
+  print "RPC::XML::Client not found, pingbacks won't work.\n";
+  %features->{rpc_xml_client}=0;
+}
 
 # config part
 my $handle="ModBlog";
@@ -189,44 +208,54 @@ sub pingURLs{
       print $OUT "Checking '$_'... ";
     }
 
-    my $client = Net::Trackback::Client->new;
-    my $data = $client->discover($_);
-    if ($data){ # we found a trackback url
-      for my $resource (@$data) {
-        #print $OUT "(".$resource->ping.")";
-        print $OUT "sending trackback... ";
-        my $p = {
-                 ping_url=>$resource->ping,
-                 blog_name=>$mcm->{'title-prefix'},
-                 excerpt=>$excerpt,
-                 url=>"$url",
-                 title=>$args->{title}
-                };
-        my $ping = Net::Trackback::Ping->new($p);
-        my $msg = $client->send_ping($ping);
-        if ($msg->is_success){
-          print $OUT "done\n";
+    if (%features->{trackback_client}==1){
+      my $client = Net::Trackback::Client->new;
+      my $data = $client->discover($_);
+      if ($data){ # we found a trackback url
+        if (%features->{trackback_client}==1){
+          for my $resource (@$data) {
+            #print $OUT "(".$resource->ping.")";
+            print $OUT "sending trackback... ";
+            my $p = {
+                     ping_url=>$resource->ping,
+                     blog_name=>$mcm->{'title-prefix'},
+                     excerpt=>$excerpt,
+                     url=>"$url",
+                     title=>$args->{title}
+                    };
+            my $ping = Net::Trackback::Ping->new($p);
+            my $msg = $client->send_ping($ping);
+            if ($msg->is_success){
+              print $OUT "done\n";
+            } else {
+              print $OUT "failed (".$msg->message().")\n";
+            }
+          }
         } else {
-          print $OUT "failed (".$msg->message().")\n";
-        }
-      }
-    } else {
-      my $ua=LWP::UserAgent->new();
-      my $response=$ua->head($_);
-      my $ping;
-      if ($response->is_success && ($ping=$response->header("X-Pingback"))){
-        print $OUT "sending pingback... ";
-        #print $OUT "Pingback to: $ping\n";
-        my $client = RPC::XML::Client->new($ping);
-        my $response = $client->send_request('pingback.ping', $url, $_);
-        #fixme, properly parse return codes
-        if (not ref $response) {
-          print $OUT "Failed to ping back '$ping': $response\n";
-        } else {
-          print $OUT "Got a response from '$ping': \n" . $response->as_string . "\n";
+          print $OUT "Net::Trackback::Ping missing, unable to send trackback\n";
         }
       } else {
-        print $OUT "trackback/pingback url not found\n";
+        if (%features->{rpc_xml_client}==1){
+          my $ua=LWP::UserAgent->new();
+          my $response=$ua->head($_);
+          my $ping;
+          if ($response->is_success && ($ping=$response->header("X-Pingback"))){
+            print $OUT "sending pingback... ";
+            #print $OUT "Pingback to: $ping\n";
+            my $client = RPC::XML::Client->new($ping);
+            my $response = $client->send_request('pingback.ping', $url, $_);
+            #fixme, properly parse return codes
+            if (not ref $response) {
+              print $OUT "Failed to ping back '$ping': $response\n";
+            } else {
+              print $OUT "Got a response from '$ping': \n" . $response->as_string . "\n";
+            }
+          } else {
+            print $OUT "trackback/pingback url not found\n";
+          }
+        } else {
+          print $OUT "RPC::XML::Client missing, unable to send pingback\n";
+        }
       }
     }
   }
