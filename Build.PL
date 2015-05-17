@@ -36,8 +36,6 @@ my %module_build_args = (
                                           'Net::NNTP' => '0',
                                           # Used by ModGallery
                                           'Image::ExifTool' => '8.15',
-                                          # Required to enable wildcard configuration
-                                          'Tie::RegexpHash' => '0.15',
                                           # Required for DB support in modules
                                           'DBI' => '0',
                                           # Requirements for trackbacks
@@ -58,6 +56,8 @@ my %module_build_args = (
                                         'Pod::Simple::HTML' => '0',
                                         'Sys::Hostname' => '0',
                                         'Text::Markdown' => '0',
+                                        # Required to enable wildcard configuration
+                                        'Tie::RegexpHash' => '0.15',
                                         'Time::HiRes' => '0',
                                         'URI::Escape' => '1.35',
                                         'XML::RSS' => '0',

@@ -1,6 +1,6 @@
 %define _name AwfulCMS
 Name: perl-%{_name}
-Version: 0.1
+Version: 0.1.3
 Release: 1
 Summary: An awful CMS
 Group: Development/Libraries
@@ -13,10 +13,11 @@ BuildRequires: perl-macros
 BuildRequires: perl(Module::Build)
 BuildRequires: perl(Test::More)
 # TODO: autogenerate those from the manifest
-%define awfulcms_requires perl(CGI) perl(Date::Format) perl(File::Path) perl(File::Temp) perl(File::Type) perl(GD) perl(Pod::Simple::HTML) perl(Sys::Hostname) perl(Time::HiRes) perl(URI::Escape) perl(Text::Markdown)
+%define awfulcms_requires perl(CGI) perl(Date::Format) perl(File::Path) perl(File::Temp) perl(File::Type) perl(GD) perl(Pod::Simple::HTML) perl(Sys::Hostname) perl(Time::HiRes) perl(URI::Escape) perl(Text::Markdown) perl(Tie::RegexpHash)
 BuildRequires: %{awfulcms_requires}
 # Recommendations:
-%define awfulcms_recommends perl(DBI) perl(Tie::RegexpHash) perl(LWP::UserAgent) perl(Image::ExifTool) perl(HTML::LinkExtor) perl(HTML::FormatText::WithLinks::AndTables)
+# included to make sure testcases pass
+%define awfulcms_recommends perl(DBI) perl(LWP::UserAgent) perl(Image::ExifTool) perl(HTML::LinkExtor) perl(HTML::FormatText::WithLinks::AndTables) perl(Net::Trackback::Client) perl(Net::Trackback::Ping)
 BuildRequires: %{awfulcms_recommends}
 Requires: %{awfulcms_requires} perl(XML::RSS)
 Recommends: %{awfulcms_recommends}
