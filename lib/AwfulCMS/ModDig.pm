@@ -113,9 +113,9 @@ sub defaultpage(){
     my $_optstring="";
     foreach my $key(keys(%digOptions)){
       my $_opt=$p->{url}->param($key);
-      if (($_opt eq "yes" || $_opt eq "no") && $_opt ne %digOptions->{$key}->{default}){
-        my $_optname=%digOptions->{$key}->{opt};
-        %digOpt->{$key}=$_opt;
+      if (($_opt eq "yes" || $_opt eq "no") && $_opt ne $digOptions{$key}->{default}){
+        my $_optname=$digOptions{$key}->{opt};
+        $digOpt{$key}=$_opt;
         if ($_opt eq "yes"){
           $_optstring.=" +$_optname";
         } else {
@@ -125,7 +125,7 @@ sub defaultpage(){
     }
 
     $digType=0 if ($digType > keys(%digTypes) || $digType < 0);
-    $digQuery=$s->queryDig($digNS, %digTypes->{$digType}, \@digDomains, $_optstring);
+    $digQuery=$s->queryDig($digNS, $digTypes{$digType}, \@digDomains, $_optstring);
 
     $url=$p->{url}->buildurl({'digType'=>$digType,
                               'digNS'=>$digNS,
@@ -137,15 +137,15 @@ sub defaultpage(){
 
   my ($optString, $typeString);
   foreach my $key(sort(keys(%digTypes))){
-    $typeString.=$p->pOption($key, %digTypes->{$key}, $digType);
+    $typeString.=$p->pOption($key, $digTypes{$key}, $digType);
   }
   foreach my $key(sort(keys(%digOptions))){
-    my $_description=%digOptions->{$key}->{description};
-    my $_name=%digOptions->{$key}->{opt};
+    my $_description=$digOptions{$key}->{description};
+    my $_name=$digOptions{$key}->{opt};
     $optString.="<tr>
      <td>$_name</td>
-     <td>".$p->pRadio($key, "yes", $p->{url}->param($key)||%digOptions->{$key}->{default})."</td>
-     <td>".$p->pRadio($key, "no", $p->{url}->param($key)||%digOptions->{$key}->{default})."</td>
+     <td>".$p->pRadio($key, "yes", $p->{url}->param($key)||$digOptions{$key}->{default})."</td>
+     <td>".$p->pRadio($key, "no", $p->{url}->param($key)||$digOptions{$key}->{default})."</td>
      <td>$_description</td>
     </tr>";
   }
