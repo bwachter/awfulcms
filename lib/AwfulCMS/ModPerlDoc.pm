@@ -20,6 +20,12 @@ The directory containing the perl modules to export
 
 =back
 
+=item * title=<string>
+
+The title to use for the overview page. Defaults to "Documentation for <modulepath>"
+
+=back
+
 =item * vendor-perl=<int>
 
 If set to 1 appends vendor_perl/<perl_version> to the documentation directory
@@ -99,7 +105,11 @@ sub defaultpage(){
   my $s=shift;
   my $p=$s->{page};
 
-  $p->title("AwfulCMS Documentation");
+  if (defined $s->{mc}->{title}){
+    $p->title($s->{mc}->{title});
+  } else {
+    $p->title("Documentation for $s->{mc}->{modulepath}");
+  }
   $s->contentlisting();
 }
 
