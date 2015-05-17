@@ -28,7 +28,6 @@ use AwfulCMS::Page;
 use AwfulCMS::SynBasic;
 require DBI;
 use strict;
-use XML::RSS;
 
 my %features = {
                 trackback_client => 1,
@@ -74,34 +73,10 @@ $mcm->{'title-prefix'}="Blog" unless (defined $mcm->{'title-prefix'});
 $mcm->{baselink}="" unless (defined $mcm->{baselink});
 $mcm->{description}="Some blog without description" unless (defined $mcm->{description});
 
+# TODO: RSS is now dynamically generated in the blog
+#       Once RSS caching is implemented this should just get rid
+#       of the cached RSS
 sub updateRSS{
-  my $result;
-  return unless (defined $mcm->{rsspath});
-  my $rss = new XML::RSS(encoding => 'ISO-8859-1');
-  $rss->channel(title=>$mcm->{'title-prefix'},
-                'link'=>$mcm->{baselink},
-                description=>$mcm->{description});
-
-  my $q = $dbh->prepare("select id,subject,body,created from blog where pid=0 and draft=0 order by created desc limit 15") ||
-    return;
-  #&myDie("Unable to prepare query for updating RSS: $!");
-  $q->execute() || return;
-    #&myDie("Unable to execute the query for updating RSS: $!");
-  while ($result=$q->fetchrow_hashref()) {
-    my $body=AwfulCMS::SynBasic->format($result->{body},
-                           {blogurl=>$mcm->{'content-prefix'}});
-    my $created=localtime($result->{created});
-    # update RSS feed
-    # FIXME, change to url builder
-    $rss -> add_item(title => $result->{subject},
-                     'link' => "$mcm->{baselink}/article/article,$result->{id}/",
-                     description => AwfulCMS::Page->pRSS($body),
-                     dc=>{
-                          date       => $created
-                         }
-                    );
-  }
-  $rss->save($mcm->{docroot}."/".$mcm->{rsspath});
 }
 
 sub formatArticle{

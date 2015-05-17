@@ -48,6 +48,9 @@ sub new{
                "draft"=>{-handler=>"displayArticle",
                          -content=>"html",
                          -dbhandle=>"blog"},
+               "rss"=>{-handler=>"displayRSS",
+                       -content=>"xml",
+                       -dbhandle=>"blog"},
                "tag"=>{-handler=>"displayTag",
                        -content=>"html",
                        -dbhandle=>"blog"},
@@ -74,10 +77,7 @@ sub new{
   $s->{mc}=$r->{mc};
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
   $s->{mc}->{'title-prefix'}="Blog" unless (defined $r->{mc}->{'title-prefix'});
-  #FIXME
-  my $rssfile="http://".$s->{page}->{rq}->{host}."/".$s->{mc}->{rsspath};
-  $s->{page}->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$rssfile\" />")
-    if defined ($s->{mc}->{rsspath});
+
   bless $s;
   $s;
 }
@@ -88,6 +88,14 @@ sub defaultHeader{
 
   my $tagurl=$p->{url}->buildurl({'req'=>'tag'});
   $p->add(div("<p><a href=\"/$p->{baseurl}\">Blog</a> | <a href=\"$tagurl\">Tags</a></p>", {'class'=>'navw'}));
+
+  eval "require XML::RSS";
+  if ($@){
+    $p->addHead("<!-- XML::RSS not available, no RSS generation -->");
+  } else {
+    my $rssurl=$p->{url}->publish({'req'=>'rss'});
+    $p->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$rssurl\" />");
+  }
 }
 
 =item formatArticle(%data)
@@ -302,6 +310,60 @@ sub trackback{
   my $article=int($p->{url}->param("article")) || return $s->trackbackStatus(1, "No such article");
 
   $s->trackbackStatus(0);
+}
+
+sub displayRSS{
+  my $s=shift;
+  my $p=$s->{page};
+  my $dbh=$s->{page}->{dbh};
+  my $modtime;
+
+  eval "require XML::RSS";
+  if ($@){
+    $p->status(500, "XML:RSS not found, RSS generation can't work.\n");
+  }
+
+  my $rss = XML::RSS->new(encoding => 'ISO-8859-1');
+  $rss->channel(title=>$s->{mc}->{'title-prefix'},
+                'link'=>$s->{mc}->{baselink},
+                description=>$s->{mc}->{description});
+
+  my $q = $dbh->prepare("select id,subject,body,created,markup from blog where pid=0 and draft=0 order by created desc limit ?");
+  $q->execute($s->{mc}->{numarticles});
+
+  while (my $d=$q->fetchrow_hashref()) {
+    my $f;
+    if (defined $d->{markup}){
+      $f=new AwfulCMS::Format($d->{markup});
+    } else {
+      $f=new AwfulCMS::Format();
+    }
+
+    $modtime=$d->{created} if ($d->{created} > $modtime);
+
+    my $body=$f->format($d->{body},
+                        {blogurl=>$s->{mc}->{'content-prefix'}});
+
+    my $created=localtime($d->{created});
+
+    $rss -> add_item(title => $d->{subject},
+                     'link' => $p->{url}->publish({'req'=>'article',
+                                                   'article'=>$d->{id}}),
+                     description => AwfulCMS::Page->pRSS($body),
+                     dc=>{
+                          date       => $created
+                         }
+                    );
+  }
+
+  eval "require HTTP::Date";
+  if ($@){
+    $p->setHeader("D'oh", "HTTP::Date not found");
+  } else {
+    # TODO: proper timezone definitions
+    $p->setHeader("Last-Modified", scalar HTTP::Date::time2str($modtime));
+  }
+  $p->{'custom-content'}=$rss->as_string();
 }
 
 =item displayArticle() CGI(int article)
