@@ -1,6 +1,6 @@
-package AwfulCMS::ModDocumentation;
+package AwfulCMS::ModPerlDoc;
 
-=head1 AwfulCMS::ModDocumentation
+=head1 AwfulCMS::ModPerlDoc
 
 This module extracts and displays POD-Information from AwfulCMS modules and scripts.
 
@@ -8,11 +8,21 @@ This module extracts and displays POD-Information from AwfulCMS modules and scri
 
 =over
 
-=item * modulepath=<string>
+=item * doc-dirs=<string>
 
-The installation path of AwfulCMS
+Directories to include in the listing. Defaults to "/" (top level only)
 
 =back
+
+=item * modulepath=<string>
+
+The directory containing the perl modules to export
+
+=back
+
+=item * vendor-perl=<int>
+
+If set to 1 appends vendor_perl/<perl_version> to the documentation directory
 
 =head2 Related information
 
@@ -48,6 +58,11 @@ sub new(){
                };
 
   $s->{mc}=$r->{mc};
+
+  if ($s->{mc}->{'vendor-perl'} == 1 && defined $s->{mc}->{modulepath}){
+    my $version=sprintf("%vd",$^V);
+    $s->{mc}->{modulepath} .= "/vendor_perl/$version";
+  }
   bless $s;
   $s;
 }
@@ -56,7 +71,13 @@ sub contentlisting(){
   my $s=shift;
   my $p=$s->{page};
 
-  my @dirs=("/AwfulCMS", "/");
+
+  my @dirs=("/");
+  if (defined $s->{mc}->{'doc-dirs'}){
+    $s->{mc}->{'doc-dirs'}=~s/ //g;
+    @dirs=split(',', $s->{mc}->{'doc-dirs'});
+  }
+
   $p->status(500, "modulepath not set, unable to find modules") unless (defined $s->{mc}->{modulepath});
 
   $p->add("<ul>");
