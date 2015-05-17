@@ -216,6 +216,15 @@ sub doRequest{
     }
   }
 
+  # set content type for the page, with fallback to HTML
+  # TODO: probably makes sense to strip down page, as loading the current
+  #       page object might be a bit cosly for plain text stuff
+  if (defined $r->{rqmap}->{$request}->{-content}){
+    $p->setContent($r->{rqmap}->{$request}->{-content});
+  } else {
+    $p->setContent("html");
+  }
+
   # check if we should only display over a secure channel
   if (defined $r->{rqmap}->{$request}->{-ssl}){
     $p->status(403, "Viewing this page is not allowed over unencrypted connections")

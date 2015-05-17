@@ -114,6 +114,19 @@ sub dbhandle {
                            $s->status(500, "DBI->connect($dbcon->{handle}): ". DBI->errstr);
 }
 
+=item setContent()
+
+Set the content type to be used (default: html)
+
+=cut
+
+sub setContent{
+  my $s=shift;
+  my $content=shift;
+
+  $s->{'content-type'}=$content;
+}
+
 =item setModule()
 
 TODO
@@ -135,7 +148,9 @@ sub setModule{
 
 =item out()
 
-TODO
+Output the complete page. If a page is not an HTML page, setContent
+must be called before writing the page out, and the content be added
+to the custom-content variable.
 
 =cut
 
@@ -144,11 +159,12 @@ sub out {
   my $hdr;
   my $out;
 
-  if ($s->{'custom-content'}){
-    print $s->{'custom-content'};
-    return;
+  # check if content-type (preset to text/html) needs to be overriden
+  if ($s->{'content-type'} eq "xml"){
+    $s->{header}->{"Content-type"}="text/xml; charset=utf-8";
   }
 
+  # prepare the header
   if (defined $s->{header}){
     if (ref($s->{header}) eq "HASH"){
       my ($key, $value);
@@ -165,6 +181,15 @@ sub out {
     $hdr.="\n";
   }
 
+  # for non-html pages, dump header + custom-content field, and
+  # stop processing
+  # TODO: this needs better handling for caching and CLI usage
+  if ($s->{'content-type'} eq "xml"){
+    print $hdr.$s->{'custom-content'};
+    return;
+  }
+
+  # for html pages, start processing the separate element in the page
   $out.=$s->{doctype} if defined $s->{doctype};
   $out.="<html><head>$s->{head}\n".
     "<title>$s->{title}</title>\n";
