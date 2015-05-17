@@ -12,19 +12,13 @@ This module extracts and displays POD-Information from AwfulCMS modules and scri
 
 Directories to include in the listing. Defaults to "/" (top level only)
 
-=back
-
 =item * modulepath=<string>
 
 The directory containing the perl modules to export
 
-=back
-
 =item * title=<string>
 
 The title to use for the overview page. Defaults to "Documentation for <modulepath>"
-
-=back
 
 =item * vendor-perl=<int>
 
