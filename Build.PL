@@ -40,19 +40,27 @@ my %module_build_args = (
                                           'Tie::RegexpHash' => '0.15',
                                           # Required for DB support in modules
                                           'DBI' => '0',
+                                          # Requirements for trackbacks
+                                          'Net::Trackback::Client' => '0',
+                                          'Net::Trackback::Ping' => '0',
+                                          'RPC::XML::Client' => '0',
                                          },
                          'recursive_test_files' => 1,
                          'requires' => {
-                                        'URI::Escape' => '1.35',
-                                        'File::Type' => '0.22',
-                                        'Time::HiRes' => '0',
+                                        'CGI' => '0',
                                         'Date::Format' => '1.1600',
-                                        'Sys::Hostname' => '0',
                                         'Encode' => '0',
                                         'File::Path' => '0',
+                                        'File::Temp' => '0',
+                                        'File::Type' => '0.22',
                                         'GD' => '2.39',
-                                        'CGI' => '0',
+                                        'LWP::Simple' => '0',
                                         'Pod::Simple::HTML' => '0',
+                                        'Sys::Hostname' => '0',
+                                        'Text::Markdown' => '0',
+                                        'Time::HiRes' => '0',
+                                        'URI::Escape' => '1.35',
+                                        'XML::RSS' => '0',
                                         'perl' => 'v5.8.1'
                                        },
                         );
