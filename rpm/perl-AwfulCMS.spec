@@ -17,7 +17,7 @@ BuildRequires: perl(Test::More)
 BuildRequires: %{awfulcms_requires}
 # Recommendations:
 # included to make sure testcases pass
-%define awfulcms_recommends perl(DBI) perl(LWP::UserAgent) perl(Image::ExifTool) perl(HTML::LinkExtor) perl(HTML::FormatText::WithLinks::AndTables) perl(Net::Trackback::Client) perl(Net::Trackback::Ping)
+%define awfulcms_recommends perl(DBI) perl(LWP::UserAgent) perl(Image::ExifTool) perl(HTML::LinkExtor) perl(HTML::FormatText::WithLinks::AndTables) perl(Net::Trackback::Client) perl(Net::Trackback::Ping) perl(XML::Atom)
 BuildRequires: %{awfulcms_recommends}
 Requires: %{awfulcms_requires} perl(XML::RSS)
 Recommends: %{awfulcms_recommends}

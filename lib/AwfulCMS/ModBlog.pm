@@ -45,6 +45,9 @@ sub new{
                "article"=>{-handler=>"displayArticle",
                            -content=>"html",
                            -dbhandle=>"blog"},
+               "atom"=>{-handler=>"displayAtom",
+                       -content=>"xml",
+                       -dbhandle=>"blog"},
                "draft"=>{-handler=>"displayArticle",
                          -content=>"html",
                          -dbhandle=>"blog"},
@@ -91,10 +94,18 @@ sub defaultHeader{
 
   eval "require XML::RSS";
   if ($@){
-    $p->addHead("<!-- XML::RSS not available, no RSS generation -->");
+    $p->addHead("<!-- XML::RSS not available, no RSS generation -->\n");
   } else {
     my $rssurl=$p->{url}->publish({'req'=>'rss'});
-    $p->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$rssurl\" />");
+    $p->addHead("<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"$rssurl\" />\n");
+  }
+
+  eval "require XML::Atom::Feed";
+  if ($@){
+    $p->addHead("<!-- XML::Atom::Feed not available, no Atom generation -->\n");
+  } else {
+    my $atomurl=$p->{url}->publish({'req'=>'atom'});
+    $p->addHead("<link rel=\"alternate\" type=\"application/atom+xml\" title=\"Atom\" href=\"$atomurl\" />\n");
   }
 }
 
@@ -310,6 +321,68 @@ sub trackback{
   my $article=int($p->{url}->param("article")) || return $s->trackbackStatus(1, "No such article");
 
   $s->trackbackStatus(0);
+}
+
+sub displayAtom{
+  my $s=shift;
+  my $p=$s->{page};
+  my $dbh=$s->{page}->{dbh};
+  my $modtime;
+
+  eval "require XML::Atom::Feed";
+  if ($@){
+    $p->status(500, "XML:Atom not found, RSS generation can't work.\n");
+  }
+
+  my $atom = XML::Atom::Feed->new;
+  $atom->title(title=>$s->{mc}->{'title-prefix'});
+  $atom->id($s->{mc}->{baselink});
+
+  # TODO: query duplicates part of displayRSS
+  my $q = $dbh->prepare("select id,subject,body,created,markup,name,email,homepage from blog where pid=0 and draft=0 order by created desc limit ?");
+  $q->execute($s->{mc}->{numarticles});
+
+  while (my $d=$q->fetchrow_hashref()) {
+    my $f;
+    if (defined $d->{markup}){
+      $f=new AwfulCMS::Format($d->{markup});
+    } else {
+      $f=new AwfulCMS::Format();
+    }
+
+    $modtime=$d->{created} if ($d->{created} > $modtime);
+
+    my $body=$f->format($d->{body},
+                        {blogurl=>$s->{mc}->{'content-prefix'}});
+
+    #TODO: this is missing link title, published date, updated date, and content type might be off
+    my $author = XML::Atom::Person->new;
+    #$author->email($d->{email});
+    $author->name($d->{name});
+    $author->uri($d->{homepage});
+
+    my $link = XML::Atom::Link->new;
+    $link->type('text/html');
+    $link->rel('alternate');
+    $link->href($p->{url}->publish({'req'=>'article',
+                                    'article'=>$d->{id}}));
+
+    my $entry = XML::Atom::Entry->new;
+    $entry->author($author);
+    $entry->title($d->{subject});
+    $entry->content($body);
+    $entry->add_link($link);
+    $atom->add_entry($entry);
+  }
+
+  eval "require HTTP::Date";
+  if ($@){
+    $p->setHeader("D'oh", "HTTP::Date not found");
+  } else {
+    # TODO: proper timezone definitions
+    $p->setHeader("Last-Modified", scalar HTTP::Date::time2str($modtime));
+  }
+  $p->{'custom-content'}=$atom->as_xml();
 }
 
 sub displayRSS{
