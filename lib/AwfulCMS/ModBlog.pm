@@ -25,6 +25,7 @@ use AwfulCMS::Page qw(:tags);
 use AwfulCMS::LibUtil qw(navwidget);
 
 use AwfulCMS::Format;
+use AwfulCMS::ModBlog::BackendMySQL;
 
 # newer versions come with a make_path function
 use File::Path qw(mkpath);
@@ -81,8 +82,28 @@ sub new{
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
   $s->{mc}->{'title-prefix'}="Blog" unless (defined $r->{mc}->{'title-prefix'});
 
+  $s->{backend}=new AwfulCMS::ModBlog::BackendMySQL;
+  $s->{backend}->{cb_dbh}=sub{$s->cb_dbh()};
+  $s->{backend}->{cb_err}=sub{my $e=shift;$s->cb_error($e)};
+
   bless $s;
   $s;
+}
+
+# callback to get the db handle just before a call is made
+# the initial module setup does not contain db handles, they're
+# only set when actually needed
+sub cb_dbh{
+  my $s=shift;
+  $s->{page}->{dbh};
+}
+
+sub cb_error{
+  my $s=shift;
+  my $e=shift;
+  my $p=$s->{page};
+
+  $p->status(400, $e);
 }
 
 sub defaultHeader{
@@ -137,7 +158,7 @@ sub formatArticle{
   my $body.=$f->format($d->{body},
                     {blogurl=>$s->{mc}->{'content-prefix'}});
 
-  my @tags=$s->getTags($d->{id});
+  my @tags=$s->{backend}->getTags($d->{id});
   my @tagref;
   my $tagstr="<a href=\"".$p->{url}->buildurl({'req'=>'tag'})."\">Tags</a>: ";
   push(@tagref, "<a href=\"".
@@ -197,28 +218,6 @@ sub getCommentCnt{
   $q_cm->execute($id) || $p->status(400, "Unable to execute query: $!");
   my ($ccnt)=$q_cm->fetchrow_array();
   $ccnt;
-}
-
-=item getTags($id)
-
-Returns an array with the tags for article $id
-
-=cut
-
-sub getTags{
-  my $s=shift;
-  my $id=shift;
-  my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
-  my ($data, @tags);
-
-  my $q_a=$dbh->prepare("select tag from blog_tags where id=?") ||
-    $p->status(400, "Unable to prepare query: $!");
-  $q_a->execute($id);
-  $data=$q_a->fetchall_arrayref({});
-
-  push(@tags, $_->{tag}) foreach (@$data);
-  @tags;
 }
 
 =item getTeasers($)
