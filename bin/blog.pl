@@ -39,19 +39,19 @@ my %features = {
 eval "require Net::Trackback::Client";
 if ($@){
   print "Net::Trackback::Client not found, pingbacks and trackbacks won't work.\n";
-  %features->{trackback_client}=0;
+  $features{trackback_client}=0;
 }
 
 eval "require Net::Trackback::Ping";
 if ($@){
   print "Net::Trackback::Ping not found, trackbacks won't work.\n";
-  %features->{trackback_ping}=0;
+  $features{trackback_ping}=0;
 }
 
 eval "require RPC::XML::Client";
 if ($@){
   print "RPC::XML::Client not found, pingbacks won't work.\n";
-  %features->{rpc_xml_client}=0;
+  $features{rpc_xml_client}=0;
 }
 
 # config part
@@ -192,11 +192,11 @@ sub pingURLs{
       print $OUT "Checking '$_'... ";
     }
 
-    if (%features->{trackback_client}==1){
+    if ($features{trackback_client}==1){
       my $client = Net::Trackback::Client->new;
       my $data = $client->discover($_);
       if ($data){ # we found a trackback url
-        if (%features->{trackback_client}==1){
+        if ($features{trackback_client}==1){
           for my $resource (@$data) {
             #print $OUT "(".$resource->ping.")";
             print $OUT "sending trackback... ";
@@ -219,7 +219,7 @@ sub pingURLs{
           print $OUT "Net::Trackback::Ping missing, unable to send trackback\n";
         }
       } else {
-        if (%features->{rpc_xml_client}==1){
+        if ($features{rpc_xml_client}==1){
           my $ua=LWP::UserAgent->new();
           my $response=$ua->head($_);
           my $ping;
@@ -266,13 +266,13 @@ sub editArticle{
     system("vi $tmp");
     openreadclose($tmp, \@result);
     parseArticle(\@result, \%newarticle);
-    if (%newarticle->{body} eq ""){
+    if ($newarticle{body} eq ""){
       print "Skipping article due to empty body\n";
       return;
     }
     my %newhash=(%$d, %newarticle);
     print $backend->updateOrEditArticle(\%newhash)."\n";
-    $backend->setTags($d->{id}, $d->{tags}, %newhash->{tags});
+    $backend->setTags($d->{id}, $d->{tags}, $newhash{tags});
     pingURLs(\%newhash);
     updateRSS();
     unlink $tmp;
@@ -334,12 +334,12 @@ END
   system("vi $tmp");
   openreadclose($tmp, \@result);
   parseArticle(\@result, \%newarticle);
-  if (%newarticle->{body} eq ""){
+  if ($newarticle{body} eq ""){
     print "Skipping article due to empty body\n";
     return;
   }
   print $backend->updateOrEditArticle(\%newarticle)."\n";
-  $backend->setTags(%newarticle->{id}, %newarticle->{tags});
+  $backend->setTags($newarticle{id}, $newarticle{tags});
   unlink $tmp;
   updateRSS();
   pingURLs(\%newarticle);
