@@ -1,6 +1,6 @@
 %define _name AwfulCMS
 Name: perl-%{_name}
-Version: 0.1.3
+Version: 0.1.5
 Release: 1
 Summary: An awful CMS
 Group: Development/Libraries
@@ -21,32 +21,19 @@ BuildRequires: %{awfulcms_requires}
 BuildRequires: %{awfulcms_recommends}
 Requires: %{awfulcms_requires} perl(XML::RSS)
 Recommends: %{awfulcms_recommends}
+Provides: perl-AwfulCMS-tools = %{version}
+Obsoletes: perl-AwfulCMS-tools < %{version}
 
 %{perl_requires}
 
 %description
 %{summary}.
 
-%files
+%files -f %{name}.files
 %defattr(-,root,root,-)
 %dir %{perl_vendorlib}/%{_name}
 %{perl_vendorlib}/%{_name}/*.pm
 %doc %{_mandir}/man3/*.3pm*
-
-
-%package tools
-Summary: Command line tools for AwfulCMS
-Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}
-
-%description tools
-%{summary}.
-
-%files tools
-%defattr(-,root,root,-)
-%{_bindir}/*
-%doc %{_mandir}/man1/*.pl.1.*
-
 
 %prep
 %setup -q -n %{_name}-%{version}
@@ -59,6 +46,7 @@ Requires: %{name} = %{version}-%{release}
 %install
 ./Build install --installdirs vendor  --destdir %{buildroot}
 %perl_process_packlist
+%perl_gen_filelist
 
 
 #check
