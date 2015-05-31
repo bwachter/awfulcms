@@ -167,7 +167,7 @@ sub formatArticle{
   $tagstr.=join(', ', @tagref);
   $tagstr.=" None" if (@tagref == 0);
 
-  my $ccnt=$s->getCommentCnt($d->{id});
+  my $ccnt=$s->{backend}->getCommentCnt($d->{id});
   my $cmtstring="$ccnt comments";
   $cmtstring = "1 comment" if ($ccnt==1);
   my $url = $p->{url}->buildurl({'req'=>'article',
@@ -198,46 +198,6 @@ sub formatArticle{
           "<br class=\"l\" /><br class=\"l\" />";
 
   $ret;
-}
-
-=item getCommentCnt($id)
-
-Returns the number of comments for the article $id
-
-=cut
-
-sub getCommentCnt{
-  my $s=shift;
-  my $id=shift;
-  my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
-
-  my $q_cm=$dbh->prepare("select count(*) from blog where rpid=? and draft=0") ||
-    $p->status(400, "Unable to prepare query: $!");
-
-  $q_cm->execute($id) || $p->status(400, "Unable to execute query: $!");
-  my ($ccnt)=$q_cm->fetchrow_array();
-  $ccnt;
-}
-
-=item getTeasers($)
-
-Returs a list of teasers
-
-=cut
-
-sub getTeasers{
-    my $s=shift;
-    my $dbh=$s->{page}->{dbh};
-    my $p=$s->{page};
-    my ($data, @teasers);
-    my $q=$dbh->prepare("select subject from blog where draft=1 and tease=1 order by created desc")||
-        $p->status(400, "Unable to prepare query: $!");
-    $q->execute();
-    $data=$q->fetchall_arrayref({});
-
-    push(@teasers, $_->{subject}) foreach (@$data);
-    join("; ", @teasers);
 }
 
 =back
@@ -529,7 +489,7 @@ sub displayPage{
   #TODO: urlbuilder
 
   if ($s->{mc}->{tease}){
-      $p->add(div(p("Upcoming articles: ".$s->getTeasers()),
+      $p->add(div(p("Upcoming articles: ".$s->{backend}->getTeasers()),
                   {'class'=>'navw'})
           );
   }

@@ -26,6 +26,7 @@ use AwfulCMS::Config;
 use AwfulCMS::LibFS qw(openreadclose);
 use AwfulCMS::Page;
 use AwfulCMS::SynBasic;
+use AwfulCMS::ModBlog::BackendMySQL;
 require DBI;
 use strict;
 
@@ -66,6 +67,7 @@ my $mc=$c->getValues("ModBlogCLI");
 my $mcm=$c->getValues("$handle");
 $mcm={%{$mcm}, %{$c->getValues("$handle/$instance")}} if ($c->getValues("$handle/$instance"));
 
+my $backend;
 my $dbh;
 my $OUT;
 
@@ -77,6 +79,12 @@ $mcm->{description}="Some blog without description" unless (defined $mcm->{descr
 #       Once RSS caching is implemented this should just get rid
 #       of the cached RSS
 sub updateRSS{
+}
+
+sub cb_die{
+  my $e=shift;
+
+  print $OUT "Critical error: $e\n";
 }
 
 sub formatArticle{
@@ -157,6 +165,7 @@ sub connectDB{
   $dbh=DBI->connect("dbi:$o->{type}:dbname=$o->{dbname}", $o->{user},
                     $o->{password}, {RaiseError=>0,AutoCommit=>1}) ||
                       die "DBI->connect(): ". DBI->errstr;
+  $backend=new AwfulCMS::ModBlog::BackendMySQL({dbh => $dbh});
 }
 
 sub pingURLs{
@@ -236,92 +245,6 @@ sub pingURLs{
   }
 }
 
-sub writeArticleDB{
-  my $args=shift;
-  my $q_u = $dbh->prepare("update blog set pid=?, rpid=?, subject=?, body=?, lang=?, name=?, email=?, homepage=?, draft=?, created=?, tease=?, markup=? where id=?");
-  my $q_i = $dbh->prepare("insert into blog(pid, rpid, subject, body, lang, name, email, homepage, draft, tease, markup, created) values (?,?,?,?,?,?,?,?,?,?,?,?)");
-  my $q_s = $dbh->prepare("select id from blog where pid=? and rpid=? and subject=? and body=? and lang=? and name=? and email=? and homepage=? and draft=? and markup=? and created=?");
-
-  $args->{homepage}="" unless (defined $args->{homepage});
-  foreach (@keys){
-    return "Key $_ not found" unless (defined $args->{$_});
-  }
-
-  if ($args->{id}){
-    $args->{created}=time() if ($args->{olddraft}==1);
-    $q_u->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
-                  $args->{lang}, $args->{name}, $args->{email},
-                  $args->{homepage}, $args->{draft}, $args->{created},
-                  $args->{tease}, $args->{markup}, $args->{id})||return "Unable to insert new record: $!\n";
-  } else {
-    my $created=time();
-    my $href;
-    $q_i->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
-                  $args->{lang}, $args->{name}, $args->{email},
-                  $args->{homepage}, $args->{draft}, $args->{tease}, $args->{markup},
-                  $created)||return "Unable to insert new record: $!\n";
-    $q_s->execute($args->{pid}, $args->{rpid}, $args->{subject}, $args->{body},
-                  $args->{lang}, $args->{name}, $args->{email},
-                  $args->{homepage}, $args->{draft}, $args->{markup}, $created)||return "Unable to insert new record: $!\n";
-    $href=$q_s->fetchrow_hashref();
-    $args->{id}=$href->{id};
-  }
-}
-
-
-sub getTags{
-  my $id=shift;
-  my ($data, @tags);
-
-  my $q_a=$dbh->prepare("select tag from blog_tags where id=?");
-  $q_a->execute($id);
-  $data=$q_a->fetchall_arrayref({});
-
-  push(@tags, $_->{tag}) foreach (@$data);
-  @tags;
-}
-
-sub setTags{
-  my $id=shift;
-  my $oldtags=shift;
-  my $newtags=shift;
-  my (@createtags, @deletetags);
-  my (%oldhash, %newhash);
-  my $q_i = $dbh->prepare("insert into blog_tags(id, tag) values (?,?)");
-  my $q_d = $dbh->prepare("delete from blog_tags where id=? and tag=?");
-
-  die "oldtags ne array" unless (ref($oldtags) eq "ARRAY");
-  if (defined $newtags){
-    die "newtags ne array" unless (ref($newtags) eq "ARRAY");
-
-    $newhash{$_}=1 foreach(@$newtags);
-    $oldhash{$_}=1 foreach(@$oldtags);
-
-    foreach(@$newtags){
-      push (@createtags, $_) unless (defined $oldhash{$_});
-    }
-
-    foreach(@$oldtags){
-      push (@deletetags, $_) unless (defined $newhash{$_});
-    }
-
-
-    $q_d->execute($id, $_) foreach(@deletetags);
-    $q_i->execute($id, $_) foreach(@createtags);
-  } else {
-    $q_i->execute($id, $_) foreach(@$oldtags);
-  }
-}
-
-sub deleteTags{
-  my $id=shift;
-  my $tags=shift;
-  my $q_i = $dbh->prepare("delete into blog_tags where id=? and tag=?");
-  foreach(@$tags){
-    $q_i->execute($id, $_);
-  }
-}
-
 sub deleteArticle{
   my $ID=shift;
   my $q_d=$dbh->prepare("delete from blog where id=?");
@@ -338,7 +261,7 @@ sub editArticle{
   my $d=$q_a->fetchrow_hashref();
   if (defined $d){
     my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
-    @{$d->{tags}}=getTags($d->{id});
+    @{$d->{tags}}=$backend->getTags($d->{id}, \&cb_die);
     print $tmp formatArticle($d);
     system("vi $tmp");
     openreadclose($tmp, \@result);
@@ -347,10 +270,9 @@ sub editArticle{
       print "Skipping article due to empty body\n";
       return;
     }
-#    print writeArticleDB(\(%$d, %newarticle))."\n";
     my %newhash=(%$d, %newarticle);
-    print writeArticleDB(\%newhash)."\n";
-    setTags($d->{id}, $d->{tags}, %newhash->{tags});
+    print $backend->updateOrEditArticle(\%newhash)."\n";
+    $backend->setTags($d->{id}, $d->{tags}, %newhash->{tags});
     pingURLs(\%newhash);
     updateRSS();
     unlink $tmp;
@@ -383,7 +305,7 @@ sub printArticle{
   $q_a->execute($ID)||print $OUT "Error executing query";
   my $d=$q_a->fetchrow_hashref();
   if (defined $d){
-    @{$d->{tags}}=getTags($d->{id});
+    @{$d->{tags}}=$backend->getTags($d->{id}, \&cb_die);
     print $OUT formatArticle($d)
   } else {
     print $OUT "No such article\n";
@@ -416,8 +338,8 @@ END
     print "Skipping article due to empty body\n";
     return;
   }
-  print writeArticleDB(\%newarticle)."\n";
-  setTags(%newarticle->{id}, %newarticle->{tags});
+  print $backend->updateOrEditArticle(\%newarticle)."\n";
+  $backend->setTags(%newarticle->{id}, %newarticle->{tags});
   unlink $tmp;
   updateRSS();
   pingURLs(\%newarticle);
