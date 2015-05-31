@@ -34,13 +34,36 @@ for a section the key=value-parser is used.
 use strict;
 use Sys::Hostname;
 
+=item new()
+
+Create a new configuration object. It's possible to specify a vhost for
+this instance, or specify an alternate path to the configuration file,
+which is mostly useful for CLI usage.
+
+C<AwfulCMS::Config->new()>
+C<AwfulCMS::Config->new($vhost)>
+C<AwfulCMS::Config->new({vhost => "vhost", filepath => "filepath"})>
+
+=cut
+
 sub new(){
   shift;
-  my $vhost=shift;
+  my $o=shift;
   my $hostname=hostname;
   my $s={};
 
   my $cfg="";
+  # for backwards compatibility it's possible to specify vhost as single
+  # string argument
+  if (defined $o){
+    if (ref($o) eq "HASH"){
+      $cfg=$o->{filepath} if (defined $o->{filepath});
+      $s->{vhost}=$o->{vhost} if (defined $o->{vhost});
+    }
+    else { $s->{vhost}=$o; }
+  }
+
+
   my @lines;
 
   $s->{parsers}={
@@ -57,7 +80,8 @@ sub new(){
     $home=$pw[7];
   }
 
-  if (-f "$home/.awfulcms/config-$vhost"){ $cfg="$home/.awfulcms/config-$vhost" }
+  if (-f $cfg){ }
+  elsif (-f "$home/.awfulcms/config-$s->{vhost}"){ $cfg="$home/.awfulcms/config-$s->{vhost}" }
   elsif (-f "$home/.awfulcms/config-$hostname"){ $cfg="$home/.awfulcms/config-$hostname" }
   elsif (-f "$home/.awfulcms/config"){ $cfg="$home/.awfulcms/config" }
   elsif (-f "$home/.awfulcms/awfulcmsrc"){ $cfg="$home/.awfulcms/awfulcmsrc" }
@@ -70,6 +94,8 @@ sub new(){
   open(F, "<$cfg")||return "Unable to open configuration file: $!";
   @lines=<F>;
   close(F);
+
+  $s->{filepath}=$cfg;
 
   my ($section, $type);
   foreach(@lines){

@@ -10,7 +10,7 @@ There are no configuration parameters outside this module.
 
 =head2 Module functions
 
-our @EXPORT_OK=qw(handleCGI);
+our @EXPORT_OK=qw(handleCGI handleCLI);
 
 =over
 
@@ -28,10 +28,11 @@ use AwfulCMS::Config;
 use AwfulCMS::LibFS qw(openreadclose);
 
 use Exporter 'import';
-our @EXPORT_OK=qw(handleCGI);
+our @EXPORT_OK=qw(handleCGI handleCLI);
 
 my ($p, # the page object
     $c, # the configuration object
+    $cliopt, # option overrides for CLI usage
     $call, # the final request call in the module
     $instance, # the module instance, if not default
     $m, # the module object handle
@@ -56,8 +57,12 @@ sub init{
   # set up a page for later use and find out about module and request foo
   $p=new AwfulCMS::Page({'mode'=>$mode});
 
-  # read the configuration file
-  $c=new AwfulCMS::Config($p->{rq}->{host});
+  # read the configuration file, reusing existing configuration objects, if possible
+  if (ref($cliopt->{c}) eq "AwfulCMS::Config"){
+    $c=$cliopt->{c};
+  } else {
+    $c=new AwfulCMS::Config($p->{rq}->{host});
+  }
   $p->status(400, "$c") if (ref($c) ne "AwfulCMS::Config");
 
   eval "require Tie::RegexpHash" if ($c->getValue("main", "filematch"));
@@ -306,7 +311,8 @@ TODO
 
 sub handleCGI{
   $mode="CGI";
-  #$starttime=DateTime->now();
+  # make sure cliopt is always an empty hash for CGI mode
+  $cliopt={};
   $starttime=[gettimeofday];
   init();
   doModule();
@@ -321,7 +327,13 @@ TODO
 =cut
 
 sub handleCLI{
+  $cliopt=shift;
+  if (ref($cliopt) eq "HASH"){
+  } else {
+    $cliopt={};
+  }
   $mode="CLI";
+  $starttime=[gettimeofday];
   init();
   doModule();
   doRequest();
