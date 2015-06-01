@@ -68,18 +68,11 @@ my $mcm=$c->getValues("$handle");
 $mcm={%{$mcm}, %{$c->getValues("$handle/$instance")}} if ($c->getValues("$handle/$instance"));
 
 my $backend;
-my $dbh;
 my $OUT;
 
 $mcm->{'title-prefix'}="Blog" unless (defined $mcm->{'title-prefix'});
 $mcm->{baselink}="" unless (defined $mcm->{baselink});
 $mcm->{description}="Some blog without description" unless (defined $mcm->{description});
-
-# TODO: RSS is now dynamically generated in the blog
-#       Once RSS caching is implemented this should just get rid
-#       of the cached RSS
-sub updateRSS{
-}
 
 sub cb_die{
   my $e=shift;
@@ -162,7 +155,7 @@ sub connectDB{
   $o->{user}=$dbc->{$dbhandle}->{1}->{user}||$dbc->{$dbhandle}->{user}||"";
   $o->{password}=$dbc->{$dbhandle}->{1}->{password}||$dbc->{$dbhandle}->{password}||"";
 
-  $dbh=DBI->connect("dbi:$o->{type}:dbname=$o->{dbname}", $o->{user},
+  my $dbh=DBI->connect("dbi:$o->{type}:dbname=$o->{dbname}", $o->{user},
                     $o->{password}, {RaiseError=>0,AutoCommit=>1}) ||
                       die "DBI->connect(): ". DBI->errstr;
   $backend=new AwfulCMS::ModBlog::BackendMySQL({dbh => $dbh});
@@ -245,23 +238,15 @@ sub pingURLs{
   }
 }
 
-sub deleteArticle{
-  my $ID=shift;
-  my $q_d=$dbh->prepare("delete from blog where id=?");
-  $q_d->execute($ID)||print $OUT "Error executing query";
-}
-
 sub editArticle{
   my $ID=shift;
   my @result;
   my %newarticle;
 
-  my $q_a=$dbh->prepare("select * from blog where id=?");
-  $q_a->execute($ID)||print $OUT "Error executing query";
-  my $d=$q_a->fetchrow_hashref();
+  my $d=$backend->getArticle($ID);
   if (defined $d){
     my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
-    @{$d->{tags}}=$backend->getTags($d->{id}, \&cb_die);
+    @{$d->{tags}}=$backend->getTagsForArticle($d->{id}, \&cb_die);
     print $tmp formatArticle($d);
     system("vi $tmp");
     openreadclose($tmp, \@result);
@@ -274,7 +259,6 @@ sub editArticle{
     print $backend->updateOrEditArticle(\%newhash)."\n";
     $backend->setTags($d->{id}, $d->{tags}, $newhash{tags});
     pingURLs(\%newhash);
-    updateRSS();
     unlink $tmp;
   } else {
     print $OUT "No such article\n";
@@ -283,29 +267,24 @@ sub editArticle{
 
 sub listArticles{
   my $opt=shift;
-  my $q_s=$dbh->prepare("select * from blog where pid=? and draft=? order by created desc limit ? offset ?") ;
-  #$p->status(400, "Unable to prepare query: $!");
-  if ($opt eq "d"){
-    $q_s->execute(0, 1, 50, 0);
-  } else {
-    $q_s->execute(0, 0, 50, 0);
-  }
 
-  while (my $d=$q_s->fetchrow_hashref()){
-    print $d->{id}."\t".$d->{subject}."\n";
-  }
-}
+  my $draft=0;
+  $draft=1 if ($opt eq "d");
 
-sub getArticle{
+  $backend->getArticleList({
+                            pid=>0,
+                            limit=>50,
+                            draft=>$draft,
+                            offset=>0,
+                            cb_format=>sub{my $d=shift; print $d->{id}."\t".$d->{subject}."\n";},
+                           });
 }
 
 sub printArticle{
   my $ID=shift;
-  my $q_a=$dbh->prepare("select * from blog where id=?");
-  $q_a->execute($ID)||print $OUT "Error executing query";
-  my $d=$q_a->fetchrow_hashref();
+  my $d=$backend->getArticle($ID);
   if (defined $d){
-    @{$d->{tags}}=$backend->getTags($d->{id}, \&cb_die);
+    @{$d->{tags}}=$backend->getTagsForArticle($d->{id}, \&cb_die);
     print $OUT formatArticle($d)
   } else {
     print $OUT "No such article\n";
@@ -341,10 +320,7 @@ END
   print $backend->updateOrEditArticle(\%newarticle)."\n";
   $backend->setTags($newarticle{id}, $newarticle{tags});
   unlink $tmp;
-  updateRSS();
   pingURLs(\%newarticle);
-  # 1 english 2 german
-  #$q_i->execute(0, 0, $subject, $text, 0, 1, $name, $email, $homepage, time());
 }
 
 sub main{
@@ -360,7 +336,7 @@ sub main{
 
     if ($cmd[0] eq "d"){
       next if ($cmd[1] eq "");
-      deleteArticle($cmd[1]);
+      $backend->deleteArticle($cmd[1]);
     } elsif ($cmd[0] eq "e"){
       next if ($cmd[1] eq "");
       editArticle($cmd[1]);
@@ -373,8 +349,6 @@ sub main{
       newArticle();
     } elsif ($cmd[0] eq "q"){
       exit(0);
-    } elsif ($cmd[0] eq "r"){
-      updateRSS();
     } else {
       print "Unknown command `$cmd[0]'\n" unless ($cmd[0] eq "");
     }
