@@ -158,7 +158,7 @@ sub formatArticle{
   my $body.=$f->format($d->{body},
                     {blogurl=>$s->{mc}->{'content-prefix'}});
 
-  my @tags=$s->{backend}->getTags($d->{id});
+  my @tags=$s->{backend}->getTagsForArticle($d->{id});
   my @tagref;
   my $tagstr="<a href=\"".$p->{url}->buildurl({'req'=>'tag'})."\">Tags</a>: ";
   push(@tagref, "<a href=\"".
@@ -217,22 +217,15 @@ Displays tag overview/detail
 sub displayTag{
   my $s=shift;
   my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
   my $tag=$p->{url}->param("tag");
 
   $s->defaultHeader();
-
-  my $q_a=$dbh->prepare("select tag from blog_tags group by tag order by tag") ||
-    $p->status(400, "Unable to prepare query: $!");
-  my $q_t=$dbh->prepare("select blog_tags.tag,blog.subject,blog.id from blog_tags left join (blog) on (blog_tags.id=blog.id) where tag=? and draft=0 order by tag")||
-    $p->status(400, "Unable to prepare query: $!");
 
   my ($tagstr, $header);
   if (defined $tag && $tag ne ""){
     my @tags;
     $header="Articles tagged '$tag'";
-    $q_t->execute($tag);
-    my $data=$q_t->fetchall_arrayref({});
+    my $data=$s->{backend}->getArticlesWithTag($tag);
     push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'article',
                                                   'article'=>$_->{id}}).
          "\">$_->{subject}</a>") foreach (@$data);
@@ -240,8 +233,8 @@ sub displayTag{
   } else {
     my @tags;
     $header="Available tags";
-    $q_a->execute();
-    my $data=$q_a->fetchall_arrayref({});
+
+    my $data=$s->{backend}->getTagList();
 
     push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'tag',
                                                   'tag'=>$_->{tag}}).
@@ -407,7 +400,6 @@ Displays one posting
 sub displayArticle{
   my $s=shift;
   my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
   my $draft=0;
 
   $s->defaultHeader();
@@ -416,23 +408,18 @@ sub displayArticle{
     $p->status(404, "No such article");
 
   $draft=1 if (int($p->{url}->param("draft")));
-  my $q_a=$dbh->prepare("select * from blog where id=? and draft=?") ||
-    $p->status(400, "Unable to prepare query: $!");
-  my $q_c=$dbh->prepare("select * from blog where rpid=? and draft=0 order by created desc") ||
-    $p->status(400, "Unable to prepare query: $!");
 
-  $q_a->execute($article, $draft) || $p->status(400, "Unable to execute query: $!");
-  $p->status(404, "No such article") if ($q_a->rows == 0);
+  my $d=$s->{backend}->getArticle($article, $draft);
+  $p->status(404, "No such article") if (!%$d);
 
-  my $d=$q_a->fetchrow_hashref();
   $p->title($s->{mc}->{'title-prefix'}." - ".$d->{subject});
   $p->add(div($s->formatArticle($d), {'class'=>'news'}));
 
   # fixme, works but is not that nice
-  $q_c->execute($d->{id}) || $p->status(400, "Unable to execute query: $!");
-  while (my $d=$q_c->fetchrow_hashref()){
-    $p->add(div($s->formatArticle($d), {'class'=>'news'}));
-  }
+  $s->{backend}->getComments({
+                              rpid=>$d->{id},
+                              cb_format=>sub{my $d=shift; $p->add(div($s->formatArticle($d), {'class'=>'news'}));},
+                             });
 
   if ($s->{mc}->{'trackback'}){
     $p->{tb}=({
@@ -471,8 +458,6 @@ sub displayPage{
 
   my $q_c=$dbh->prepare("select count(*) from blog where pid=? and draft=0") ||
     $p->status(400, "Unable to prepare query: $!");
-  my $q_s=$dbh->prepare("select * from blog where pid=? and draft=0 order by created desc limit ? offset ?") ||
-    $p->status(400, "Unable to prepare query: $!");
 
   $q_c->execute(0) || $p->status(400, "Unable to execute query: $!");
   my ($cnt)=$q_c->fetchrow_array();
@@ -482,9 +467,6 @@ sub displayPage{
   my $page=int($p->{url}->param("page"))||1;
   $page=1 if ($page<0);
   $offset=($page-1)*$s->{mc}->{numarticles};
-
-#  $p->add("There are $cnt articles on $pages pages\n");
-#  $p->add("Displaying page $page with offset $offset, $s->{mc}->{numarticles} articles per page\n");
 
   #TODO: urlbuilder
 
@@ -498,11 +480,13 @@ sub displayPage{
               {'class'=>'navw'})
          );
 
-  $q_s->execute(0, $s->{mc}->{numarticles}, $offset) || $p->status(400, "Unable to execute query: $!");
-
-  while (my $d=$q_s->fetchrow_hashref()){
-    $p->add(div($s->formatArticle($d), {'class'=>'news'}));
-  }
+  # cb_format gets called for each article
+  $s->{backend}->getArticleList({
+                                 pid=>0,
+                                 limit=>$s->{mc}->{numarticles},
+                                 offset=>$offset,
+                                 cb_format=>sub{my $d=shift; $p->add(div($s->formatArticle($d), {'class'=>'news'}));},
+                                });
 
   $p->add(div(p("There are $cnt articles on $pages pages").
               p($p->navwidget({'minpage'=>1, 'maxpage'=>$pages, 'curpage'=>$page})),

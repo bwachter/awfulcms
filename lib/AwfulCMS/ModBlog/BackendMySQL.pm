@@ -65,6 +65,41 @@ sub getCommentCnt{
   $ccnt;
 }
 
+=item getComments($id)
+
+Get the comments for a given article, using a format callback for each comment
+found in the database.
+
+=cut
+
+sub getComments{
+  my $s=shift;
+  my $o=shift;
+  my $cb=shift;
+  my $dbh=$s->getDbh();
+
+  if (ref $o eq 'HASH'){
+
+  } else {
+    my $id=$o;
+    $o->{rpid}=$id;
+  }
+
+  $o->{draft}=0 unless (defined $o->{draft});
+
+  my $q=$dbh->prepare("select * from blog where rpid=? and draft=? order by created desc") ||
+    $s->err("Unable to prepare query: $!", $cb);
+
+  $q->execute($o->{rpid}, $o->{draft});
+
+  # TODO some fallback if no formatting callback is provided
+  while (my $d=$q->fetchrow_hashref()){
+    if (ref $o->{cb_format} eq 'CODE'){
+      $o->{cb_format}->($d);
+    }
+  }
+}
+
 ### Tag handling
 
 =item deleteTags($id, $tags, $cb)
@@ -88,14 +123,33 @@ sub deleteTags{
   }
 }
 
-=item getTags($id)
+=item getArticlesWithTag($tag, $cb)
+
+Get a list of articles tagged with a specific tag
+
+=cut
+
+sub getArticlesWithTag{
+  my $s=shift;
+  my $tag=shift;
+  my $cb=shift;
+  my $dbh=$s->getDbh();
+
+  my $q=$dbh->prepare("select blog_tags.tag,blog.subject,blog.id from blog_tags left join (blog) on (blog_tags.id=blog.id) where tag=? and draft=0 order by tag")||
+    $s->err("Unable to prepare query: $!", $cb);
+
+  $q->execute($tag) || $s->err("Unable to execute query: $!", $cb);
+  $q->fetchall_arrayref({});
+}
+
+=item getTagsForArticle($id)
 
 Returns an array with the tags for article $id. A function reference may
 be passed as optional argument as callback for error handling.
 
 =cut
 
-sub getTags{
+sub getTagsForArticle{
   my $s=shift;
   my $id=shift;
   my $cb=shift;
@@ -108,6 +162,24 @@ sub getTags{
 
   push(@tags, $_->{tag}) foreach (@$data);
   @tags;
+}
+
+=item getTagList($cb)
+
+Returns an array reference with a complete list of tags
+
+=cut
+
+sub getTagList{
+  my $s=shift;
+  my $cb=shift;
+  my $dbh=$s->getDbh();
+
+  my $q=$dbh->prepare("select tag from blog_tags group by tag order by tag") ||
+    $s->err("Unable to prepare query: $!", $cb);
+
+  $q->execute() || $s->err("Unable to execute query: $!", $cb);
+  $q->fetchall_arrayref({});
 }
 
 =item setTags($id, $oldtags, $newtags, $cb)
@@ -155,6 +227,69 @@ sub setTags{
 
 
 ###
+
+=item getArticle($id)
+
+Return a hash with one article, or an empty hash if the article does not exist.
+
+=cut
+
+sub getArticle{
+  my $s=shift;
+  my $o=shift;
+  my $cb=shift;
+  my $dbh=$s->getDbh();
+
+  if (ref $o eq 'HASH'){
+    # TODO: error handling
+  } else {
+    my $id=$o;
+    $o->{id}=$id;
+  }
+
+  $o->{draft}=0 unless (defined $o->{draft});
+
+  my $q=$dbh->prepare("select * from blog where id=? and draft=?") ||
+    $s->err("Unable to prepare query: $!", $cb);
+  $q->execute($o->{id}, $o->{draft});
+
+  my $d=$q->fetchrow_hashref();
+  return {} if ($q->rows == 0);
+  $d;
+}
+
+sub getArticleList{
+  my $s=shift;
+  my $o=shift;
+  my $cb=shift;
+  my $dbh=$s->getDbh();
+
+  $o->{pid}=0 unless (defined $o->{pid});
+  $o->{draft}=0 unless (defined $o->{draft});
+  $o->{limit}=0 unless (defined $o->{limit});
+  $o->{offset}=0 unless (defined $o->{offset});
+
+  my $q=$dbh->prepare("select * from blog where pid=? and draft=? order by created desc limit ? offset ?") ||
+    $s->err("Unable to prepare query: $!", $cb);
+  $q->execute($o->{pid}, $o->{draft}, $o->{limit}, $o->{offset});
+
+  # TODO some fallback if no formatting callback is provided
+  while (my $d=$q->fetchrow_hashref()){
+    if (ref $o->{cb_format} eq 'CODE'){
+      $o->{cb_format}->($d);
+    }
+  }
+}
+
+sub deleteArticle{
+  my $s=shift;
+  my $cb=shift;
+  my $id=shift;
+  my $dbh=$s->getDbh();
+
+  my $q_d=$dbh->prepare("delete from blog where id=?");
+  $q_d->execute($id) || $s->err("Error executing query", $cb);
+}
 
 # TODO: Fix error handling
 sub updateOrEditArticle{
