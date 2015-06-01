@@ -268,7 +268,6 @@ sub trackbackStatus{
 sub trackback{
   my $s=shift;
   my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
 
   my $article=int($p->{url}->param("article")) || return $s->trackbackStatus(1, "No such article");
 
@@ -278,7 +277,6 @@ sub trackback{
 sub displayAtom{
   my $s=shift;
   my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
   my $modtime;
 
   eval "require XML::Atom::Feed";
@@ -290,42 +288,43 @@ sub displayAtom{
   $atom->title(title=>$s->{mc}->{'title-prefix'});
   $atom->id($s->{mc}->{baselink});
 
-  # TODO: query duplicates part of displayRSS
-  my $q = $dbh->prepare("select id,subject,body,created,markup,name,email,homepage from blog where pid=0 and draft=0 order by created desc limit ?");
-  $q->execute($s->{mc}->{numarticles});
+  $s->{backend}->getArticleList({
+                                 limit=>$s->{mc}->{numarticles},
+                                 cb_format=>
+                                 sub{
+                                   my $d=shift;
+                                   my $f;
+                                   if (defined $d->{markup}){
+                                     $f=new AwfulCMS::Format($d->{markup});
+                                   } else {
+                                     $f=new AwfulCMS::Format();
+                                   }
 
-  while (my $d=$q->fetchrow_hashref()) {
-    my $f;
-    if (defined $d->{markup}){
-      $f=new AwfulCMS::Format($d->{markup});
-    } else {
-      $f=new AwfulCMS::Format();
-    }
+                                   $modtime=$d->{created} if ($d->{created} > $modtime);
 
-    $modtime=$d->{created} if ($d->{created} > $modtime);
+                                   my $body=$f->format($d->{body},
+                                                       {blogurl=>$s->{mc}->{'content-prefix'}});
 
-    my $body=$f->format($d->{body},
-                        {blogurl=>$s->{mc}->{'content-prefix'}});
+                                   #TODO: this is missing link title, published date, updated date, and content type might be off
+                                   my $author = XML::Atom::Person->new;
+                                   #$author->email($d->{email});
+                                   $author->name($d->{name});
+                                   $author->uri($d->{homepage});
 
-    #TODO: this is missing link title, published date, updated date, and content type might be off
-    my $author = XML::Atom::Person->new;
-    #$author->email($d->{email});
-    $author->name($d->{name});
-    $author->uri($d->{homepage});
+                                   my $link = XML::Atom::Link->new;
+                                   $link->type('text/html');
+                                   $link->rel('alternate');
+                                   $link->href($p->{url}->publish({'req'=>'article',
+                                                                   'article'=>$d->{id}}));
 
-    my $link = XML::Atom::Link->new;
-    $link->type('text/html');
-    $link->rel('alternate');
-    $link->href($p->{url}->publish({'req'=>'article',
-                                    'article'=>$d->{id}}));
-
-    my $entry = XML::Atom::Entry->new;
-    $entry->author($author);
-    $entry->title($d->{subject});
-    $entry->content($body);
-    $entry->add_link($link);
-    $atom->add_entry($entry);
-  }
+                                   my $entry = XML::Atom::Entry->new;
+                                   $entry->author($author);
+                                   $entry->title($d->{subject});
+                                   $entry->content($body);
+                                   $entry->add_link($link);
+                                   $atom->add_entry($entry);
+                                 },
+                                });
 
   eval "require HTTP::Date";
   if ($@){
@@ -340,7 +339,6 @@ sub displayAtom{
 sub displayRSS{
   my $s=shift;
   my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
   my $modtime;
 
   eval "require XML::RSS";
@@ -353,33 +351,35 @@ sub displayRSS{
                 'link'=>$s->{mc}->{baselink},
                 description=>$s->{mc}->{description});
 
-  my $q = $dbh->prepare("select id,subject,body,created,markup from blog where pid=0 and draft=0 order by created desc limit ?");
-  $q->execute($s->{mc}->{numarticles});
+  $s->{backend}->getArticleList({
+                                 limit=>$s->{mc}->{numarticles},
+                                 cb_format=>
+                                 sub{
+                                   my $d=shift;
+                                   my $f;
+                                   if (defined $d->{markup}){
+                                     $f=new AwfulCMS::Format($d->{markup});
+                                   } else {
+                                     $f=new AwfulCMS::Format();
+                                   }
 
-  while (my $d=$q->fetchrow_hashref()) {
-    my $f;
-    if (defined $d->{markup}){
-      $f=new AwfulCMS::Format($d->{markup});
-    } else {
-      $f=new AwfulCMS::Format();
-    }
+                                   $modtime=$d->{created} if ($d->{created} > $modtime);
 
-    $modtime=$d->{created} if ($d->{created} > $modtime);
+                                   my $body=$f->format($d->{body},
+                                                       {blogurl=>$s->{mc}->{'content-prefix'}});
 
-    my $body=$f->format($d->{body},
-                        {blogurl=>$s->{mc}->{'content-prefix'}});
+                                   my $created=localtime($d->{created});
 
-    my $created=localtime($d->{created});
-
-    $rss -> add_item(title => $d->{subject},
-                     'link' => $p->{url}->publish({'req'=>'article',
-                                                   'article'=>$d->{id}}),
-                     description => AwfulCMS::Page->pRSS($body),
-                     dc=>{
-                          date       => $created
-                         }
-                    );
-  }
+                                   $rss -> add_item(title => $d->{subject},
+                                                    'link' => $p->{url}->publish({'req'=>'article',
+                                                                                  'article'=>$d->{id}}),
+                                                    description => AwfulCMS::Page->pRSS($body),
+                                                    dc=>{
+                                                         date       => $created
+                                                        }
+                                                   );
+                                 },
+                                });
 
   eval "require HTTP::Date";
   if ($@){
@@ -450,17 +450,12 @@ Displays one page with postings
 sub displayPage{
   my $s=shift;
   my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
   my $offset=0;
 
   $p->title($s->{mc}->{'title-prefix'});
   $s->defaultHeader();
 
-  my $q_c=$dbh->prepare("select count(*) from blog where pid=? and draft=0") ||
-    $p->status(400, "Unable to prepare query: $!");
-
-  $q_c->execute(0) || $p->status(400, "Unable to execute query: $!");
-  my ($cnt)=$q_c->fetchrow_array();
+  my ($cnt)=$s->{backend}->getArticleCount(0);
   my $pages=int($cnt/$s->{mc}->{numarticles});
   $pages++ unless ($cnt=~/0$/);
 
@@ -557,99 +552,6 @@ sub editform{
   </tr>
   </table></form><hr>
          ");
-}
-
-=item createdb()
-
-Drops and creates all blog databases
-
-=cut
-
-sub createdb{
-  my $s=shift;
-  my $dbh=$s->{page}->{dbh};
-  my @queries;
-  push(@queries, "DROP TABLE IF EXISTS blog");
-  push(@queries, "CREATE TABLE blog (".
-       "id int(11) NOT NULL auto_increment,".
-       "subject tinytext NOT NULL,".
-       "body text NOT NULL,".
-       "created bigint(20) default NULL,".
-       "lang tinyint(4) NOT NULL default '0',".
-       "pid int(11) NOT NULL default '0',".
-       "rpid int(11) NOT NULL default '0',".
-       "`name` tinytext NOT NULL,".
-       "email tinytext NOT NULL,".
-       "homepage tinytext,".
-       "markup tinytext,",
-       "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,".
-       "draft int(4) NOT NULL default '1',".
-       "PRIMARY KEY  (id),".
-       "UNIQUE KEY id_2 (id),".
-       "KEY id (id)".
-       ") ENGINE=MyISAM AUTO_INCREMENT=195 DEFAULT CHARSET=latin1;");
-  push(@queries, "DROP TABLE IF EXISTS blog_mp");
-  push(@queries, "CREATE TABLE blog_mp (".
-       "pid int(11) NOT NULL default '0',".
-       "id varchar(255) NOT NULL default '',".
-       "`time` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,".
-       "PRIMARY KEY  (pid,id)".
-       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-  push(@queries, "DROP TABLE IF EXISTS blog_tb");
-  push(@queries, "CREATE TABLE blog_tb (".
-       "id int(11) NOT NULL auto_increment,".
-       "pid int(11) NOT NULL default '0',".
-       "url varchar(255) NOT NULL default '',".
-       "excerpt text,".
-       "title varchar(255) default NULL,".
-       "blog_name varchar(255) default NULL,".
-       "PRIMARY KEY  (id),".
-       "UNIQUE KEY id_2 (id),".
-       "KEY id (id)".
-       ") ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;");
-  push(@queries, "DROP TABLE IF EXISTS blogdel");
-  push(@queries, "CREATE TABLE blogdel (".
-       "id int(11) NOT NULL default '0',".
-       "subject tinytext NOT NULL,".
-       "body text NOT NULL,".
-       "created bigint(20) default NULL,".
-       "lang tinyint(4) NOT NULL default '0',".
-       "pid int(11) NOT NULL default '0',".
-       "`name` tinytext NOT NULL,".
-       "email tinytext NOT NULL,".
-       "homepage tinytext,".
-       "markup tinytext,".
-       "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP".
-       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-  push(@queries, "DROP TABLE IF EXISTS blog_tags");
-  push(@queries, "CREATE TABLE blog_tags (".
-       "id int(11) NOT NULL,".
-       "tag varchar(50) NOT NULL,".
-       "PRIMARY KEY (id, tag)".
-       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-
-  foreach(@queries){
-    $dbh->do($_);
-  }
-}
-
-=item dropdb()
-
-Drops all blog databases
-
-=cut
-
-sub dropdb{
-  my $s=shift;
-  my $dbh=$s->{page}->{dbh};
-  my @queries;
-  push(@queries, "DROP TABLE IF EXISTS blog");
-  push(@queries, "DROP TABLE IF EXISTS blog_mp");
-  push(@queries, "DROP TABLE IF EXISTS blog_tb");
-  push(@queries, "DROP TABLE IF EXISTS blogdel");
-  foreach(@queries){
-    $dbh->do($_);
-  }
 }
 
 1;

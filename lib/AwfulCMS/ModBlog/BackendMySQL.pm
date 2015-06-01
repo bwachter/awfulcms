@@ -258,6 +258,33 @@ sub getArticle{
   $d;
 }
 
+=item getArticleCount
+
+Return the number of blog articles
+
+=cut
+
+sub getArticleCount{
+  my $s=shift;
+  my $o=shift;
+  my $cb=shift;
+  my $dbh=$s->getDbh();
+
+  if (ref $o eq 'HASH'){
+    # TODO: error handling
+  } else {
+    my $id=$o;
+    $o->{pid}=$id;
+  }
+
+  $o->{draft}=0 unless (defined $o->{draft});
+
+  my $q=$dbh->prepare("select count(*) from blog where pid=? and draft=?") ||
+    $s->err("Unable to prepare query: $!", $cb);
+  $q->execute($o->{pid}, $o->{draft});
+  $q->fetchrow_array();
+}
+
 sub getArticleList{
   my $s=shift;
   my $o=shift;
@@ -351,6 +378,92 @@ sub getTeasers{
 
 ### DB Management
 
+=item createdb()
+
+Create databases, unless they exist
+
+=cut
+
+sub createdb{
+  my $s=shift;
+  my $dbh=$s->{page}->{dbh};
+  my @queries;
+
+  # TODO: have those queries in a hash, and have them created on demand
+  push(@queries, "DROP TABLE IF EXISTS blog");
+  push(@queries, "CREATE TABLE blog (".
+       "id int(11) NOT NULL auto_increment,".
+       "subject tinytext NOT NULL,".
+       "body text NOT NULL,".
+       "created bigint(20) default NULL,".
+       "lang tinyint(4) NOT NULL default '0',".
+       "pid int(11) NOT NULL default '0',".
+       "rpid int(11) NOT NULL default '0',".
+       "`name` tinytext NOT NULL,".
+       "email tinytext NOT NULL,".
+       "homepage tinytext,".
+       "markup tinytext,",
+       "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,".
+       "draft int(4) NOT NULL default '1',".
+       "PRIMARY KEY  (id),".
+       "UNIQUE KEY id_2 (id),".
+       "KEY id (id)".
+       ") ENGINE=MyISAM AUTO_INCREMENT=195 DEFAULT CHARSET=latin1;");
+  push(@queries, "DROP TABLE IF EXISTS blog_mp");
+  push(@queries, "CREATE TABLE blog_mp (".
+       "pid int(11) NOT NULL default '0',".
+       "id varchar(255) NOT NULL default '',".
+       "`time` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,".
+       "PRIMARY KEY  (pid,id)".
+       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+  push(@queries, "DROP TABLE IF EXISTS blog_tb");
+  push(@queries, "CREATE TABLE blog_tb (".
+       "id int(11) NOT NULL auto_increment,".
+       "pid int(11) NOT NULL default '0',".
+       "url varchar(255) NOT NULL default '',".
+       "excerpt text,".
+       "title varchar(255) default NULL,".
+       "blog_name varchar(255) default NULL,".
+       "PRIMARY KEY  (id),".
+       "UNIQUE KEY id_2 (id),".
+       "KEY id (id)".
+       ") ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;");
+  push(@queries, "DROP TABLE IF EXISTS blogdel");
+  push(@queries, "CREATE TABLE blogdel (".
+       "id int(11) NOT NULL default '0',".
+       "subject tinytext NOT NULL,".
+       "body text NOT NULL,".
+       "created bigint(20) default NULL,".
+       "lang tinyint(4) NOT NULL default '0',".
+       "pid int(11) NOT NULL default '0',".
+       "`name` tinytext NOT NULL,".
+       "email tinytext NOT NULL,".
+       "homepage tinytext,".
+       "markup tinytext,".
+       "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP".
+       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+  push(@queries, "DROP TABLE IF EXISTS blog_tags");
+  push(@queries, "CREATE TABLE blog_tags (".
+       "id int(11) NOT NULL,".
+       "tag varchar(50) NOT NULL,".
+       "PRIMARY KEY (id, tag)".
+       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+  push(@queries, "CREATE TABLE blog_series (".
+       "article_id int(11) NOT NULL,".
+       "name varchar(50) NOT NULL,".
+       "PRIMARY KEY (article_id, name)".
+       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+  push(@queries, "CREATE TABLE blog_series_description (".
+       "name varchar(50) NOT NULL,",
+       "description varchar (500),",
+       "PRIMARY KEY (name),",
+       ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+
+  foreach(@queries){
+    $dbh->do($_);
+  }
+}
+
 =item dropdb()
 
 Drops all blog databases
@@ -371,3 +484,7 @@ sub dropdb{
 }
 
 1;
+
+=back
+
+=cut
