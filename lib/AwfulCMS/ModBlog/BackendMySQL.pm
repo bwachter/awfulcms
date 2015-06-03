@@ -386,12 +386,12 @@ Create databases, unless they exist
 
 sub createdb{
   my $s=shift;
-  my $dbh=$s->{page}->{dbh};
+  my $dbh=$s->getDbh();
   my @queries;
+  my @unused_queries;
 
   # TODO: have those queries in a hash, and have them created on demand
-  push(@queries, "DROP TABLE IF EXISTS blog");
-  push(@queries, "CREATE TABLE blog (".
+  push(@queries, "CREATE TABLE IF NOT EXISTS blog (".
        "id int(11) NOT NULL auto_increment,".
        "subject tinytext NOT NULL,".
        "body text NOT NULL,".
@@ -402,22 +402,23 @@ sub createdb{
        "`name` tinytext NOT NULL,".
        "email tinytext NOT NULL,".
        "homepage tinytext,".
-       "markup tinytext,",
+       "markup tinytext,".
        "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,".
        "draft int(4) NOT NULL default '1',".
+       "tease int(4) NOT NULL default '0',".
        "PRIMARY KEY  (id),".
        "UNIQUE KEY id_2 (id),".
        "KEY id (id)".
        ") ENGINE=MyISAM AUTO_INCREMENT=195 DEFAULT CHARSET=latin1;");
-  push(@queries, "DROP TABLE IF EXISTS blog_mp");
-  push(@queries, "CREATE TABLE blog_mp (".
+  push(@queries, "DROP TABLE IF EXISTS blog_mp;");
+  push(@unused_queries, "CREATE TABLE IF NOT EXISTS blog_mp (".
        "pid int(11) NOT NULL default '0',".
        "id varchar(255) NOT NULL default '',".
        "`time` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,".
        "PRIMARY KEY  (pid,id)".
        ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-  push(@queries, "DROP TABLE IF EXISTS blog_tb");
-  push(@queries, "CREATE TABLE blog_tb (".
+  push(@queries, "DROP TABLE IF EXISTS blog_tb;");
+  push(@unused_queries, "CREATE TABLE IF NOT EXISTS blog_tb (".
        "id int(11) NOT NULL auto_increment,".
        "pid int(11) NOT NULL default '0',".
        "url varchar(255) NOT NULL default '',".
@@ -428,8 +429,8 @@ sub createdb{
        "UNIQUE KEY id_2 (id),".
        "KEY id (id)".
        ") ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;");
-  push(@queries, "DROP TABLE IF EXISTS blogdel");
-  push(@queries, "CREATE TABLE blogdel (".
+  push(@queries, "DROP TABLE IF EXISTS blogdel;");
+  push(@unused_queries, "CREATE TABLE IF NOT EXISTS blogdel (".
        "id int(11) NOT NULL default '0',".
        "subject tinytext NOT NULL,".
        "body text NOT NULL,".
@@ -442,21 +443,20 @@ sub createdb{
        "markup tinytext,".
        "`changed` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP".
        ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-  push(@queries, "DROP TABLE IF EXISTS blog_tags");
-  push(@queries, "CREATE TABLE blog_tags (".
+  push(@queries, "CREATE TABLE IF NOT EXISTS blog_tags (".
        "id int(11) NOT NULL,".
        "tag varchar(50) NOT NULL,".
        "PRIMARY KEY (id, tag)".
        ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-  push(@queries, "CREATE TABLE blog_series (".
+  push(@queries, "CREATE TABLE IF NOT EXISTS blog_series (".
        "article_id int(11) NOT NULL,".
        "name varchar(50) NOT NULL,".
        "PRIMARY KEY (article_id, name)".
        ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-  push(@queries, "CREATE TABLE blog_series_description (".
-       "name varchar(50) NOT NULL,",
-       "description varchar (500),",
-       "PRIMARY KEY (name),",
+  push(@queries, "CREATE TABLE IF NOT EXISTS blog_series_description (".
+       "name varchar(50) NOT NULL,".
+       "description varchar (500),".
+       "PRIMARY KEY (name)".
        ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
 
   foreach(@queries){
