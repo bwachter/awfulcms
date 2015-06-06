@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -z "$1" ]; then
+    echo "Sync host/dir not given, using default"
+    SYNCDIR=webdev.serf.lart.info:/home/bwachter/awfulcms
+else
+    SYNCDIR=$1
+fi
+
+rsync -avzp --delete --exclude '.git' --exclude 'gallery/' . $SYNCDIR
