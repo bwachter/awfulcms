@@ -21,6 +21,7 @@ There are no configuration parameters outside this module.
 #TODO: LibCLI as CLI<>Module-wrapper; move as much code as possible to ModBlog
 
 use Term::ReadLine;
+use Term::ReadKey;
 use File::Temp;
 use AwfulCMS::Config;
 use AwfulCMS::LibFS qw(openreadclose);
@@ -28,6 +29,7 @@ use AwfulCMS::Page;
 use AwfulCMS::SynBasic;
 use AwfulCMS::ModBlog::BackendMySQL;
 use Text::ASCIITable;
+use POSIX 'strftime';
 require DBI;
 use strict;
 
@@ -293,6 +295,14 @@ sub listArticles{
   my $t=Text::ASCIITable->new({ headingText => "articles on page $page/$pages" });
   $t->setCols('ID', 'Subject', 'Created', 'Changed', 'Tease');
 
+  # created / changed / tease / 4-digit ID and additional padding
+  # TODO: this will fail for longer IDs, but we need to set the col width
+  #       before getting the data
+  my $content_size = 22 + 22 + 8 + 5 + 5;
+  my ($wchar, $hchar, $wpixels, $hpixels) = GetTerminalSize();
+
+  $t->setColWidth('Subject', $wchar - $content_size);
+
   $backend->getArticleList({
                             pid=>0,
                             limit=>$numarticles,
@@ -300,7 +310,7 @@ sub listArticles{
                             offset=>$offset,
                             cb_format=>sub{
                               my $d=shift;
-                              my $dt=localtime($d->{created});
+                              my $dt=strftime '%Y-%m-%d %H:%M:%S', localtime($d->{created});
                               $t->addRow($d->{id}, $d->{subject},
                                          $dt, $d->{changed},
                                          $d->{tease});},

@@ -1,6 +1,6 @@
 %define _name AwfulCMS
 Name: perl-%{_name}
-Version: 0.1.5
+Version: 0.1.8
 Release: 1
 Summary: An awful CMS
 Group: Development/Libraries
@@ -13,7 +13,7 @@ BuildRequires: perl-macros
 BuildRequires: perl(Module::Build)
 BuildRequires: perl(Test::More)
 # TODO: autogenerate those from the manifest
-%define awfulcms_requires perl(CGI) perl(Date::Format) perl(File::Path) perl(File::Temp) perl(File::Type) perl(GD) perl(Pod::Simple::HTML) perl(Sys::Hostname) perl(Time::HiRes) perl(URI::Escape) perl(Text::Markdown) perl(Tie::RegexpHash) perl(Text::ASCIITable)
+%define awfulcms_requires perl(CGI) perl(Date::Format) perl(File::Path) perl(File::Temp) perl(File::Type) perl(GD) perl(Pod::Simple::HTML) perl(Sys::Hostname) perl(Time::HiRes) perl(URI::Escape) perl(Text::Markdown) perl(Tie::RegexpHash) perl(Text::ASCIITable) perl(Term::ReadKey)
 BuildRequires: %{awfulcms_requires}
 # Recommendations:
 # included to make sure testcases pass
