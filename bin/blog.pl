@@ -27,6 +27,7 @@ use AwfulCMS::LibFS qw(openreadclose);
 use AwfulCMS::Page;
 use AwfulCMS::SynBasic;
 use AwfulCMS::ModBlog::BackendMySQL;
+use Text::ASCIITable;
 require DBI;
 use strict;
 
@@ -267,17 +268,45 @@ sub editArticle{
 
 sub listArticles{
   my $opt=shift;
+  my $page=shift;
 
   my $draft=0;
-  $draft=1 if ($opt eq "d");
+
+  if ($opt eq "d"){
+    $draft=1 if ($opt eq "d");
+    $page=1 unless ($page =~ /[0-9+]/);
+  } elsif ($opt =~ /[0-9]+/){
+    $page=$opt;
+  } else {
+    $page=1;
+  }
+
+  my $numarticles=20;
+
+  my ($cnt)=$backend->getArticleCount(0);
+  my $pages=int($cnt/$numarticles);
+  $pages++ unless ($cnt=~/0$/);
+
+  $page=1 if ($page<=0);
+  my $offset=($page-1)*$numarticles;
+
+  my $t=Text::ASCIITable->new({ headingText => "articles on page $page/$pages" });
+  $t->setCols('ID', 'Subject', 'Created', 'Changed', 'Tease');
 
   $backend->getArticleList({
                             pid=>0,
-                            limit=>50,
+                            limit=>$numarticles,
                             draft=>$draft,
-                            offset=>0,
-                            cb_format=>sub{my $d=shift; print $d->{id}."\t".$d->{subject}."\n";},
+                            offset=>$offset,
+                            cb_format=>sub{
+                              my $d=shift;
+                              my $dt=localtime($d->{created});
+                              $t->addRow($d->{id}, $d->{subject},
+                                         $dt, $d->{changed},
+                                         $d->{tease});},
                            });
+
+  print $OUT $t;
 }
 
 sub printArticle{
@@ -323,6 +352,22 @@ END
   pingURLs(\%newarticle);
 }
 
+sub help{
+  print $OUT <<END;
+d|delete <article-id>     delete the article with the given ID
+e|edit   <article-id>     open the article with the given ID in the editor
+h|help                    show this help text
+l|list                    list all articles
+  [d|draft]               list all drafts
+  [s|series]              list all configured series
+  [<page>]                list the given page (1-n, default 1)
+n|new                     prepare a new article and open in the editor
+p|print  <article-id>     print the article with the given ID
+q|quit                    exit this program
+u|update                  update/create SQL databases
+END
+}
+
 sub main{
   my $term = new Term::ReadLine 'AwfulCMS Blog';
   my $prompt = "> ";
@@ -334,20 +379,33 @@ sub main{
   while ( defined ($_ = $term->readline($prompt)) ) {
     my @cmd=split(/ /, $_);
 
-    if ($cmd[0] eq "d"){
-      next if ($cmd[1] eq "");
+    if ($cmd[0] eq "d" || $cmd[0] eq "delete"){
+      if ($cmd[1] eq ""){
+        print $OUT "Missing article ID. See `help' for details.";
+        next;
+      }
       $backend->deleteArticle($cmd[1]);
-    } elsif ($cmd[0] eq "e"){
-      next if ($cmd[1] eq "");
+    } elsif ($cmd[0] eq "e" || $cmd[0] eq "edit"){
+      if ($cmd[1] eq ""){
+        print $OUT "Missing article ID. See `help' for details.";
+        next;
+      }
       editArticle($cmd[1]);
-    } elsif ($cmd[0] eq "l"){
+    } elsif($cmd[0] eq "h" || $cmd[0] eq "help"){
+      help();
+    } elsif ($cmd[0] eq "l" || $cmd[0] eq "list"){
       listArticles($cmd[1]);
-    } elsif ($cmd[0] eq "p"){
-      next if ($cmd[1] eq "");
+    } elsif ($cmd[0] eq "p" || $cmd[0] eq "print"){
+      if ($cmd[1] eq ""){
+        print $OUT "Missing article ID. See `help' for details.";
+        next;
+      }
       printArticle($cmd[1]);
-    } elsif ($cmd[0] eq "n"){
+    } elsif ($cmd[0] eq "n" || $cmd[0] eq "new"){
       newArticle();
-    } elsif ($cmd[0] eq "q"){
+    } elsif ($cmd[0] eq "u" || $cmd[0] eq "update"){
+      $backend->createdb();
+    } elsif ($cmd[0] eq "q" || $cmd[0] eq "quit"){
       exit(0);
     } else {
       print "Unknown command `$cmd[0]'\n" unless ($cmd[0] eq "");
