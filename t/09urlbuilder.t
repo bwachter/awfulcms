@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 
 use_ok('AwfulCMS::UrlBuilder');
+use_ok('AwfulCMS::SynBasic');
 
 my $dir="t/synbasic.tests";
 

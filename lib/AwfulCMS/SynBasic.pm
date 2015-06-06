@@ -52,11 +52,19 @@ sub format {
 
   # .*? -- non-greedy matching...
   # h2-6
+  # TODO: headers get replaced insife -[ ]- (<pre></pre>) as well
   $string=~s{={6}(.*?)={6}((?: \w*="\w*")*)}{<h6$2>$1</h6>}gs;
   $string=~s{={5}(.*?)={5}((?: \w*="\w*")*)}{<h5$2>$1</h5>}gs;
   $string=~s{={4}(.*?)={4}((?: \w*="\w*")*)}{<h4$2>$1</h4>}gs;
   $string=~s{={3}(.*?)={3}((?: \w*="\w*")*)}{<h3$2>$1</h3>}gs;
+
   $string=~s{={2}(.*?)={2}((?: \w*="\w*")*)}{<h2$2>$1</h2>}gs;
+  # something like this should solve the pre-thing
+  #$string=~s{(^-\[.*?)={2}(.*?)={2}((?: \w*="\w*")*)}{$1<h2$3>$2</h2>}gs;
+  # Testcase for this problem would be input:
+  #-[foobar ==bar baz== foo]-
+  # output:
+  #<pre>foobar ==bar baz== foo</pre>
 
   # org-mode headings
   #FIXME, support for attributes
