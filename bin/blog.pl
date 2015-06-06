@@ -292,7 +292,7 @@ sub listArticles{
   $page=1 if ($page<=0);
   my $offset=($page-1)*$numarticles;
 
-  my $t=Text::ASCIITable->new({ headingText => "articles on page $page/$pages" });
+  my $t=Text::ASCIITable->new({ headingText => "$cnt articles on page $page/$pages" });
   $t->setCols('ID', 'Subject', 'Created', 'Changed', 'Tease');
 
   # created / changed / tease / 4-digit ID and additional padding
