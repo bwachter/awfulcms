@@ -281,8 +281,8 @@ sub status {
   $s->p("$s->{sdesc}->{$status}->{long}");
   $s->p("Additional information: <pre>$description</pre>");
   $s->out();
-  exit;
-  #die "Foo";
+
+  exit if ($s->{mode} ne "CLI");
 }
 
 =item navwidget(%options)
