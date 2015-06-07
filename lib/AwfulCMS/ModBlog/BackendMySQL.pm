@@ -319,7 +319,7 @@ sub deleteArticle{
 }
 
 # TODO: Fix error handling
-sub updateOrEditArticle{
+sub createOrEditArticle{
   my $s=shift;
   my $args=shift;
   my $cb=shift;

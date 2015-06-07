@@ -259,7 +259,7 @@ sub editArticle{
       return;
     }
     my %newhash=(%$d, %newarticle);
-    print $backend->updateOrEditArticle(\%newhash)."\n";
+    print $backend->createOrEditArticle(\%newhash)."\n";
     $backend->setTags($d->{id}, $d->{tags}, $newhash{tags});
     pingURLs(\%newhash);
     unlink $tmp;
@@ -356,7 +356,7 @@ END
     print "Skipping article due to empty body\n";
     return;
   }
-  print $backend->updateOrEditArticle(\%newarticle)."\n";
+  print $backend->createOrEditArticle(\%newarticle)."\n";
   $backend->setTags($newarticle{id}, $newarticle{tags});
   unlink $tmp;
   pingURLs(\%newarticle);
