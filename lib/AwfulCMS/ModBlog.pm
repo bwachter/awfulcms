@@ -409,7 +409,7 @@ sub displayArticle{
 
   $draft=1 if (int($p->{url}->param("draft")));
 
-  my $d=$s->{backend}->getArticle($article, $draft);
+  my $d=$s->{backend}->getArticle({id=>$article, draft=>$draft});
   $p->status(404, "No such article") if (!%$d);
 
   $p->title($s->{mc}->{'title-prefix'}." - ".$d->{subject});

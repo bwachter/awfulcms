@@ -249,7 +249,7 @@ sub getArticle{
 
   $o->{draft}=0 unless (defined $o->{draft});
 
-  my $q=$dbh->prepare("select * from blog where id=? and draft=?") ||
+  my $q=$dbh->prepare("select * from blog where id=? and draft like ?") ||
     $s->err("Unable to prepare query: $!", $cb);
   $q->execute($o->{id}, $o->{draft});
 

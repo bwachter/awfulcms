@@ -246,7 +246,7 @@ sub editArticle{
   my @result;
   my %newarticle;
 
-  my $d=$backend->getArticle($ID);
+  my $d=$backend->getArticle({id=>$ID, draft=>'%'});
   if (defined $d){
     my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
     @{$d->{tags}}=$backend->getTagsForArticle($d->{id}, \&cb_die);
@@ -321,7 +321,7 @@ sub listArticles{
 
 sub printArticle{
   my $ID=shift;
-  my $d=$backend->getArticle($ID);
+  my $d=$backend->getArticle({id=>$ID, draft=>'%'});
   if (defined $d){
     @{$d->{tags}}=$backend->getTagsForArticle($d->{id}, \&cb_die);
     print $OUT formatArticle($d)
