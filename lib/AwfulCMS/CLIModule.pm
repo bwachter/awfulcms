@@ -12,6 +12,7 @@ Generic functionality for CLI modules
 
 use strict;
 use AwfulCMS::Config;
+use Term::ReadLine;
 
 =item new
 
@@ -174,6 +175,25 @@ sub get_config{
   $s->{dbc}=$dbc->{$dbhandle};
 }
 
+sub mainloop{
+  my $s=shift;
+
+  my $term=new Term::ReadLine;
+  my $prompt="> ";
+
+  $s->{OUT} = $term->OUT || \*STDOUT;
+
+  while (defined ($_ = $term->readline($prompt))){
+    my @cmd=split(/ /, $_);
+
+    # command handling
+    # TODO: provide generic option parser in addition to just
+    #       calling this method as well
+    $s->handleCommand(\@cmd);
+
+    $term->addhistory($_) if /\S/;
+  }
+}
 
 =back
 
