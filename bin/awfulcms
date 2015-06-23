@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+
+=head1 awfulcms
+
+A generic wrapper for modules providing a CLIModule implementation.
+
+=cut
+
+use strict;
+
+my $module;
+my $instance;
+
+if ($#ARGV < 0 || $#ARGV > 1){
+  print <<END;
+Usage: $0 ModuleName[/instance]
+       $0 ModuleName [instance]
+
+The module name and instance both need proper capitalization. This
+CLI tool only works for modules providing a CLIModule implementation.
+
+The name given should be for the main module, without the AwfulCMS::
+prefix: Specifying `ModBlog' will try to load AwfulCMS::ModBlog::CLI.
+
+END
+    exit -1;
+} elsif ($#ARGV == 0){
+  ($module, $instance)=split('/', $ARGV[0]);
+} else {
+  $module=$ARGV[0];
+  $instance=$ARGV[1];
+}
+
+$module=~s/(.*)/AwfulCMS::\1::CLI/;
+
+eval "require $module";
+if ($@){
+  print "Requiring '$module' failed: $@\n";
+  exit -1;
+}
+
+my $cli=new $module({instance => $instance});
+$cli->mainloop();
