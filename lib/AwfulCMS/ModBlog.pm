@@ -1,4 +1,5 @@
 package AwfulCMS::ModBlog;
+use parent 'AwfulCMS::Module';
 
 =head1 AwfulCMS::ModBlog
 
@@ -88,22 +89,6 @@ sub new{
 
   bless $s;
   $s;
-}
-
-# callback to get the db handle just before a call is made
-# the initial module setup does not contain db handles, they're
-# only set when actually needed
-sub cb_dbh{
-  my $s=shift;
-  $s->{page}->{dbh};
-}
-
-sub cb_error{
-  my $s=shift;
-  my $e=shift;
-  my $p=$s->{page};
-
-  $p->status(400, $e);
 }
 
 sub defaultHeader{
