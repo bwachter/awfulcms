@@ -178,7 +178,7 @@ sub get_config{
 sub mainloop{
   my $s=shift;
 
-  my $term=new Term::ReadLine;
+  my $term=new Term::ReadLine 'AwfulCMS CLI';
   my $prompt="> ";
 
   $s->{OUT} = $term->OUT || \*STDOUT;
