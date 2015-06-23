@@ -92,6 +92,8 @@ sub thumbnail {
   open(IM, ">$outfile")||return;
   print IM $image||return;
   close(IM);
+  # TODO: make mode configurable
+  chmod(0644, $outfile);
   return $outfile;
 }
 
