@@ -16,6 +16,7 @@ use strict;
 use Term::ReadKey;
 use POSIX 'strftime';
 use Text::ASCIITable;
+use File::Temp;
 use AwfulCMS::LibFS qw(openreadclose);
 use AwfulCMS::ModBlog::BackendMySQL;
 use AwfulCMS::SynBasic;
@@ -55,6 +56,10 @@ sub new{
   $s->{backend}->{cb_err}=sub{my $e=shift;$s->cb_die($e)};
 
   $s->connect_db();
+
+  print "Trackbacks not working, install Net::Trackback::Client and Net::Trackback::Ping\n" if ($s->{features}->{trackbacks}->{available} == 0);
+  print "Pingbacks not working, install RPC::XML::Client\n" if ($s->{features}->{pingbacks}->{available} == 0);
+  print {$s->{OUT}} "Using blog at $s->{mc}->{baselink}\n";
 
   $s;
 }
