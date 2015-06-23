@@ -1,4 +1,6 @@
 package AwfulCMS::ModBlog::BackendMySQL;
+use parent 'AwfulCMS::Backend';
+use DBI;
 
 =head1 AwfulCMS::ModBlog::BackendMySQL
 
@@ -17,32 +19,6 @@ sub new{
 
   bless $s;
   $s;
-}
-
-# execute callback for receiving dbh, if set
-sub getDbh{
-  my $s=shift;
-
-  if (defined $s->{cb_dbh} and ref $s->{cb_dbh} eq 'CODE'){
-    $s->{dbh}=$s->{cb_dbh}->();
-  }
-
-  $s->{dbh};
-}
-
-sub err{
-  my $s=shift;
-  my $e=shift;
-  my $cb=shift;
-
-  if (defined $cb and ref $cb eq 'CODE'){
-    &$cb($e);
-  } elsif (defined $s->{cb_err} and ref $s->{cb_err} eq 'CODE'){
-    $s->{cb_err}->($e);
-  } else {
-    print STDERR "Warning: Using fallback error handler\n";
-    die $e;
-  }
 }
 
 =item getCommentCnt($id)
