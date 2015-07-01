@@ -532,15 +532,70 @@ sub setHtmlHeader {
 
 =item addCookie($cookie)
 
-TODO
+Set a cookie for this page. It takes either a cookie, or a hash as parameter.
+
+If a string is given expiry is set to 1 year, if the string is not a key/value
+pair separated by '=' the cookie will have an empty value. The cookie value
+must be URL encoded.
+
+A hash as argument may contain the following members:
+
+C<name> for the cookie name. If unset this method will just return without doing anything
+
+C<value> for the cookie value. It'll get URL encoded before setting
+
+C<expire> for the expiry date, as timestamp. It'll be converted using gmtime()
+
+C<domain> for the domain
+
+C<path> for the path, which will get URL encoded
+
+C<secure> for a 'secure' cookie (only available via HTTPS)
+
+C<http_only> for a cookie only sent via HTTP (not available via JavaScript)
 
 =cut
 
 sub addCookie {
   my $s=shift;
-  my $cookie=shift;
-  my $expire=gmtime(time()+365*24*3600)." GMT";
-  push (@{$s->{cookies}}, "$cookie; expires=$expire");
+  my $o=shift;
+  my $cookie;
+
+  my $default_expire=gmtime(time()+365*24*3600)." GMT";
+  if (ref $o eq 'HASH'){
+    return unless (defined $o->{name});
+    $o->{name}=~s/\s*//g;
+    $o->{value}=~s/([^A-Za-z0-9\.\/])/sprintf("%%%02X", ord($1))/seg;
+
+    if (defined $o->{expire}){
+      my $expire=gmtime($o->{expire})." GMT";
+      $cookie="$o->{name}=$o->{value}; expires=$expire";
+    } else {
+      $cookie="$o->{name}=$o->{value}; expires=$default_expire";
+    }
+
+    if (defined $o->{domain}){
+      $o->{domain}=~s/\s*//g;
+      $cookie.="; domain=$o->{domain}";
+    }
+
+    if (defined $o->{path}){
+      $o->{path}=~s/([^A-Za-z0-9\.\/])/sprintf("%%%02X", ord($1))/seg;
+      $cookie.="; path=$o->{path}";
+    }
+
+    $cookie.="; secure" if (defined $o->{secure});
+    $cookie.="; HttpOnly" if (defined $o->{http_only});
+  } else {
+    if ($o=~/=/){
+      $cookie="$o; expires=$default_expire";
+    } else {
+      $o=~s/\s*//g;
+      $cookie="$o=; expires=$default_expire";
+    }
+  }
+
+  push (@{$s->{cookies}}, $cookie);
 }
 
 =item tag()
