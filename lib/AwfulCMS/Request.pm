@@ -39,6 +39,9 @@ most significant first.
 
 Cookies with empty values are ignored.
 
+Cookies with urldecoded values are stored in 'cookies', without decoding
+in 'raw_cookies'
+
 =cut
 
 sub parseCookies{
@@ -49,6 +52,8 @@ sub parseCookies{
     foreach(@cookies){
       my ($key, $value)=split(/=/);
       $key=~s/\s*//g;
+      push (@{$s->{raw_cookies}->{$key}}, $value) if ($value ne "");
+      $value=~s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
       push (@{$s->{cookies}->{$key}}, $value) if ($value ne "");
     }
   }
