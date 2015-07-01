@@ -146,8 +146,7 @@ sub publish {
   #fixme, check for https
   $url=$s->{rq}->{host}."/$url";
   $url=~s,/+,/,g;
-  $url=~s/([^A-Za-z0-9\.])/sprintf("%%%02X", ord($1))/seg;
-  $url=~s,%2F,/,g;
+  $url=~s/([^A-Za-z0-9\.\/])/sprintf("%%%02X", ord($1))/seg;
   "http://$url";
 }
 
