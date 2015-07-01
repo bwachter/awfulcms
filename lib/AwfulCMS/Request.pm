@@ -31,6 +31,35 @@ sub new {
   $s;
 }
 
+=item parseCookies()
+
+Parse cookies in the request, and provide them in a hash, cookie values
+in arrays. Cookie values remain in the order provided by the client,
+most significant first.
+
+Cookies with empty values are ignored.
+
+=cut
+
+sub parseCookies{
+  my $s=shift;
+
+  if (defined $ENV{'HTTP_COOKIE'}){
+    my @cookies=split(';', $ENV{'HTTP_COOKIE'});
+    foreach(@cookies){
+      my ($key, $value)=split(/=/);
+      $key=~s/\s*//g;
+      push (@{$s->{cookies}->{$key}}, $value) if ($value ne "");
+    }
+  }
+}
+
+=item p()
+
+Return an entry from the environment
+
+=cut
+
 sub p {
   my $s=shift;
   my $param=shift;
@@ -38,12 +67,19 @@ sub p {
   return $ENV{"$param"};
 }
 
+=item http()
+
+Return an entry from the environment, upcasing the argument and prefixing
+it with HTTP_
+
+=cut
+
 sub http {
   my $s=shift;
   my $param=shift;
 
   $param=~s/-/_/g;
-  return p("HTTP_\U$param\E");
+  return $s->p("HTTP_\U$param\E");
 }
 
 1;
