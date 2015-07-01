@@ -17,17 +17,57 @@ sub new {
   my $s={};
   bless $s;
 
+  # Those variables are based on what lighttpd sets
+  # TODO: Check with (and enable support for) other webservers
+  # This piece should be the only webserver-specific code
+
+  # information about the remote side
   $s->{remote_host}=$ENV{'REMOTE_HOST'} || $ENV{'REMOTE_ADDR'} || 'localhost';
   $s->{remote_ip}=$ENV{'REMOTE_ADDR'} || '127.0.0.2';
-  $s->{ssl}=1 if ($ENV{'HTTPS'} eq "on");
-  $s->{host}=$s->http('x_forwarded_host') || $s->http('host') || $s->p('SERVER_NAME') || 'localhost';
+  $s->{remote_port}=$ENV{'REMOTE_PORT'} || '0';
+  $s->{user_agent}=$ENV{'HTTP_USER_AGENT'} || "Unknown";
+
+  # information about the server side
+  $s->{host}=$ENV{'HTTP_X_FORWARDED_HOST'} || $ENV{'HTTP_HOST'} || $ENV{'SERVER_NAME'} || 'localhost';
   $s->{host}=~s/:\d+$//; #remove port number
+  $s->{port}=$ENV{'SERVER_PORT'};
+  $s->{ip}=$ENV{'SERVER_ADDR'};
+  $s->{protocol}=$ENV{'SERVER_PROTOCOL'};
+  $s->{cgi}=$ENV{'GATEWAY_INTERFACE'};
+  $s->{software}=$ENV{'SERVER_SOFTWARE'};
+
+  # information about the request
+  $s->{ssl}=1 if ($ENV{'HTTPS'} eq "on");
+  $s->{referer}=$ENV{'HTTP_REFERER'} || '';
+  $s->{method}=$ENV{'REQUEST_METHOD'};
+  $s->{length}=$ENV{'CONTENT_LENGTH'};
+
+  # TODO: Unused request variables:
+  # 'HTTP_ACCEPT_ENCODING' => 'gzip, deflate',
+  # 'HTTP_CONNECTION' => 'keep-alive',
+  # 'HTTP_ACCEPT' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  # 'REDIRECT_STATUS' => '200',
+  # 'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.7,de-DE;q=0.3',
+  # 'HTTP_AUTHORIZATION' => 'Basic Zm9vOmJhcg==',
+
+  # information about the called file
+  $s->{docroot}=$ENV{'DOCUMENT_ROOT'};
+  # script relative to docroot; may be nonsensical
+  $s->{scriptrel}=$ENV{'SCRIPT_NAME'};
+  # script path in the filesystem
+  # docroot/scriptrel _should_ be same as scriptabs, though in some cases
+  # (blog) an additional directory gets added to SCRIPT_NAME for some reason
+  $s->{scriptabs}=$ENV{'SCRIPT_FILENAME'};
+
   $s->{fileabs}=$ENV{'REQUEST_URI'}; # have a look at the other stuff in CGI.pm
   $s->{fileabs}=~s/^\///;
   $s->{fileabs}=~s/%20/ /;
   ($s->{dir})=$s->{fileabs}=~m/(.*)\/(.*)/;
   $s->{dir}="." if ($s->{dir} eq "");
   ($s->{file})=$s->{fileabs}=~m/.*\/(.*)/;
+
+  $s->parseCookies();
+
   $s;
 }
 
