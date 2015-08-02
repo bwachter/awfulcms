@@ -17,6 +17,7 @@ use Term::ReadKey;
 use POSIX 'strftime';
 use Text::ASCIITable;
 use File::Temp;
+use File::Which;
 use AwfulCMS::LibFS qw(openreadclose);
 use AwfulCMS::ModBlog::BackendMySQL;
 use AwfulCMS::SynBasic;
@@ -210,7 +211,7 @@ Markup: $markup
 Tags:
 
 END
-  system("vi $tmp");
+  $s->openEditor($tmp);
   openreadclose($tmp, \@result);
   $s->parseArticle(\@result, \%newarticle);
   if ($newarticle{body} eq ""){
@@ -234,7 +235,7 @@ sub editArticle{
     my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
     @{$d->{tags}}=$s->{backend}->getTagsForArticle($d->{id});
     print $tmp $s->formatArticle($d);
-    system("vi $tmp");
+    $s->openEditor($tmp);
     openreadclose($tmp, \@result);
     $s->parseArticle(\@result, \%newarticle);
     if ($newarticle{body} eq ""){
@@ -261,6 +262,57 @@ sub printArticle{
   } else {
     print {$s->{OUT}} "No such article\n";
   }
+}
+
+sub openEditor{
+  my $s=shift;
+  my $file=shift;
+  my $editor="vi";
+
+  if ($ENV{'EDITOR'}){
+    if (defined which($ENV{'EDITOR'})){
+      $editor=$ENV{'EDITOR'};
+    }
+  }
+  system("$editor $file");
+}
+
+sub createOrEditSeries{
+  my $s=shift;
+  my $series;
+  my $name=shift;
+  my @result;
+
+  $series=$s->{backend}->getSeries($name);
+  $series->{markup}=$s->{mc}->{markup}||"Basic" unless ($series->{markup} ne "");
+  $series->{name}=$name unless ($series->{name} ne "");
+
+  print $series->{name};
+  print $series->{description};
+
+  my $tmp = new File::Temp( UNLINK => 0, SUFFIX => '.dat' );
+
+  print $tmp "Markup: $series->{markup}\n\n$series->{description}\n";
+
+  $s->openEditor($tmp);
+  openreadclose($tmp, \@result);
+
+  $series->{markup}=shift @result;
+  if ($series->{markup} =~ /^Markup: .*/){
+    $series->{markup} =~s/^Markup: *//;
+  } else {
+    print {$s->{OUT}} "No markup specified\n";
+  }
+  $series->{description}=join(" ", @result);
+  $series->{description}=~s/^\s+//;
+  $series->{description}=~s/\s+$//;
+  $series->{description}=~s/\n+/ /;
+  $series->{markup}=~s/\n+/ /;
+  #TODO: properly bail out on errors; don't add the series entry if the description is empty
+  # add handler 'series' to modblog to list all series, and to list all articles in one series, displaying the header
+
+  print $s->{backend}->createOrEditSeries($series)."\n";
+  unlink $tmp;
 }
 
 sub pingURLs{
