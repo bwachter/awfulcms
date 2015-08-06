@@ -45,6 +45,8 @@ sub cb_blockcode {
     my $lm = Syntax::SourceHighlight::LangMap->new();
     my $map = $lm->getMappedFileName($lang);
 
+    $text =~ s/^\s*//;
+    $text =~ s/\s*$//;
     $text = hoedown_escape_html($text);
 
     if ($map){
