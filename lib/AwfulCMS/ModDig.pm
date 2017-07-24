@@ -73,7 +73,8 @@ sub defaultpage(){
                 '08' => "SIG",
                 '09' => "SOA",
                 '10' => "SRV",
-                '11' => "TXT"
+                '11' => "TXT",
+                '12' => "CAA"
                );
 
   my %digOptions=(
