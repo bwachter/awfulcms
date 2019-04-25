@@ -329,6 +329,7 @@ sub hoedown_html_cb_image {
     my ($link, $title, $alt) = @_;
 
     $alt = "Who needs alt texts anyway?" if (!defined $alt);
+    $title = "" if (!defined $title);
 
     return if ($link eq "");
 
