@@ -14,6 +14,7 @@ use constant {
   HOEDOWN_TABLE_ALIGN_RIGHT => 2,
   HOEDOWN_TABLE_ALIGN_CENTER => 3,
   HOEDOWN_AUTOLINK_EMAIL => 2,
+  HOEDOWN_LIST_ORDERED => (1 << 0),
 };
 
 sub new {
