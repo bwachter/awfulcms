@@ -20,7 +20,7 @@ sub new {
 
   eval "require AwfulCMS::Syn$o";
   if ($@){
-    print "bad things. $@";
+    print STDERR "Bad things: $@";
   } else {
     $s->{formatter}="AwfulCMS::Syn$o"->new();
   }
