@@ -128,9 +128,10 @@ sub buildurl {
 sub myurl {
   my $s=shift;
   my $url;
+  my $protocol="https";
+  $protocol = "https" if ($ENV{'HTTPS'});
 
-  #fixme, check for https
-  $url="http://".$s->{rq}->{host}."/".$s->{rq}->{dir}."/".$s->{page}->{rq}->{file}
+  $url="$protocol://".$s->{rq}->{host}."/".$s->{rq}->{dir}."/".$s->{page}->{rq}->{file}
 }
 sub cgihandler {
   my $s=shift;
@@ -141,13 +142,14 @@ sub cgihandler {
 sub publish {
   my $s=shift;
   my $url=shift;
+  my $protocol="https";
+  $protocol = "https" if ($ENV{'HTTPS'});
 
   $url=$s->buildurl($url) if (ref $url eq "HASH");
-  #fixme, check for https
   $url=$s->{rq}->{host}."/$url";
   $url=~s,/+,/,g;
   $url=~s/([^A-Za-z0-9\.\/])/sprintf("%%%02X", ord($1))/seg;
-  "http://$url";
+  "$protocol://$url";
 }
 
 1;
