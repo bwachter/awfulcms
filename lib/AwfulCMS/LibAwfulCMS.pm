@@ -278,8 +278,18 @@ sub doRequest{
     $o->{dbname}=$dbc->{$handle}->{$snum}->{dbname}||$dbc->{$handle}->{dbname};
     $o->{user}=$dbc->{$handle}->{$snum}->{user}||$dbc->{$handle}->{user}||"";
     $o->{password}=$dbc->{$handle}->{$snum}->{password}||$dbc->{$handle}->{password}||"";
+    $o->{host}=$dbc->{$handle}->{$snum}->{host}||$dbc->{$handle}->{host}||"";
+    $o->{port}=$dbc->{$handle}->{$snum}->{port}||$dbc->{$handle}->{port}||"";
 
-    $p->dbhandle({dsn=>"dbi:$o->{type}:dbname=$o->{dbname}", user=>"$o->{user}",
+    my $dsn;
+    $dsn = "dbi:$o->{type}:dbname=$o->{dbname}";
+
+    $dsn .= ";host=$o->{host}"
+      if ($o->{host} ne "");
+    $dsn .= ";port=$o->{port}"
+      if ($o->{port} ne "");
+
+    $p->dbhandle({dsn=>"$dsn", user=>"$o->{user}",
           password=>"$o->{password}", attr=>{RaiseError=>0,AutoCommit=>1},
          handle=>$handle});
   }
