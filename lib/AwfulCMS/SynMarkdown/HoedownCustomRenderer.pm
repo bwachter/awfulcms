@@ -188,11 +188,11 @@ sub hoedown_html_cb_table_cell {
         $r = "<td";
     }
 
-    if ($flags & HOEDOWN_TABLE_ALIGNMASK == HOEDOWN_TABLE_ALIGN_CENTER){
+    if (($flags & HOEDOWN_TABLE_ALIGNMASK) == HOEDOWN_TABLE_ALIGN_CENTER){
         $r .= " style=\"text-align: center\">";
-    } elsif ($flags & HOEDOWN_TABLE_ALIGNMASK == HOEDOWN_TABLE_ALIGN_LEFT){
+    } elsif (($flags & HOEDOWN_TABLE_ALIGNMASK) == HOEDOWN_TABLE_ALIGN_LEFT){
         $r .= " style=\"text-align: left\">";
-    } elsif ($flags & HOEDOWN_TABLE_ALIGNMASK == HOEDOWN_TABLE_ALIGN_RIGHT){
+    } elsif (($flags & HOEDOWN_TABLE_ALIGNMASK) == HOEDOWN_TABLE_ALIGN_RIGHT){
         $r .= " style=\"text-align: right\">";
     } else {
         $r .= ">";
