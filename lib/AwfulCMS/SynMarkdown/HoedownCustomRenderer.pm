@@ -5,6 +5,17 @@ use Exporter 'import';
 our @EXPORT_OK=qw(hoedown_escape_href hoedown_escape_html);
 use Text::Markdown::Hoedown;
 
+# Those values are taken from hoedown C source
+# In earlier versions those were exported by the perl bindings
+use constant {
+  HOEDOWN_TABLE_ALIGNMASK => 3,
+  HOEDOWN_TABLE_HEADER => 4,
+  HOEDOWN_TABLE_ALIGN_LEFT => 1,
+  HOEDOWN_TABLE_ALIGN_RIGHT => 2,
+  HOEDOWN_TABLE_ALIGN_CENTER => 3,
+  HOEDOWN_AUTOLINK_EMAIL => 2,
+};
+
 sub new {
     shift;
     my $opts=shift;
