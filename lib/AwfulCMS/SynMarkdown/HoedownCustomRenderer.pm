@@ -328,6 +328,8 @@ sub hoedown_html_cb_quote {
 sub hoedown_html_cb_image {
     my ($link, $title, $alt) = @_;
 
+    $alt = "Who needs alt texts anyway?" if (!defined $alt);
+
     return if ($link eq "");
 
     my $r = "<img src=\"";
@@ -348,6 +350,8 @@ sub hoedown_html_cb_linebreak {
 
 sub hoedown_html_cb_link {
     my ($content, $link, $title) = @_;
+
+    $title = "" if (!defined $title);
 
     my $r = "<a href=\"";
     $r .= hoedown_escape_html($link);
