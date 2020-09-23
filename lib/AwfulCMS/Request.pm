@@ -42,13 +42,17 @@ sub new {
   $s->{method}=$ENV{'REQUEST_METHOD'};
   $s->{length}=$ENV{'CONTENT_LENGTH'};
 
+  # raw header, needs to be parsed later
+  # 'HTTP_AUTHORIZATION' => 'Basic Zm9vOmJhcg==',
+  $s->{authorization}=$ENV{'HTTP_AUTHORIZATION'};
+  $s->{user}=$ENV{'REMOTE_USER'};
   # TODO: Unused request variables:
   # 'HTTP_ACCEPT_ENCODING' => 'gzip, deflate',
   # 'HTTP_CONNECTION' => 'keep-alive',
   # 'HTTP_ACCEPT' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   # 'REDIRECT_STATUS' => '200',
   # 'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.7,de-DE;q=0.3',
-  # 'HTTP_AUTHORIZATION' => 'Basic Zm9vOmJhcg==',
+
 
   # information about the called file
   $s->{docroot}=$ENV{'DOCUMENT_ROOT'};
