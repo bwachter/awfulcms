@@ -41,8 +41,8 @@ my ($p, # the page object
     $module, # the module name
     $module_short, # the module shortname (i.e. without AwfulCMS::)
     $request, # the name of the request to pass through
-    $role, # the current role
     $roles,
+    $users, # configured users
     $starttime);
 
 my $r={}; # the hash reference for the module configuration / request handlers
@@ -69,6 +69,7 @@ sub init{
   $p->status(400, "Require Tie::RegexpHash failed ($@)") if ($@);
 
   $roles=$c->getValues("roles");
+  $users=$c->getValues("users");
 
   $p->{hostname}=$c->getValue("main", "hostname") if ($c->getValue("main", "hostname"));
   $p->{starttime}=$starttime;
@@ -236,7 +237,58 @@ sub doRequest{
       unless ($p->{rq}->{ssl}==1);
   }
 
+  # this handles trust in proxy auth, which is easiest to set up
+  # additionally we could check basic auth header ourselves. Adding
+  # any other auth methods probably is not worth the effort, given
+  # how easily modern web servers can proxy authentication
+  if ($r->{mc}->{'allow-remote-user'}==1 &&
+      $p->{rq}->{user} ne ""){
+    $p->{rq}->{authorized}=1;
+  } else {
+    $p->{rq}->{authorized}=0;
+  }
+
+  # if proxy authorization didn't work and an auth header exists we
+  # can try to authenticate using that ourselves. TODO
+  if ($p->{rq}->{authorized}==0 &&
+      $p->{rq}->{authorization} ne ""){
+    $p->{rq}->{authorized}=0;
+  }
+
+  # set up sane default roles. Probably there should be an error somewhere
+  # if we don't have roles / preload with default roles
+  if ($r->{mc}->{'unauthorized-role'} ne ""){
+    $p->{rq}->{'effective-role'}=$r->{mc}->{'unauthorized-role'};
+    $p->{rq}->{'max-role'}=$r->{mc}->{'unauthorized-role'};
+  }
+
+  if ($p->{rq}->{authorized}==1){
+    # set sane initial defaults for authorized users
+    if ($r->{mc}->{'authorized-role'} ne ""){
+      $p->{rq}->{'effective-role'}=$r->{mc}->{'authorized-role'};
+      $p->{rq}->{'max-role'}=$r->{mc}->{'authorized-role'};
+    }
+
+    if ($c->getValue("users", $p->{rq}->{user})){
+      $p->{rq}->{'max-role'}=$c->getValue("users", $p->{rq}->{user});
+      # this marks if the role comes as the default settings, or if it's
+      # configured for the user
+      $p->{rq}->{'assigned-role'}=1;
+    }
+  }
+
+  # if the roles are not configured evaluate to -1, which generally should
+  # block access
+  $p->{rq}->{'max-role-uid'}=$roles->{$p->{rq}->{'max-role'}}||-1;
+  $p->{rq}->{'effective-role-uid'}=$roles->{$p->{rq}->{'effective-role'}}||-1;
+
   # check and enforce roles
+  # maximum role levels have been set above
+  # effective role levels are the role levels requested by the module
+  # request, or error if the user doesn't have a high enough role.
+  # A module may mix different privilege levels in one page, in which case
+  # the module must request the lowest role level required for viewing the
+  # page, and guard other components using maximum role level.
   if (defined $r->{rqmap}->{$request}->{-role}){
 
     my $rolename=$r->{rqmap}->{$request}->{-role};
@@ -245,7 +297,15 @@ sub doRequest{
     #  $p->cgi->raw_cookie();
     }
     $p->status(400, "There's no such role '$rolename'") if (not defined $roles->{$rolename});
-    $p->status(401, "You don't have the privileges required to perform this operation") if ($role < $roles->{$rolename});
+    $p->status(403,
+               "You don't have the privileges required to perform this operation. "
+               .$p->{rq}->{'max-role'}." is available, "
+               ."$rolename is expected.")
+      if ($p->{rq}->{'max-role-uid'} < $roles->{$rolename});
+
+    # if we got that far the requested role should be suitable as effective role
+    $p->{rq}->{'effective-role'}=$rolename;
+    $p->{rq}->{'effective-role-uid'}=$roles->{$rolename};
   }
 
   if (defined $r->{rqmap}->{$request}->{-dbhandle}){
