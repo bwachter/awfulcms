@@ -729,6 +729,17 @@ sub input { tag("input", @_); }
 
 sub option { tag("option", @_); }
 
+# pretty print environment
+sub pEnv {
+  my $s=shift;
+  my $r;
+
+  foreach my $key (sort keys(%ENV)){
+    push(@$r, "$key = $ENV{$key}");
+  }
+  $r;
+}
+
 # historical foo, need better code
 sub pOption {
   my $s=shift;

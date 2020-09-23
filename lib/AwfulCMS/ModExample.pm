@@ -98,6 +98,8 @@ sub mainsite(){
                   name=>"submit",
                   value=>"Submit"})
           );
+
+  $p->add($p->pEnv());
 }
 
 sub status(){
