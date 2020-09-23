@@ -55,6 +55,11 @@ sub new {
     $s->{args}->{$key}=$vars->{$key};
   }
 
+  # POST request always overrides URL based requests
+  if (defined $vars->{req}){
+    $s->{request}=$vars->{req};
+  }
+
   my @_arguments=split('/', $s->{arguments});
   foreach (@_arguments){
     # FIXME, url quote/unquote
