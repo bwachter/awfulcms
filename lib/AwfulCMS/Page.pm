@@ -378,7 +378,15 @@ sub add {
   #$s->{divmap}->{500}={'id'=>'content',
   #                    'class'=>'content'};
 
-  $s->{divhash}->{$divname}.=$content;
+  if (ref($content) eq "ARRAY"){
+    $s->{divhash}->{$divname}.="<ul>";
+    foreach(@{$content}){
+      $s->{divhash}->{$divname}.="<li>$_</li>\n";
+    }
+    $s->{divhash}->{$divname}.="</ul>";
+  } else {
+    $s->{divhash}->{$divname}.=$content;
+  }
 }
 
 sub addHead{
