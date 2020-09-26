@@ -89,36 +89,53 @@ sub new(){
   elsif(-f "/etc/awfulcms/config"){ $cfg="/etc/awfulcms/config" }
   elsif (-f "/etc/awfulcms/awfulcmsrc"){ $cfg="/etc/awfulcms/awfulcmsrc" }
 
-  return "Unable to find a configuration file" if ($cfg eq "");
+  # TODO: This probably should get logged now
+  #return "Unable to find a configuration file" if ($cfg eq "");
 
-  open(F, "<$cfg")||return "Unable to open configuration file: $!";
-  @lines=<F>;
-  close(F);
+  if (open(F, "<$cfg")){
+    @lines=<F>;
+    close(F);
 
-  $s->{filepath}=$cfg;
+    $s->{filepath}=$cfg;
 
-  my ($section, $type);
-  foreach(@lines){
-    $_=~s/#.*//;
-    $_=~s/ +/ /g;
-    $_=~s/^ +//;
-    $_=~s/[\t\n]//g;
-    $_=~s/[^\da-zA-Z\@%\:=<>\-_\/,\.\*\?& ]//g;
-    next if (/^ *$/);
-    if ($type eq ""){
-      if (/^section/i){
-        $type=$_;#=~/ .*$/;
-        $type=~s/^.*? //;
-      }
-      next;
-    } else {
-      if (/^endsection/i){
-        $s->{"r_$type"}=$section;
-        $section=$type="";
+    my ($section, $type);
+    foreach(@lines){
+      $_=~s/#.*//;
+      $_=~s/ +/ /g;
+      $_=~s/^ +//;
+      $_=~s/[\t\n]//g;
+      $_=~s/[^\da-zA-Z\@%\:=<>\-_\/,\.\*\?& ]//g;
+      next if (/^ *$/);
+      if ($type eq ""){
+        if (/^section/i){
+          $type=$_;#=~/ .*$/;
+          $type=~s/^.*? //;
+        }
         next;
+      } else {
+        if (/^endsection/i){
+          $s->{"r_$type"}=$section;
+          $section=$type="";
+          next;
+        }
+        $section.=$_."\n";
       }
-      $section.=$_."\n";
     }
+  } else {
+    eval "require Module::Path";
+    return "Unable to open baconfiguration file '$cfg', Module::Paths not available for fallback: $!\n$@" if ($@);
+
+    my $_modulepath=Module::Path::module_path("AwfulCMS::Config");
+    return "Module installation path not found and no configuration available: $!" unless (defined($_modulepath));
+
+    $_modulepath=~s,AwfulCMS/Config\.pm$,,;
+    # make ModPerlDoc available
+    $s->{"r_modules"}="ModPerlDoc=1";
+    # set as default module
+    $s->{"r_main"}="defaultmodule=ModPerlDoc";
+    # set module path
+    $s->{"r_ModPerlDoc"}="modulepath=$_modulepath
+doc-dirs=/AwfulCMS";
   }
 
   bless $s;
