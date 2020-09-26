@@ -127,7 +127,22 @@ sub buildurl {
       $url.="$key,$args->{$key}/";
     }
   }
-  "/$baseurl/$request/$url";
+
+  # our URLs generally should begin and end with /
+  # beginning with // breaks stuff, though
+  my @_url;
+  push(@_url, ""); # initial /
+  push(@_url, $baseurl) if ($baseurl ne "");
+  push(@_url, $request) if ($request ne "");
+  push(@_url, $url) if ($url ne "");
+
+  my $_url=join('/', @_url);
+
+  if ($_url=~/\/$/){
+    $_url;
+  } else {
+    $_url."/";
+  }
 }
 
 sub myurl {
