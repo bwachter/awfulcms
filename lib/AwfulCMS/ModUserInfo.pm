@@ -27,8 +27,12 @@ sub new(){
   $r->{content}="html";
   $r->{rqmap}={"default"=>{-handler=>"mainsite",
                            -role=>"reader",
-                           -content=>"html"}
-               };
+                           -content=>"html"},
+               "logout"=>{-handler=>"logout",
+                          -role=>"reader",
+                         -content=>"html"},
+              };
+
   $s->{mc}=$r->{mc};
   bless $s;
   $s;
@@ -49,6 +53,15 @@ sub mainsite(){
   if ($p->{rq}->{authorized}==1){
     $p->h2("User profile for ".$p->{rq}->{user});
   }
+}
+
+sub logout(){
+  my $s=shift;
+  my $p=$s->{page};
+  my $status=401;
+  my $message="Logged out";
+
+  $p->status($status, $message);
 }
 
 1;
