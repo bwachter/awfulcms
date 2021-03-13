@@ -41,6 +41,7 @@ my ($p, # the page object
     $module, # the module name
     $module_short, # the module shortname (i.e. without AwfulCMS::)
     $request, # the name of the request to pass through
+    $static_request, # a request forced by the module configuration
     $roles,
     $users, # configured users
     $starttime);
@@ -149,6 +150,13 @@ TODO
 sub doModule{
   $module=lookupModule();
 
+  # allow mapping URLs to specific requests. Useful for something like
+  # logout*=ModUserInfo:logout
+  if ($module=~/@/){
+    ($static_request)=$module=~m/@(.*)$/;
+    $module=~s/@.*//;
+  }
+
   if ($module=~/\//){
     ($instance)=$module=~m/\/(.*)$/;
     $module=~s/\/.*//;
@@ -197,12 +205,17 @@ TODO
 =cut
 
 sub doRequest{
+  # $baseurl here is what will end up in $p->{url}->{request}
   $p->setModule($module, $instance, $baseurl);
 
   # cgi style requests are broken until basic cgi support gets added to url
   # tool scripts still work since all requests are default
   #$request=getrequest($p->{target}, $baseurl);
-  $request=$p->{url}->{request};
+  if ($static_request ne ""){
+    $request=$static_request;
+  } else {
+    $request=$p->{url}->{request};
+  }
 
   # FIXME, include code needs some serious redesigning
   $p->preinclude(openreadclose($c->getValue("main", "top-include")))
