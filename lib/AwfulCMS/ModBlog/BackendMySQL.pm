@@ -294,6 +294,36 @@ sub deleteArticle{
   $q_d->execute($id) || $s->err("Error executing query", $cb);
 }
 
+sub getSeries{
+  my $s=shift;
+  my $name=shift;
+  my $cb=shift;
+  my $dbh=$s->getDbh();
+
+  my $q=$dbh->prepare("select * from blog_series_description where name=?") ||
+    $s->err("Unable to prepare query: $!", $cb);
+  $q->execute($name);
+
+  my $d=$q->fetchrow_hashref();
+  return {} if ($q->rows == 0);
+  $d;
+}
+
+sub createOrEditSeries{
+  my $s=shift;
+  my $args=shift;
+  my $cb=shift;
+  my $dbh=$s->getDbh();
+
+  return -1 unless (defined $args->{name});
+  return -1 unless (defined $args->{markup});
+  return -1 unless (defined $args->{description});
+
+  my $q=$dbh->prepare("insert into blog_series_description (name, description, markup) values (?, ?, ?) on duplicate key update description=?, markup=?") || $s->err("Error preparing query", $cb);
+
+  $q->execute($args->{name}, $args->{description}, $args->{markup}, $args->{description}, $args->{markup});
+}
+
 # TODO: Fix error handling
 sub createOrEditArticle{
   my $s=shift;
@@ -432,6 +462,7 @@ sub createdb{
   push(@queries, "CREATE TABLE IF NOT EXISTS blog_series_description (".
        "name varchar(50) NOT NULL,".
        "description varchar (500),".
+       "markup tinytext,".
        "PRIMARY KEY (name)".
        ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
 
