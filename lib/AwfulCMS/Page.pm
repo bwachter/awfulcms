@@ -274,6 +274,8 @@ sub status {
   my $description=shift;
   $description="Not given" if (not defined $description);
 
+  # TODO: have this configurable to offer auth for forbidden resources
+  #$s->setHeader("WWW-Authenticate", "Basic realm=\"Realm\"") if ($status == 401);
   $s->setHeader("Status", $status);
   $s->title("$status $s->{sdesc}->{$status}->{short} ($s->{module})");
   $s->clear();
