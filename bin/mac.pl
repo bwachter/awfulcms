@@ -86,9 +86,14 @@ foreach my $key (sort(keys(%macs))){
   if ($ARGV[0] eq "csv"){
     print "$key;".%macs->{$key}->{'manufacturer'}.";".%macs->{$key}->{'address'}.";0\n";
   } elsif ($ARGV[0] eq "mysql") {
-    $q->execute($key, %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'address'},
-                %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'address'})||
-      die("Database problem: $!");
+    if (%macs->{$key}->{'manufacturer'} eq ""){
+      print "Problem for ".%macs->{$key}->{'address'}." (".%macs->{$key}->{'address'}."), skipping\n";
+    } else {
+      print "Inserting $key\n";
+      $q->execute($key, %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'address'},
+                  %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'address'})||
+                    die("Database problem: $!");
+    }
   } else {
     print "$key ".%macs->{$key}->{'manufacturer'}."\n";
     print %macs->{$key}->{'address'}."\n";
