@@ -261,6 +261,9 @@ sub doRequest{
     $p->{rq}->{authorized}=0;
   }
 
+  # for authenticated users we also might want to set some cookies here later on
+  # $p->addCookie({name=>'foobar', value=>'test foo / bar; baz...', domain=>'lart.info'});
+
   # if proxy authorization didn't work and an auth header exists we
   # can try to authenticate using that ourselves. TODO
   if ($p->{rq}->{authorized}==0 &&
