@@ -103,6 +103,17 @@ sub parseCookies{
   }
 }
 
+=item cookie()
+
+Placeholder function for easy cookie access. This should return cookie values
+for a specific key.
+
+=cut
+
+sub cookie(){
+  my $s=shift;
+}
+
 =item p()
 
 Return an entry from the environment
