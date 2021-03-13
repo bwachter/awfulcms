@@ -312,8 +312,8 @@ sub doRequest{
     $p->status(400, "There's no such role '$rolename'") if (not defined $roles->{$rolename});
     $p->status(403,
                "You don't have the privileges required to perform this operation. "
-               .$p->{rq}->{'max-role'}." is available, "
-               ."$rolename is expected.")
+               .$p->{rq}->{'max-role'}."(".$p->{rq}->{'max-role-uid'}.") is available, ".
+               "$rolename(".$roles->{$rolename}.") is expected.")
       if ($p->{rq}->{'max-role-uid'} < $roles->{$rolename});
 
     # if we got that far the requested role should be suitable as effective role
