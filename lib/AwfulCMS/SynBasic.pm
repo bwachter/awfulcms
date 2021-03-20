@@ -115,7 +115,7 @@ sub format {
   # some cases still result in empty paragraphs, remove them for now
   $string=~s{<p>\s*</p>}{}gs;
 
-  $string=~s/{{(.*?)}}/<$1>/gs if (defined $vars->{htmlhack});
+  $string=~s/\{\{(.*?)\}\}/<$1>/gs if (defined $vars->{htmlhack});
 
   # lists. first thoughts
   #  ordered list: {% %}
