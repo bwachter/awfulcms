@@ -105,8 +105,8 @@ sub mainsite(){
   close(F);
 
   my $content=join('', @lines);
-  (my $metadata)=$content=~/\{:(.*):\}/s;
-  $content=~s/\{:(.*):\}//gs;
+  (my $metadata)=$content=~/^\{:(.*):\}/s;
+  $content=~s/^\{:(.*):\}//gs;
   $content=~s/^\s*//;
   $metadata=~s/^\s+/ /;
   my @metadata;
