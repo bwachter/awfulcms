@@ -40,16 +40,20 @@ sub new {
                        'class'=>'content'};
   # a hash to hold divname -> number mappings
   $s->{divhash}={};
+  # a hash to hold metadata. Filled with initial values, but
+  # may be fully overridden from yaml - so only metadata we don't
+  # care about losing should be stored there.
+  $s->{metadata}={};
   #$s->{divhash}->{content}="<hr/>Sample content<hr/>";
 
   #die (ref($s->{divhash}));
 
   if (defined $o){
     if (ref($o) eq "HASH"){
-      $s->{title}=$o->{title} if (defined $o->{title});
+      $s->{metadata}->{title}=$o->{title} if (defined $o->{title});
       $s->{mode}=$o->{mode} if (defined $o->{mode});
     }
-    else { $s->{title}=$o; }
+    else { $s->{metadata}->{title}=$o; }
   }
 
   $s->{mode}="CGI" unless (defined $s->{mode});
@@ -192,7 +196,7 @@ sub out {
   # for html pages, start processing the separate element in the page
   $out.=$s->{doctype} if defined $s->{doctype};
   $out.="<html><head>$s->{head}\n".
-    "<title>$s->{title}</title>\n";
+    "<title>$s->{metadata}->{title}</title>\n";
 
   if (defined $s->{htmlheader} && ref($s->{htmlheader}) eq "HASH"){
     my ($key, $value);
@@ -212,7 +216,7 @@ sub out {
            <rdf:Description
              rdf:about=\"$s->{tb}->{about}\"
              dc:identifier=\"$s->{tb}->{identifier}\"
-             dc:title=\"$s->{title}\"
+             dc:title=\"$s->{metadata}->{title}\"
              trackback:ping=\"$s->{tb}->{trackback}\" />
            </rdf:RDF>
            -->";
@@ -345,7 +349,7 @@ TODO
 sub title {
   my $s=shift;
   my $title=shift;
-  $s->{'title'}=$title;
+  $s->{metadata}->{'title'}=$title;
 }
 
 =item dumpto($filename)
@@ -483,7 +487,7 @@ sub expandInclude{
     }
     if (length $excerpt >= 40){
       $flattr=$s->flattrButton({
-                                subject => $s->{title},
+                                subject => $s->{metadata}->{title},
                                 text => $excerpt,
                                 url => $s->{url}->myurl(),
                                });
@@ -538,6 +542,24 @@ sub setHtmlHeader {
   my $headerValue=shift;
 
   $s->{htmlheader}->{$headerName}=$headerValue;
+}
+
+=item setYamlMetadata($rawYaml)
+
+Set yaml metadata for this page.
+
+=cut
+
+sub setYamlMetadata {
+  my $s=shift;
+  my $yaml=shift;
+
+  eval "require YAML::XS";
+  $s->status(400, "Require YAML::XS failed ($@)") if ($@);
+  $s->{metadata}=YAML::XS::Load $yaml;
+
+  #eval "require Data::Dumper";
+  #print STDERR Data::Dumper::Dumper($s->{metadata});
 }
 
 =item addCookie($cookie)

@@ -106,7 +106,9 @@ sub mainsite(){
 
   my $content=join('', @lines);
   (my $metadata)=$content=~/^\{:(.*):\}/s;
-  $content=~s/^\{:(.*):\}//gs;
+  $content=~s/^\{:(.*):\}\s*//gs;
+  (my $yaml_metadata)=$content=~/^---(.*?)\n---/s;
+  $content=~s/^---(.*?)\n---//gs;
   $content=~s/^\s*//;
   $metadata=~s/^\s+/ /;
   my @metadata;
@@ -138,6 +140,10 @@ sub mainsite(){
                      htmlhack=>1});
 
   #foreach my $key (sort(keys(%metadata))){ $body.="'$key' =&gt; '$metadata{$key}'<br />"; }
+
+  # this may override some of the above stuff. Eventually that probably should
+  # all be merged into page
+  $p->setYamlMetadata($yaml_metadata) if ($yaml_metadata);
 
   # FIXME, more elegant solution
   $p->add($body);
