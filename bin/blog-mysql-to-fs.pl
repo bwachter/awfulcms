@@ -54,6 +54,13 @@ sub cb_error{
 sub cb_write_article{
   my $d=shift;
 
+  utf8::encode($d->{subject});
+  utf8::encode($d->{author});
+  utf8::encode($d->{body});
+
+  $d->{quoted_subject}=$d->{subject};
+  $d->{quoted_subject}=~s/"/\\"/g;
+
   print "Processing article $d->{id}, $d->{subject}\n";
   mkpath($d->{subject});
   if (defined $d->{markup}){
@@ -76,7 +83,7 @@ sub cb_write_article{
   if ($filename ne ""){
     open(FH, ">$filename")||die "Unable to open $filename: $!";
     print FH "---\n";
-    print FH "title: $d->{subject}\n";
+    print FH "title: \"$d->{quoted_subject}\"\n";
     print FH "author: $d->{name}\n";
     print FH "date: ".localtime($d->{created})."\n";
     print FH "modified: ".localtime($d->{changed})."\n" if ($d->{modified});
@@ -84,7 +91,7 @@ sub cb_write_article{
     print FH "lang: $d->{lang}\n" if ($d->{lang});
     print FH "email: $d->{email}\n" if ($d->{email});
     print FH "homepage: $d->{homepage}\n" if ($d->{homepage});
-    print FH "keywords:\n  - $tag_string\n";
+    print FH "keywords:\n  - $tag_string\n" if @tags>0;
     print FH "---\n";
     print FH $d->{body};
     close(FH);
