@@ -26,7 +26,6 @@ use AwfulCMS::Page qw(:tags);
 use AwfulCMS::LibUtil qw(navwidget);
 
 use AwfulCMS::Format;
-use AwfulCMS::ModBlog::BackendMySQL;
 
 # newer versions come with a make_path function
 use File::Path qw(mkpath);
@@ -83,7 +82,19 @@ sub new{
   $s->{mc}->{numarticles}=10 unless (defined $r->{mc}->{numarticles});
   $s->{mc}->{'title-prefix'}="Blog" unless (defined $r->{mc}->{'title-prefix'});
 
-  $s->{backend}=new AwfulCMS::ModBlog::BackendMySQL;
+  if (defined $s->{mc}->{backend}){
+    $s->{backend_type}=$s->{mc}->{backend};
+  } else {
+    $s->{backend_type}="MySQL";
+  }
+
+  eval "require AwfulCMS::ModBlog::Backend$s->{backend_type}";
+  if ($@){
+    $s->{page}->status(500, "Unable to load blog backend: $@\n");
+  }
+
+  my $backend_name="AwfulCMS::ModBlog::Backend$s->{backend_type}";
+  $s->{backend}=new $backend_name;
   $s->{backend}->{cb_dbh}=sub{$s->cb_dbh()};
   $s->{backend}->{cb_err}=sub{my $e=shift;$s->cb_error($e)};
 
