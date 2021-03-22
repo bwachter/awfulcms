@@ -13,6 +13,7 @@ sub new{
   my $o=shift;
   my $s={};
 
+  # this bit probably is obsolete
   if (ref($o) eq "HASH"){
     $s->{dbh}=$o->{dbh} if (defined $o->{dbh});
   }

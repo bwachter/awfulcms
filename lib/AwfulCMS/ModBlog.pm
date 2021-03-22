@@ -94,7 +94,7 @@ sub new{
   }
 
   my $backend_name="AwfulCMS::ModBlog::Backend$s->{backend_type}";
-  $s->{backend}=new $backend_name;
+  $s->{backend}=new $backend_name($s->{page});
   $s->{backend}->{cb_dbh}=sub{$s->cb_dbh()};
   $s->{backend}->{cb_err}=sub{my $e=shift;$s->cb_error($e)};
 
