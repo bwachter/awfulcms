@@ -94,7 +94,7 @@ sub new{
   }
 
   my $backend_name="AwfulCMS::ModBlog::Backend$s->{backend_type}";
-  $s->{backend}=new $backend_name($s->{page});
+  $s->{backend}=new $backend_name($r, $s->{page});
   $s->{backend}->{cb_dbh}=sub{$s->cb_dbh()};
   $s->{backend}->{cb_err}=sub{my $e=shift;$s->cb_error($e)};
 
@@ -142,7 +142,9 @@ sub formatArticle{
   } else {
     $d->{email}="";
   }
-  $d->{date}=localtime($d->{created});
+  unless (defined $d->{date}){
+    $d->{date}=localtime($d->{created});
+  }
 
   my $f;
   if (defined $d->{markup}){
@@ -151,10 +153,17 @@ sub formatArticle{
     $f=new AwfulCMS::Format();
   }
 
+  my $uid=$d->{id};
   my $body.=$f->format($d->{body},
                     {blogurl=>$s->{mc}->{'content-prefix'}});
 
-  my @tags=$s->{backend}->getTagsForArticle($d->{id});
+  my @tags;
+  if ($d->{keywords}){
+    @tags=@{$d->{keywords}};
+  } else {
+    @tags=$s->{backend}->getTagsForArticle($uid);
+  }
+
   my @tagref;
   my $tagstr="<a href=\"".$p->{url}->buildurl({'req'=>'tag'})."\">Tags</a>: ";
   push(@tagref, "<a href=\"".
@@ -163,11 +172,11 @@ sub formatArticle{
   $tagstr.=join(', ', @tagref);
   $tagstr.=" None" if (@tagref == 0);
 
-  my $ccnt=$s->{backend}->getCommentCnt($d->{id});
+  my $ccnt=$s->{backend}->getCommentCnt($uid);
   my $cmtstring="$ccnt comments";
   $cmtstring = "1 comment" if ($ccnt==1);
   my $url = $p->{url}->buildurl({'req'=>'article',
-                                 'article'=>$d->{id}});
+                                 'article'=>$uid});
 
   my $flattr;
   if ($s->{mc}->{flattr}){
@@ -182,12 +191,12 @@ sub formatArticle{
 
   $cmtstring = "<a href=\"".
     $p->{url}->buildurl({'req'=>'article',
-                         'article'=>"$d->{id}"})."#comments\">$cmtstring</a>" if ($ccnt>0);
+                         'article'=>"$uid"})."#comments\">$cmtstring</a>" if ($ccnt>0);
 
   $d->{name}="<a href=\"$d->{homepage}\">$d->{name}</a>" if ($d->{homepage}=~/^http:\/\//);
 
   my $ret=
-    div("<!-- start news entry --><a name=\"$d->{id}\">[$d->{date}]</a> [<a href=\"#$d->{id}\">#</a><a href=\"$url\">$d->{id}] $d->{subject}</a>",
+    div("<!-- start news entry --><a name=\"$uid\">[$d->{date}]</a> [<a href=\"#$uid\">#</a><a href=\"$url\">$uid] $d->{subject}</a>",
         {'class'=>'newshead'}).
           div("$body", {'class'=>'newsbody'}).
             div("<div class=\"tags\">$tagstr$flattr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
@@ -231,10 +240,19 @@ sub displayTag{
     $header="Available tags";
 
     my $data=$s->{backend}->getTagList();
-
-    push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'tag',
-                                                  'tag'=>$_->{tag}}).
-         "\">$_->{tag}</a>")  foreach (@$data);
+    # DBI backends return an array with one-element hash refs, while other
+    # backends might just return a simple array
+    foreach(@$data){
+      my $t;
+      if (ref($_) eq "HASH"){
+        $t=$_->{tag};
+      } else {
+        $t=$_;
+      }
+      push(@tags, "<a href=\"".$p->{url}->buildurl({'req'=>'tag',
+                                                    'tag'=>$t}).
+           "\">$t</a>");
+    }
     $tagstr.=join(', ', @tags);
   }
   $p->title($s->{mc}->{'title-prefix'}." - $header");
@@ -400,13 +418,13 @@ sub displayArticle{
 
   $s->defaultHeader();
 
-  my $article=int(($p->{url}->param("article")) || ($p->{url}->param("draft"))) ||
+  my $article=($p->{url}->param("article")) || ($p->{url}->param("draft")) ||
     $p->status(404, "No such article");
 
-  $draft=1 if (int($p->{url}->param("draft")));
+  $draft=1 if ($p->{url}->param("draft"));
 
   my $d=$s->{backend}->getArticle({id=>$article, draft=>$draft});
-  $p->status(404, "No such article") if (!%$d);
+  $p->status(404, "No such article $article") if (!%$d);
 
   $p->title($s->{mc}->{'title-prefix'}." - ".$d->{subject});
   $p->add(div($s->formatArticle($d), {'class'=>'news'}));
