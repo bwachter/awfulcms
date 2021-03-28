@@ -153,7 +153,10 @@ sub formatArticle{
     $f=new AwfulCMS::Format($p);
   }
 
-  my $uid=$d->{id};
+  my $uid;
+  $uid=$d->{id} if (defined $d->{id});
+  $uid=$d->{timestamp} if (defined $d->{timestamp});
+
   my $body.=$f->format($d->{body},
                     {blogurl=>$s->{mc}->{'content-prefix'}});
 
@@ -196,7 +199,7 @@ sub formatArticle{
   $d->{name}="<a href=\"$d->{homepage}\">$d->{name}</a>" if ($d->{homepage}=~/^http:\/\//);
 
   my $ret=
-    div("<!-- start news entry --><a name=\"$uid\">[$d->{date}]</a> [<a href=\"#$uid\">#</a><a href=\"$url\">$uid] $d->{subject}</a>",
+    div("<!-- start news entry --><a name=\"$uid\">[$d->{date}]</a> <a href=\"#$uid\">[#]</a> <a href=\"$url\">$d->{subject}</a>",
         {'class'=>'newshead'}).
           div("$body", {'class'=>'newsbody'}).
             div("<div class=\"tags\">$tagstr$flattr</div><div class=\"from\">Posted by $d->{name} $d->{email}-- $cmtstring</div>", {'class'=>'newsfoot'}).
