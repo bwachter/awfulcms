@@ -44,6 +44,7 @@ my ($p, # the page object
     $static_request, # a request forced by the module configuration
     $roles,
     $users, # configured users
+    $urltypes, # URL type mappings
     $starttime);
 
 my $r={}; # the hash reference for the module configuration / request handlers
@@ -71,9 +72,13 @@ sub init{
 
   $roles=$c->getValues("roles");
   $users=$c->getValues("users");
+  $urltypes=$c->getValues("urltypes");
 
   $p->{hostname}=$c->getValue("main", "hostname") if ($c->getValue("main", "hostname"));
   $p->{starttime}=$starttime;
+
+  $p->{urltypes}=$urltypes;
+
   $p->{mc}={};
   $p->{mc}={%{$p->{mc}}, %{$c->getValues("default")}} if ($c->getValues("default"));
   $p->{mc}={%{$p->{mc}}, %{$c->getValues("page")}} if ($c->getValues("page"));
@@ -324,7 +329,8 @@ sub doRequest{
     $p->{rq}->{'effective-role-uid'}=$roles->{$rolename};
   }
 
-  if (defined $r->{rqmap}->{$request}->{-dbhandle}){
+  if (defined $r->{rqmap}->{$request}->{-dbhandle} &&
+      !defined $r->{mc}->{'nodbi'}){
     # dbhandle lookup order:
     # module:handle/instance, module/instance, module:handle, module, default
     my $dbc=$c->getValues("database");

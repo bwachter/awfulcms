@@ -69,7 +69,8 @@ sub new(){
   $s->{parsers}={
                  "main"=>"mainParser",
                  "modules"=>"mainParser",
-                 "database"=>"dbParser"
+                 "database"=>"dbParser",
+                 "urltypes"=>"urlParser"
                 };
 
   # locate the configuration file
@@ -216,6 +217,28 @@ sub mainParser(){
     } else {
       $s->{"c_$type"}->{$_}=0;
     }
+  }
+}
+
+sub urlParser(){
+  my $s=shift;
+  my $type=shift;
+  my $mode="";
+
+  my ($key, $url, $description, $icon);
+
+  return if (not defined $s->{"r_$type"});
+  my @lines=split('\n', $s->{"r_$type"});
+  foreach (@lines){
+    next if ($key eq "" && not /^type/i);
+    if (/^type/i){
+      $key=$_;
+      $key=~s/^.*? //;
+      $s->{"c_$type"}->{$key}={};
+      next;
+    }
+    my ($k, $v)=split('=', $_);
+    $s->{"c_$type"}->{$key}->{$k}=$v;
   }
 }
 

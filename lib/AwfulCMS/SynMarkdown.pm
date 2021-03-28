@@ -20,8 +20,12 @@ use AwfulCMS::LibRender 'render';
 
 sub new {
   shift;
-
+  my $p=shift;
   my $s={};
+
+  if (ref($p) eq "AwfulCMS::Page"){
+    $s->{urltypes}=$p->{urltypes};
+  }
 
   bless $s;
   $s;
@@ -161,7 +165,8 @@ sub format {
          HOEDOWN_EXT_FOOTNOTES |
          HOEDOWN_EXT_QUOTE |
          HOEDOWN_EXT_HIGHLIGHT
-        });
+        },
+        $s->{urltypes});
 
   $md->{cb}->blockcode(sub{$s->cb_blockcode(@_)});
   $md->{cb}->paragraph(\&cb_paragraph);

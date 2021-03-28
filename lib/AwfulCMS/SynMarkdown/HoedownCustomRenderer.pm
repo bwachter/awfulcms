@@ -5,6 +5,8 @@ use Exporter 'import';
 our @EXPORT_OK=qw(hoedown_escape_href hoedown_escape_html);
 use Text::Markdown::Hoedown;
 
+my $g_urltypes;
+
 # Those values are taken from hoedown C source
 # In earlier versions those were exported by the perl bindings
 use constant {
@@ -20,11 +22,17 @@ use constant {
 sub new {
     shift;
     my $opts=shift;
+    my $urltypes=shift;
 
     my $s={};
 
     if (ref($opts) eq "HASH"){
         $s->{extensions}=$opts->{extensions} if (defined $opts->{extensions});
+      }
+
+    if (ref($urltypes) eq "HASH"){
+      $s->{urltypes}=$urltypes;
+      $g_urltypes=$urltypes;
     }
 
     bless $s;
@@ -354,12 +362,30 @@ sub hoedown_html_cb_link {
 
     $title = "" if (!defined $title);
 
+    my ($method)=$link=~m/^(.*?):/;
+
+    if (defined $g_urltypes->{$method}){
+      if (defined $g_urltypes->{$method}->{url}){
+        my ($old_link)=$link=~m/^.*?:(.*)/;
+        $link=$g_urltypes->{$method}->{url};
+        $link=~s/\%1/$old_link/;
+      }
+      # order matters here to avoid putting the icon in the title
+      if (defined $g_urltypes->{$method}->{description} && $title eq ""){
+        $title="$content (".$g_urltypes->{$method}->{description}.")";
+      }
+      if (defined $g_urltypes->{$method}->{icon}){
+        $content.="<img src=\"$g_urltypes->{$method}->{icon}\" />"
+      }
+    }
+
     my $r = "<a href=\"";
     $r .= hoedown_escape_html($link);
 
     if ($title ne ""){
         $r .= "\" title=\"";
         $r .= hoedown_escape_html($title);
+        $r .= '"';
     }
 
     # TODO: handle link attributes

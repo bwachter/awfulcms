@@ -13,16 +13,25 @@ use Exporter 'import';
 sub new {
   shift;
   my $o=shift;
+  my $p=shift;
   my $s={};
   bless $s;
 
-  $o="Basic" unless (defined $o);
+  if (defined $o){
+    if (ref($o) eq "AwfulCMS::Page"){
+      $p=$o;
+      $o="Basic";
+    }
+  } else {
+    $o="Basic";
+    $p={};
+  }
 
   eval "require AwfulCMS::Syn$o";
   if ($@){
     print STDERR "Bad things: $@";
   } else {
-    $s->{formatter}="AwfulCMS::Syn$o"->new();
+    $s->{formatter}="AwfulCMS::Syn$o"->new($p);
   }
 
   $s;

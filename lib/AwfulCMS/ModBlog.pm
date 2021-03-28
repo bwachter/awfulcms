@@ -148,9 +148,9 @@ sub formatArticle{
 
   my $f;
   if (defined $d->{markup}){
-    $f=new AwfulCMS::Format($d->{markup});
+    $f=new AwfulCMS::Format($d->{markup}, $p);
   } else {
-    $f=new AwfulCMS::Format();
+    $f=new AwfulCMS::Format($p);
   }
 
   my $uid=$d->{id};
@@ -309,9 +309,9 @@ sub displayAtom{
                                    my $d=shift;
                                    my $f;
                                    if (defined $d->{markup}){
-                                     $f=new AwfulCMS::Format($d->{markup});
+                                     $f=new AwfulCMS::Format($d->{markup}, $p);
                                    } else {
-                                     $f=new AwfulCMS::Format();
+                                     $f=new AwfulCMS::Format($p);
                                    }
 
                                    $modtime=$d->{created} if ($d->{created} > $modtime);
@@ -372,9 +372,9 @@ sub displayRSS{
                                    my $d=shift;
                                    my $f;
                                    if (defined $d->{markup}){
-                                     $f=new AwfulCMS::Format($d->{markup});
+                                     $f=new AwfulCMS::Format($d->{markup}, $p);
                                    } else {
-                                     $f=new AwfulCMS::Format();
+                                     $f=new AwfulCMS::Format($p);
                                    }
 
                                    $modtime=$d->{created} if ($d->{created} > $modtime);
