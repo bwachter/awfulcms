@@ -27,6 +27,8 @@ sub new {
     $s->{urltypes}=$p->{urltypes};
   }
 
+  $s->{urltypes}={} unless (defined $s->{urltypes});
+
   bless $s;
   $s;
 }
@@ -141,11 +143,18 @@ sub cb_paragraph {
 sub format {
   my $s=shift;
   my $string=shift;
-  my $vars=shift;
+  my $opts=shift;
   my $html;
 
-  foreach my $key (keys(%$vars)){
-    $string =~ s/$key:\:/$vars->{$key}/g
+  if (defined $opts->{vars}){
+    foreach my $key (keys(%{$opts->{vars}})){
+      $string =~ s/$key:\:/$opts->{vars}->{$key}/g
+    }
+  }
+
+  #if (defined $opts->{urltypes} && defined $s->{urltypes}){
+  if (defined $opts->{urltypes}){
+    $s->{urltypes}={%{$s->{urltypes}}, %{$opts->{urltypes}}};
   }
 
   # [@...||@]

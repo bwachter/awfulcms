@@ -341,6 +341,16 @@ sub hoedown_html_cb_image {
 
     return if ($link eq "");
 
+    my ($method)=$link=~m/^(.*?):/;
+
+    if (defined $g_urltypes->{$method}){
+      if (defined $g_urltypes->{$method}->{url}){
+        my ($old_link)=$link=~m/^.*?:(.*)/;
+        $link=$g_urltypes->{$method}->{url};
+        $link=~s/\%1/$old_link/;
+      }
+    }
+
     my $r = "<img src=\"";
     $r .= hoedown_escape_href($link);
     $r .= "\" alt=\"";
@@ -375,7 +385,7 @@ sub hoedown_html_cb_link {
         $title="$content (".$g_urltypes->{$method}->{description}.")";
       }
       if (defined $g_urltypes->{$method}->{icon}){
-        $content.="<img src=\"$g_urltypes->{$method}->{icon}\" />"
+        $content.="<img src=\"$g_urltypes->{$method}->{icon}\" class=\"svg-icon\" />"
       }
     }
 

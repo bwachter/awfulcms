@@ -158,7 +158,20 @@ sub formatArticle{
   $uid=$d->{timestamp} if (defined $d->{timestamp});
 
   my $body.=$f->format($d->{body},
-                    {blogurl=>$s->{mc}->{'content-prefix'}});
+                       {
+                        'vars'=>
+                        {blogurl=>$s->{mc}->{'content-prefix'}},
+                        'urltypes'=>
+                        {blogurl=>{
+                                   url=>$s->{mc}->{'content-prefix'}.'/%1'
+                                  },
+                         blog=>{
+                                   url=>$s->{mc}->{'content-prefix'}.'/%1'
+                               },
+                         article=>{
+                                   url=>$s->{mc}->{'content-prefix'}.'/'.$d->{subject}.'/%1'
+                                  }}
+                       });
 
   my @tags;
   if ($d->{keywords}){
@@ -320,7 +333,19 @@ sub displayAtom{
                                    $modtime=$d->{created} if ($d->{created} > $modtime);
 
                                    my $body=$f->format($d->{body},
-                                                       {blogurl=>$s->{mc}->{'content-prefix'}});
+                                                       {'vars'=>
+                                                        {blogurl=>$s->{mc}->{'content-prefix'}},
+                                                        'urltypes'=>
+                                                        {blogurl=>{
+                                                                   url=>$s->{mc}->{'content-prefix'}.'/%1'
+                                                                  },
+                                                         blog=>{
+                                                                url=>$s->{mc}->{'content-prefix'}.'/%1'
+                                                               },
+                                                         article=>{
+                                                                   url=>$s->{mc}->{'content-prefix'}.'/'.$d->{subject}.'/%1'
+                                                                  }}
+                                                       });
 
                                    #TODO: this is missing link title, published date, updated date, and content type might be off
                                    my $author = XML::Atom::Person->new;
@@ -383,7 +408,19 @@ sub displayRSS{
                                    $modtime=$d->{created} if ($d->{created} > $modtime);
 
                                    my $body=$f->format($d->{body},
-                                                       {blogurl=>$s->{mc}->{'content-prefix'}});
+                                                       {'vars'=>
+                                                        {blogurl=>$s->{mc}->{'content-prefix'}},
+                                                        'urltypes'=>
+                                                        {blogurl=>{
+                                                                   url=>$s->{mc}->{'content-prefix'}.'/%1'
+                                                                  },
+                                                         blog=>{
+                                                                url=>$s->{mc}->{'content-prefix'}.'/%1'
+                                                               },
+                                                         article=>{
+                                                                   url=>$s->{mc}->{'content-prefix'}.'/'.$d->{subject}.'/%1'
+                                                                  }}
+                                                       });
 
                                    my $created=localtime($d->{created});
 
