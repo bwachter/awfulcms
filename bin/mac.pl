@@ -14,9 +14,9 @@ use strict;
 require DBI;
 
 # get the oui database from:
-my $oui_url="http://standards.ieee.org/regauth/oui/oui.txt";
+my $oui_url="http://standards-oui.ieee.org/oui/oui.txt";
 # get the iab database from:
-my $iab_url="http://standards.ieee.org/regauth/oui/iab.txt";
+my $iab_url="http://standards-oui.ieee.org/oui/iab.txt";
 
 my %macs;
 my $lastmac;
@@ -36,7 +36,7 @@ while(<OUI>){
   if (/^\s*[\da-zA-z]{2}-[\da-zA-z]{2}-[\da-zA-z]{2}/){
     my ($mac, $manufacturer)=m/^\s*([\da-zA-z]{2}-[\da-zA-z]{2}-[\da-zA-z]{2})\s*\(.*?\)\s*(.*)/;
     $mac=~s/-/:/g;
-    %macs->{$mac}={'manufacturer'=>$manufacturer,
+    $macs{$mac}={'manufacturer'=>$manufacturer,
                    'address'=>''};
     #print "New Mac: $mac / $manufacturer\n";
     $lastmac=$mac;
@@ -45,7 +45,7 @@ while(<OUI>){
     # recording only starts after first mac found
     next unless defined $lastmac;
     $_=~s/^\s*//;
-    %macs->{$lastmac}->{'address'}.=$_;
+    $macs{$lastmac}->{'address'}.=$_;
   }
   #print $_;
 }
@@ -80,22 +80,31 @@ if ($ARGV[0] eq "mysql"){
                       die "DBI->connect(): ". DBI->errstr;
   $q=$dbh->prepare("insert into mac (mac, manufacturer, address) values (?, ?, ?) on duplicate key update manufacturer=?, address=?")||
     die("Database problem: $!");
+} elsif ($ARGV[0] eq "cdb"){
+  eval "require CDB::TinyCDB";
+  die "Unable to lead TinyCDB: $@" if ($@);
+  $q=CDB::TinyCDB->create("mac.cdb", "mac.cdb.$$");
 }
 
 foreach my $key (sort(keys(%macs))){
   if ($ARGV[0] eq "csv"){
-    print "$key;".%macs->{$key}->{'manufacturer'}.";".%macs->{$key}->{'address'}.";0\n";
+    print "$key;".$macs{$key}->{'manufacturer'}.";".$macs{$key}->{'address'}.";0\n";
   } elsif ($ARGV[0] eq "mysql") {
-    if (%macs->{$key}->{'manufacturer'} eq ""){
-      print "Problem for ".%macs->{$key}->{'address'}." (".%macs->{$key}->{'address'}."), skipping\n";
+    if ($macs{$key}->{'manufacturer'} eq ""){
+      print "Problem for ".$macs{$key}->{'address'}." (".$macs{$key}->{'address'}."), skipping\n";
     } else {
       print "Inserting $key\n";
-      $q->execute($key, %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'address'},
-                  %macs->{$key}->{'manufacturer'}, %macs->{$key}->{'address'})||
+      $q->execute($key, $macs{$key}->{'manufacturer'}, $macs{$key}->{'address'},
+                  $macs{$key}->{'manufacturer'}, $macs{$key}->{'address'})||
                     die("Database problem: $!");
     }
+  } elsif ($ARGV[0] eq "cdb"){
+    $q->put_replace($key, $macs{$key}->{'manufacturer'});
+    $q->put_replace("a_$key", $macs{$key}->{'address'});
   } else {
-    print "$key ".%macs->{$key}->{'manufacturer'}."\n";
-    print %macs->{$key}->{'address'}."\n";
+    print "$key ".$macs{$key}->{'manufacturer'}."\n";
+    print $macs{$key}->{'address'}."\n";
   }
 }
+
+$q->finish() if ($ARGV[0] eq "cdb");
