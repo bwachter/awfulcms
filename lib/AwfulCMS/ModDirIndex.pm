@@ -110,18 +110,20 @@ sub defaultpage(){
   $s->{page}->add("<div class=\"dirview-group\">");
   my $icon="$s->{mc}->{iconset}/$s->{mc}->{diricon}";
   foreach(sort @dirs){
-    $s->{page}->add("<div class=\"dirview-item\"><div class=\"dirview-info\"><a href=\"$_\"><img src=\"$icon\" border=\"0\" alt=\"Directory\" /><br />$_</a></div></div>");
+    $s->{page}->add("<div class=\"dirview-item\"><div class=\"dirview-info\"><a href=\"$_/\"><img src=\"$icon\" border=\"0\" alt=\"Directory\" /><br />$_</a></div></div>");
   }
 
   foreach my $key (sort (keys(%$files))){
+    my $dir=$s->{page}->{rq}->{dir};
     my $icon="$s->{mc}->{iconset}/$s->{mc}->{fileicon}";
     my $value=$files->{$key};
     if ($s->{mc}->{fileinfo}==1){
       $icon = "$s->{mc}->{iconset}/".$s->{mc}->{"icon-".$value->{type}} if (defined $s->{mc}->{"icon-".$value->{type}});
     }
+
     if ($s->{mc}->{preview}==1){
       %$value=(%$value, 'filename'=>$key,
-               'directory'=>$s->{page}->{rq}->{dir},
+               'directory'=>$dir,
                'maxx'=>$maxx,
                'maxy'=>$maxy);
       my $ret=thumbnail($value);
