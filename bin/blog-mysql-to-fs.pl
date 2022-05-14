@@ -92,6 +92,8 @@ sub cb_write_article{
     print FH "email: $d->{email}\n" if ($d->{email});
     print FH "homepage: $d->{homepage}\n" if ($d->{homepage});
     print FH "keywords:\n  - $tag_string\n" if @tags>0;
+    print FH "draft: $d->{draft}\n" if ($d->{draft}==1);
+    print FH "tease: $d->{tease}\n" if ($d->{tease}==1);
     print FH "---\n";
     print FH $d->{body};
     close(FH);
@@ -135,6 +137,7 @@ $backend->getArticleList
   ({
     pid=>0,
     limit=>$cnt,
+    draft=>0,
     offset=>0,
     cb_format=>sub{my $d=shift;cb_write_article($d);},
    });
