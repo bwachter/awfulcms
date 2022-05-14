@@ -32,6 +32,7 @@ sub new(){
                             -role=>"admin"}
                };
 
+  $s->{mc}=$r->{mc};
   bless $s;
   $s;
 }
@@ -39,16 +40,20 @@ sub new(){
 sub lookupMAC {
   my $s=shift;
   my $p=$s->{page};
-  my $dbh=$s->{page}->{dbh};
-  my $mac=shift;
 
-  my $q_c = $dbh->prepare("select mac,manufacturer,address from mac where mac=?")||
-    $p->status(400, "Unable to prepare query: $!");
+  if ($s->{mc}->{backend} eq "cdb"){
+  } else {
+    my $dbh=$s->{page}->{dbh};
+    my $mac=shift;
 
-  $q_c->execute($mac)||
-    $p->status(400, "Unable to execute query: $!");
-  my @id = $q_c->fetchrow_array();
-  return @id;
+    my $q_c = $dbh->prepare("select mac,manufacturer,address from mac where mac=?")||
+      $p->status(400, "Unable to prepare query: $!");
+
+    $q_c->execute($mac)||
+      $p->status(400, "Unable to execute query: $!");
+    my @id = $q_c->fetchrow_array();
+    return @id;
+  }
 }
 
 sub defaultpage{
