@@ -247,14 +247,18 @@ sub getArticleList{
 
   my @r;
 
+  if ($o->{draft}==0){
+    @r=sort { $b <=> $a } $s->{cdb}->getall("a");
+  } else {
+    @r=sort { $b <=> $a } $s->{cdb}->getall("d");
+  }
 
-  @r=sort { $b <=> $a } $s->{cdb}->getall("a");
   foreach(@r){
     print STDERR "$_\n";
   }
 
   my @l=@r[$o->{offset}..$o->{offset}+$o->{limit}-1];
-  # TODO: add support for drafts and comments
+  # TODO: add support for comments
 
   foreach(@l){
     if (ref $o->{cb_format} eq 'CODE'){
@@ -262,6 +266,7 @@ sub getArticleList{
       if ($file){
         print STDERR "$file\n";
         my $d=$s->loadArticle($file);
+        $d->{timestamp}=$_;
         $o->{cb_format}->($d);
       }
     }
@@ -395,38 +400,55 @@ sub createIndex{
 
   my $cdb=CDB::TinyCDB->create("$s->{rootdir}/index.cdb", "$s->{rootdir}/index.cdb.$$");
   my $tags={};
+  my $timestamps={};
+  my $article_cnt=0,$draft_cnt=0;
   foreach my $key (sort(keys(%{$s->{articles}}))){
     print STDERR "Processing $key...\n";
 
     my $y=$s->loadArticle("$key/".$s->{articles}->{$key}->{index});
+    # this makes sure we only have unique article IDs
     my $timestamp=str2time($y->{date})+0.1;
-    # TODO: check if cdb already has key for that timestamp, and if yes,
-    #       increment after the point until it's unique
-    # a list with all articles identified by timestamp for easy sorting
-    # it's rather unlikely we'd have two articles with the same timestamp,
-    # but later parsing should still take that unlikely situation into account
-    $cdb->put_add("a", $timestamp);
+    while (defined $timestamps{$timestamp}){
+      print STDERR "Duplicate\n";
+      $timestamp+=0.1
+    }
+    $timestamps{$timestamp}=1;
+
     # we need to open the article anyway, so we anly need to extract data here
     # which makes building the pages / navigation faster:
     # - title
     # - id
     # - tags
+    # those keys are shared between drafts and published articles
     $cdb->put_replace("f_$timestamp", "$key/".$s->{articles}->{$key}->{index});
     $cdb->put_replace("t_$timestamp", $y->{title});
     $cdb->put_replace("i_$timestamp", $y->{id}) if ($y->{id});
     $cdb->put_replace("id_".$y->{id}, $timestamp) if ($y->{id});
 
-    if (defined $y->{keywords}){
-      foreach (@{$y->{keywords}}){
-        unless (defined $tags->{$_}){
-          $cdb->put_add("tags", $_);
-          $tags->{$_}=1;
+    if (defined $y->{draft} &&
+        $y->{draft}!=0){
+      $draft_cnt++;
+      # a list with all drafts identified by timestamp for easy sorting
+      $cdb->put_add("d", $timestamp);
+    } else {
+      $article_cnt++;
+      # a list with all articles identified by timestamp for easy sorting
+      $cdb->put_add("a", $timestamp);
+
+      # keywords on drafts get ignored
+      if (defined $y->{keywords}){
+        foreach (@{$y->{keywords}}){
+          unless (defined $tags->{$_}){
+            $cdb->put_add("tags", $_);
+            $tags->{$_}=1;
+          }
+          $cdb->put_add($_."_content", $timestamp);
         }
-        $cdb->put_add($_."_content", $timestamp);
       }
     }
   }
-  $cdb->put_replace("cnt", scalar keys %{$s->{articles}});
+  $cdb->put_replace("cnt", $article_cnt);
+  $cdb->put_replace("dcnt", $draft_cnt);
   $cdb->finish();
 }
 
