@@ -24,18 +24,12 @@ sub new{
     $s->{mc}=$r->{mc};
   }
 
-  print STDERR ref($r)."\n";
-  print STDERR "backend ".$r->{mc}->{backend}."\n";
-  print STDERR "dir: ".$s->{page}->{rq}->{dir};
-  print STDERR "file: ".$s->{page}->{rq}->{file};
-  print STDERR "keys: ".keys %{$s->{page}};
-
   $s->{rootdir}=$s->{page}->{rq}->{dir};
   $s->{rootdir}=$s->{mc}->{root} if (defined $s->{mc}->{root});
   bless $s;
 
   unless (-f $s->{rootdir}."/index.cdb"){
-    print STDERR "index.cdb not available\n";
+    print STDERR "index.cdb not available, expected in $s->{rootdir}\n";
     $s->createIndex();
   }
 
@@ -188,8 +182,6 @@ sub getArticle{
     my $id=$o;
     $o->{id}=$id;
   }
-
-  print STDERR $o->{id}."\n";
 
   $o->{draft}=0 unless (defined $o->{draft});
 
