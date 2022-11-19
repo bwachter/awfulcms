@@ -337,7 +337,7 @@ sub loadArticle{
   my $filename=shift;
 
     # load file, extract yaml, read body, parse yaml, add body to yaml, add compat keys, return hash
-  open(F, $filename)||$s->err("Unable to open $filename: $!\n");
+  open(F,'<:encoding(UTF-8)', $filename)||$s->err("Unable to open $filename: $!\n");
   my @lines=<F>;
   close(F);
 
