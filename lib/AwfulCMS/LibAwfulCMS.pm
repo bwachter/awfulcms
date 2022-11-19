@@ -330,13 +330,14 @@ sub doRequest{
   }
 
   if (defined $r->{rqmap}->{$request}->{-dbhandle} &&
-      !defined $r->{mc}->{'nodbi'}){
+      (!defined $r->{mc}->{'nodbi'} || $r->{mc}->{'nodbi'}==0)){
     # dbhandle lookup order:
     # module:handle/instance, module/instance, module:handle, module, default
     my $dbc=$c->getValues("database");
     # the handle asked by the module
     my $mhandle=$r->{rqmap}->{$request}->{-dbhandle};
     my $handle="default";
+    print STDERR "db handle: $handle for $instance\n";
     if ($instance ne "" && defined $dbc->{"$module_short:$mhandle/$instance"}){
       $handle="$module_short:$mhandle/$instance"
     } elsif ($instance ne "" && defined $dbc->{"$module_short/$instance"}){
