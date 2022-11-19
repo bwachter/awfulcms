@@ -19,7 +19,6 @@ use Text::ASCIITable;
 use File::Temp;
 use File::Which;
 use AwfulCMS::LibFS qw(openreadclose);
-use AwfulCMS::ModBlog::BackendMySQL;
 use AwfulCMS::SynBasic;
 
 sub new{
@@ -53,14 +52,35 @@ sub new{
   $s->{mc}->{baselink}="" unless (defined $s->{mc}->{baselink});
   $s->{mc}->{description}="Some blog without description" unless (defined $s->{mc}->{description});
 
-  $s->{backend}=new AwfulCMS::ModBlog::BackendMySQL;
-  $s->{backend}->{cb_err}=sub{my $e=shift;$s->cb_die($e)};
+  if (defined $s->{mc}->{backend}){
+    $s->{backend_type}=$s->{mc}->{backend};
+  } else {
+    $s->{backend_type}="MySQL";
+  }
 
-  $s->connect_db();
+  if (defined $s->{mc}->{cli_docroot}){
+   $s->{mc}->{rootdir}=$s->{mc}->{cli_docroot};
+  }
+  my $r={};
+  $r->{mc}=$s->{mc};
+
+  eval "require AwfulCMS::ModBlog::Backend$s->{backend_type}";
+  if ($@){
+    die "Unable to load blog backend: $@\n";
+  }
+
+  my $backend_name="AwfulCMS::ModBlog::Backend$s->{backend_type}";
+  $s->{backend}=new $backend_name($r);
+
+  if ($s->{backend_type} != "FS"){
+    $s->{backend}->{cb_err}=sub{my $e=shift;$s->cb_die($e)};
+    $s->connect_db();
+  }
 
   print "Trackbacks not working, install Net::Trackback::Client and Net::Trackback::Ping\n" if ($s->{features}->{trackbacks}->{available} == 0);
   print "Pingbacks not working, install RPC::XML::Client\n" if ($s->{features}->{pingbacks}->{available} == 0);
   print {$s->{OUT}} "Using blog at $s->{mc}->{baselink}\n";
+  print {$s->{OUT}} "Backend is $s->{backend_type}, object is $s->{backend}\n";
 
   $s;
 }

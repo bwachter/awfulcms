@@ -26,6 +26,14 @@ sub new{
 
   $s->{rootdir}=$s->{page}->{rq}->{dir};
   $s->{rootdir}=$s->{mc}->{root} if (defined $s->{mc}->{root});
+  if (defined $s->{mc}->{rootdir}){
+    if (defined $s->{mc}->{root}){
+      $s->{rootdir}=$s->{mc}->{rootdir}."/".$s->{mc}->{root};
+    } else {
+      $s->{rootdir}=$s->{mc}->{rootdir};
+    }
+  }
+
   bless $s;
 
   unless (-f $s->{rootdir}."/index.cdb"){
