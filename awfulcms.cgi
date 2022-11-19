@@ -36,6 +36,7 @@ set the module path containing AwfulCMS with a "use lib" statement
 =cut
 
 use lib "/home/bwachter/www/htdocs";
+use utf8;
 use strict;
 
 use AwfulCMS::LibAwfulCMS qw(handleCGI);

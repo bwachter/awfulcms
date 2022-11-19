@@ -22,6 +22,7 @@ There are no configuration parameters outside this module.
 
 use AwfulCMS::ModBlog::CLI;
 use strict;
+use utf8;
 
 my $s=AwfulCMS::ModBlog::CLI->new({instance => $ARGV[0]});
 $s->mainloop();

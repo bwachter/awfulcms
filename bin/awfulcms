@@ -7,6 +7,7 @@ A generic wrapper for modules providing a CLIModule implementation.
 =cut
 
 use strict;
+use utf8;
 
 my $module;
 my $instance;
