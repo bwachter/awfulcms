@@ -93,7 +93,7 @@ sub new(){
   # TODO: This probably should get logged now
   #return "Unable to find a configuration file" if ($cfg eq "");
 
-  if (open(F, "<$cfg")){
+  if (open(F,'<:encoding(UTF-8)',"$cfg")){
     @lines=<F>;
     close(F);
 
@@ -124,7 +124,7 @@ sub new(){
     }
   } else {
     eval "require Module::Path";
-    return "Unable to open baconfiguration file '$cfg', Module::Paths not available for fallback: $!\n$@" if ($@);
+    return "Unable to open configuration file '$cfg', Module::Paths not available for fallback: $!\n$@" if ($@);
 
     my $_modulepath=Module::Path::module_path("AwfulCMS::Config");
     return "Module installation path not found and no configuration available: $!" unless (defined($_modulepath));

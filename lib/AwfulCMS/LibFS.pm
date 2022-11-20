@@ -140,7 +140,7 @@ sub openreadclose{
   my $file=shift;
   my $result=shift;
 
-  open(FILE, "<$file")||return;
+  open(FILE,'<:encoding(UTF-8)',"$file")||return;
   my @fcontent=<FILE>;
   close(FILE);
   @$result=@fcontent if (ref($result) eq "ARRAY");

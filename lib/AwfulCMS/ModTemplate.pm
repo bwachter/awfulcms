@@ -99,7 +99,7 @@ sub mainsite(){
 
   # if index.tpl does not exist generate a simple overview page;
   # if overview.map exists, use this for the overview
-  open(F, "$filename")||
+  open(F, '<:encoding(UTF-8)', "$filename")||
     $p->status(404, "No such file '$filename'");
   @lines=<F>;
   close(F);
