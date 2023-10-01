@@ -34,14 +34,19 @@ sub new{
     }
   }
 
+  if (defined $s->{mc}->{cdbfile}){
+    $s->{cdbfile}=$s->{mc}->{cdbfile};
+  } else {
+    $s->{cdbfile}=$s->{rootdir}."/index.cdb";
+  }
   bless $s;
 
-  unless (-f $s->{rootdir}."/index.cdb"){
-    print STDERR "index.cdb not available, expected in $s->{rootdir}\n";
+  unless (-f $s->{cdbfile}){
+    print STDERR "index.cdb not available, expected at $s->{cdbfile}\n";
     $s->createIndex();
   }
 
-  $s->{cdb}=CDB::TinyCDB->open($s->{rootdir}."/index.cdb");
+  $s->{cdb}=CDB::TinyCDB->open($s->{cdbfile});
 
   $s;
 }
@@ -398,7 +403,7 @@ sub createIndex{
   print STDERR "Root directory: ".$s->{rootdir}."\n";
   File::Find::find({wanted=>sub{$s->findCallback()}}, $s->{rootdir});
 
-  my $cdb=CDB::TinyCDB->create("$s->{rootdir}/index.cdb", "$s->{rootdir}/index.cdb.$$");
+  my $cdb=CDB::TinyCDB->create("$s->{cdbfile}", "$s->{cdbfile}.$$");
   my $tags={};
   my $timestamps={};
   my $article_cnt=0,$draft_cnt=0;
