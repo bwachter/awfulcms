@@ -74,7 +74,8 @@ sub defaultpage(){
                 '09' => "SOA",
                 '10' => "SRV",
                 '11' => "TXT",
-                '12' => "CAA"
+                '12' => "CAA",
+                '13' => "TLSA"
                );
 
   my %digOptions=(
