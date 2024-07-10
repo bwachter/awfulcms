@@ -1,0 +1,34 @@
+name: Build awfulcms container
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  REGISTRY_USER: ${{ github.actor }}
+  REGISTRY_PASSWORD: ${{ github.token }}
+  IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  login:
+    name: Build and publish awfulcms container
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Log in to ghcr.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+          registry: ${{ env.IMAGE_REGISTRY }}
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build podman containers
+        run: |
+          sudo apt-get install -y qemu qemu-user-static
+          cd container
+          podman manifest create awfulcms:latest
+          podman build --platform linux/amd64,linux/arm64 --manifest awfulcms:latest .
+          podman manifest push awfulcms:latest ghcr.io/${{ env.REGISTRY_USER }}/awfulcms:latest

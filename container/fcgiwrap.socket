@@ -1,0 +1,11 @@
+[Unit]
+Description=fcgiwrap Socket
+
+[Socket]
+SocketUser=awfulcms
+SocketGroup=awfulcms
+SocketMode=0660
+ListenStream=/run/fcgiwrap.sock
+
+[Install]
+WantedBy=sockets.target
