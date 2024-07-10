@@ -195,7 +195,7 @@ sub out {
 
   # for html pages, start processing the separate element in the page
   $out.=$s->{doctype} if defined $s->{doctype};
-  $out.="<html><head>$s->{head}\n".
+  $out.="<html><head><meta charset=\"UTF-8\">$s->{head}\n".
     "<title>$s->{metadata}->{title}</title>\n";
 
   if (defined $s->{htmlheader} && ref($s->{htmlheader}) eq "HASH"){

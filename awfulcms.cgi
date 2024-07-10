@@ -41,4 +41,7 @@ use strict;
 
 use AwfulCMS::LibAwfulCMS qw(handleCGI);
 
+binmode STDOUT, ':utf8';
+binmode STDERR, ':utf8';
+
 handleCGI();
