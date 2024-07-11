@@ -4,6 +4,9 @@ use CDB::TinyCDB;
 use YAML::XS;
 use Digest::SHA qw(sha256_hex);
 use Date::Parse;
+use Term::ANSIColor;
+use File::Touch;
+use utf8;
 
 =head1 AwfulCMS::ModBlog::BackendFS
 
@@ -44,6 +47,14 @@ sub new{
   unless (-f $s->{cdbfile}){
     print STDERR "index.cdb not available, expected at $s->{cdbfile}\n";
     $s->createIndex();
+  } elsif (defined $s->{mc}->{cdbmaxage}) {
+    my $now=time();
+    $s->{cdb_mtime}=(stat($s->{cdbfile}))[9];
+    if ($s->{cdb_mtime} + $s->{mc}->{cdbmaxage} < $now){
+      printf STDERR "⏰ cdb too old, regenerating (%s < %s)\n", colored($s->{cdb_mtime} + $s->{mc}->{cdbmaxage}, 'green'), colored($now, 'green');
+      $s->{blog_mtime} = $s->{cdb_mtime};
+      $s->createIndex();
+    }
   }
 
   $s->{cdb}=CDB::TinyCDB->open($s->{cdbfile});
@@ -259,7 +270,7 @@ sub getArticleList{
   }
 
   foreach(@r){
-    print STDERR "$_\n";
+    print STDERR "📋 $_\n" if (defined $s->{mc}->{debug_articles});
   }
 
   my @l=@r[$o->{offset}..$o->{offset}+$o->{limit}-1];
@@ -269,7 +280,7 @@ sub getArticleList{
     if (ref $o->{cb_format} eq 'CODE'){
       my $file=$s->{cdb}->get("f_$_");
       if ($file){
-        print STDERR "$file\n";
+        print STDERR "$file\n"  if (defined $s->{mc}->{debug_articles});
         my $d=$s->loadArticle($file);
         $d->{timestamp}=$_;
         $o->{cb_format}->($d);
@@ -385,7 +396,18 @@ sub findCallback{
     } else {
       $s->{articles}->{$dir}->{index}=$_;
     }
-    print STDERR $dir."--".$File::Find::name."\n";
+
+    # no need to stat if we already know we need to regenerate
+    if (defined $s->{cdb_mtime} && defined $s->{blog_mtime} && $s->{cdb_mtime} <= $s->{blog_mtime}){
+      my $filename=(File::Spec->splitpath($File::Find::name))[2];
+      my $mtime=(stat($filename))[9];
+      if ($mtime > $s->{blog_mtime}){
+        $s->{blog_mtime}=$mtime;
+        printf STDERR "❗ New newest article %s found, with time %s\n", $File::Find::name, colored("$mtime", 'green');
+      }
+    }
+
+    print STDERR "🔎 ".$dir."--".$File::Find::name."\n" if (defined $s->{mc}->{debug_find});
   }
 }
 
@@ -400,21 +422,27 @@ sub createIndex{
   eval "require File::Find";
   $s->err("Require File::Find failed ($@)") if ($@);
 
-  print STDERR "Root directory: ".$s->{rootdir}."\n";
+  print STDERR "Root directory: ".$s->{rootdir}."\n" if (defined $s->{mc}->{debug_cdb});
   File::Find::find({wanted=>sub{$s->findCallback()}}, $s->{rootdir});
+
+  if (defined $s->{cdb_mtime} && defined $s->{blog_mtime} && $s->{cdb_mtime} >= $s->{blog_mtime}){
+    print STDERR "⏰ cdb newer than blog contents, skipping index update\n";
+    touch($s->{cdbfile});
+    return;
+  }
 
   my $cdb=CDB::TinyCDB->create("$s->{cdbfile}", "$s->{cdbfile}.$$");
   my $tags={};
   my $timestamps={};
   my $article_cnt=0,$draft_cnt=0;
   foreach my $key (sort(keys(%{$s->{articles}}))){
-    print STDERR "Processing $key...\n";
+    print STDERR "🕵️ $key...\n" if (defined $s->{mc}->{debug_cdb});
 
     my $y=$s->loadArticle("$key/".$s->{articles}->{$key}->{index});
     # this makes sure we only have unique article IDs
     my $timestamp=str2time($y->{date})+0.1;
     while (defined $timestamps{$timestamp}){
-      print STDERR "Duplicate\n";
+      print STDERR "Duplicate timestamp, compensating.\n" if (defined $s->{mc}->{debug_cdb});
       $timestamp+=0.1
     }
     $timestamps{$timestamp}=1;

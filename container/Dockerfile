@@ -6,7 +6,7 @@ RUN zypper ar -f obs://home:bhwachter/openSUSE_Leap_15.6 bhwachter &&\
     zypper ar -f obs://home:bhwachter:server/openSUSE_Leap_15.6 bhwachter_server && \
      zypper --gpg-auto-import-keys ref
 
-RUN zypper -n in git vim less iproute2 strace nmap tcpdump bind-utils fcgiwrap fcgiwrap-nginx mariadb-client nginx perl-CDB-TinyCDB perl-CGI perl-DBD-Pg perl-DBD-SQLite perl-DBD-mysql perl-File-Type perl-GD perl-Module-Path perl-Syntax-SourceHighlight perl-Text-Markdown-Hoedown perl-Tie-RegexpHash perl-TimeDate perl-URI perl-XML-Atom perl-XML-RSS perl-YAML-LibYAML perl-libintl-perl source-highlight
+RUN zypper -n in git vim less iproute2 strace nmap tcpdump bind-utils fcgiwrap fcgiwrap-nginx mariadb-client nginx perl-CDB-TinyCDB perl-CGI perl-DBD-Pg perl-DBD-SQLite perl-DBD-mysql perl-File-Type perl-GD perl-Module-Path perl-Syntax-SourceHighlight perl-Text-Markdown-Hoedown perl-Tie-RegexpHash perl-TimeDate perl-URI perl-XML-Atom perl-XML-RSS perl-YAML-LibYAML perl-libintl-perl source-highlight perl-File-Touch
 
 COPY nginx /etc/nginx
 COPY awfulcms.config /srv/web/.awfulcms/config
